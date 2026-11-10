@@ -11,22 +11,19 @@ export default function AdminModule11_SecurityMonitoring() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Cybersecurity & Threat Monitoring
-            </h2>
-            <Badge variant="blue">OWASP Compliant</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Automated rate-limiting filters, webhook cryptographic signature verifiers, and DPDP anomaly detectors.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Security & Events
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Rate limiting, webhook verification, and access logs.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
-          <ShieldAlert className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
+          <ShieldAlert className="w-5 h-5" />
         </div>
       </div>
 

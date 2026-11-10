@@ -41,27 +41,24 @@ export default function AdminModule03_DoctorVerification() {
     addToast({
       type: decision === 'APPROVED' ? 'success' : 'warning',
       title: decision === 'APPROVED' ? 'Doctor Approved' : 'Doctor Rejected',
-      message: `Practitioner moved to ${decision === 'APPROVED' ? 'CREDENTIAL_VERIFIED' : 'REJECTED'}. Audit log emitted.`,
+      message: `Doctor status updated.`,
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Doctor Credential Verification Queue
-            </h2>
-            <Badge variant="violet">Approval Workflow</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Verify medical registration numbers against State Council registries before granting appointment rights.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Doctor Verification Queue
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Review submitted medical licenses and certificates.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-aurora-violet flex items-center justify-center shrink-0">
-          <Award className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-aurora-violet flex items-center justify-center shrink-0">
+          <Award className="w-5 h-5" />
         </div>
       </div>
 

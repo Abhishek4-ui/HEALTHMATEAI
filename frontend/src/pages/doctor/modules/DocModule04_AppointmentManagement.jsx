@@ -21,22 +21,19 @@ export default function DocModule04_AppointmentManagement() {
   const { addToast } = useToast();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Doctor Appointment Management
-            </h2>
-            <Badge variant="blue">Clinical Roster</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Accept, reschedule, or cancel patient teleconsultations with synchronized calendar updates.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Appointments
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            View and manage patient appointments and consultation bookings.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
-          <Calendar className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
+          <Calendar className="w-5 h-5" />
         </div>
       </div>
 
@@ -59,9 +56,9 @@ export default function DocModule04_AppointmentManagement() {
       ) : (
         <EmptyState
           icon={Calendar}
-          title="No Pending Appointment Requests"
-          description="In strict adherence to zero-fabrication rules, fake patient appointments are never generated. Incoming patient bookings will appear here in real-time."
-          actionLabel="Configure Availability Hours"
+          title="No appointments"
+          description="Upcoming appointments will appear here."
+          actionLabel="Set Availability"
           onAction={() => window.location.href = '/doctor/availability'}
         />
       )}

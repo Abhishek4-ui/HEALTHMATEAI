@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Pill, 
-  FileText, 
-  Download, 
-  CheckCircle2, 
-  ShieldCheck, 
-  ExternalLink,
-  Calendar,
-  Lock
+  Download
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -22,61 +16,53 @@ export default function Module10_Prescriptions() {
   const handleDownload = (id) => {
     addToast({
       type: 'info',
-      title: 'Prescription PDF',
-      message: 'Prescription PDF download initiated with embedded digital signature.',
+      title: 'Downloading',
+      message: 'Prescription PDF download started.',
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Digitally Signed Prescriptions
-            </h2>
-            <Badge variant="teal">NMC Compliant</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Official digital medical orders issued by verified doctors with tamper-evident cryptographic hashes.
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            Prescriptions
+          </h2>
+          <p className="text-xs text-slate-500">
+            Digital prescriptions issued by your doctors.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
-          <Pill className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
+          <Pill className="w-5 h-5" />
         </div>
       </div>
 
-      {/* Prescriptions List / Empty State */}
       {prescriptions.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {prescriptions.map((rx) => (
-            <Card key={rx.id} className="p-6 space-y-4">
-              <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <Card key={rx.id} className="p-5 space-y-3">
+              <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
                 <div>
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">{rx.doctorName}</h3>
-                  <p className="text-xs text-slate-400">NMC Reg: {rx.doctorNmcNumber} • {rx.date}</p>
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-white">{rx.doctorName}</h3>
+                  <p className="text-[11px] text-slate-400">{rx.date}</p>
                 </div>
-                <Badge variant="teal">Digitally Signed</Badge>
+                <Badge variant="teal">Signed</Badge>
               </div>
 
-              <div className="space-y-2 text-xs">
-                <div className="font-bold text-slate-700 dark:text-slate-300">Prescribed Medications:</div>
+              <div className="space-y-1.5 text-xs">
+                <div className="font-semibold text-slate-700 dark:text-slate-300">Medications:</div>
                 {rx.medications?.map((m, i) => (
-                  <div key={i} className="p-2.5 rounded-xl bg-slate-50 dark:bg-aurora-midnight flex items-center justify-between">
+                  <div key={i} className="p-2 rounded-lg bg-slate-50 dark:bg-aurora-midnight flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-slate-900 dark:text-white">{m.name}</span>
-                      <span className="text-slate-500 ml-2 font-mono">({m.dosage})</span>
+                      <span className="font-medium text-slate-900 dark:text-white">{m.name}</span>
+                      <span className="text-slate-500 ml-1.5">({m.dosage})</span>
                     </div>
-                    <span className="text-slate-400">{m.frequency}</span>
+                    <span className="text-slate-400 text-[11px]">{m.frequency}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                <span className="font-mono text-[10px] text-slate-400 truncate max-w-xs">
-                  SHA-256: {rx.signatureHash}
-                </span>
+              <div className="flex justify-end pt-1 border-t border-slate-100 dark:border-slate-800">
                 <Button size="sm" variant="outline" onClick={() => handleDownload(rx.id)}>
                   <Download className="w-3.5 h-3.5" />
                   <span>Download PDF</span>
@@ -88,9 +74,9 @@ export default function Module10_Prescriptions() {
       ) : (
         <EmptyState
           icon={Pill}
-          title="No Prescriptions Issued Yet"
-          description="You do not have any digital prescriptions on record. Prescriptions are issued strictly following a clinical consultation with an accredited doctor."
-          actionLabel="Book a Consultation"
+          title="No prescriptions found"
+          description="Prescriptions issued after your doctor consultations will be saved here."
+          actionLabel="Find a Doctor"
           onAction={() => window.location.href = '/patient/doctors'}
         />
       )}

@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   Cpu, 
-  Brain, 
   FileText, 
   Sparkles, 
   BarChart2, 
@@ -14,101 +13,83 @@ import Card from '../../components/ui/Card';
 export default function AITechnologyPage() {
   const techStack = [
     {
-      title: 'XGBoost & PyTorch Predictive Ensembles',
-      category: 'Machine & Deep Learning',
-      desc: 'Triage risk scoring and disease risk assessment models trained on PhysioNet and CDC research datasets with probability calibration.',
+      title: 'Machine Learning Models',
+      category: 'Predictive Triage',
+      desc: 'Trained on validated research datasets (PhysioNet, CDC) for symptom severity and chronic risk scoring.',
       icon: Cpu,
-      badge: 'Statistical AI'
     },
     {
-      title: 'PaddleOCR v2 Document Intelligence',
+      title: 'Medical Document OCR',
       category: 'Computer Vision',
-      desc: 'Deep learning text and table extraction fine-tuned on pathology and biochemistry lab reports for key-value biomarker parsing.',
+      desc: 'Extracts lab test values from medical reports and compares them against standard reference intervals.',
       icon: FileText,
-      badge: 'Vision & OCR'
     },
     {
-      title: 'FAISS Dense Retrieval (Medical RAG)',
-      category: 'Information Retrieval',
-      desc: 'In-memory similarity vector search indexed with Ministry of Health clinical treatment guidelines and WHO essential medicine compendiums.',
+      title: 'Medical Reference Retrieval',
+      category: 'Knowledge Base',
+      desc: 'Retrieves relevant clinical guidelines and reference standards for symptoms and medication safety.',
       icon: Database,
-      badge: 'Vector DB'
     },
     {
-      title: 'Resilient Dual LLM Gateway',
+      title: 'Dual LLM Gateway',
       category: 'Language Models',
-      desc: 'OpenRouter primary gateway with automatic failover to Google Gemini. Features configurable timeouts, retries, and clinical guardrails.',
+      desc: 'OpenRouter primary gateway with automatic failover to Google Gemini, with response timeouts and medical safeguards.',
       icon: Sparkles,
-      badge: 'LLM Gateway'
     },
     {
-      title: 'SHAP (SHapley Additive exPlanations)',
-      category: 'Explainable AI (XAI)',
-      desc: 'Quantifies each biological feature’s exact contribution towards risk predictions, preventing black-box medical opacity.',
+      title: 'Explainable AI',
+      category: 'Model Transparency',
+      desc: 'Computes feature attributions to show which patient inputs contributed to specific risk estimates.',
       icon: BarChart2,
-      badge: 'Interpretability'
     },
     {
-      title: 'MLflow Model Registry & Drift Detection',
-      category: 'MLOps Engineering',
-      desc: 'Tracks model versioning, ROC-AUC, latency benchmarks, and Population Stability Index (PSI) drift alarms in real-time.',
+      title: 'Model Quality Monitoring',
+      category: 'MLOps',
+      desc: 'Tracks inference latency, prediction confidence, and service availability across the platform.',
       icon: Layers,
-      badge: 'MLOps'
     }
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-16">
-      <div className="text-center max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-aurora-teal/10 border border-aurora-teal/30 text-aurora-teal text-xs font-bold mb-4">
-          <Brain className="w-4 h-4" />
-          Rigorous Machine Learning & Deep Learning
-        </div>
-        <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Hybrid AI Engine Architecture
+    <div className="max-w-5xl mx-auto px-4 py-12 space-y-12">
+      <div className="text-center max-w-2xl mx-auto">
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          AI Technology
         </h1>
-        <p className="mt-4 text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed">
-          HealthMate AI avoids fragile single-model dependencies by uniting tree-based gradient boosting, deep neural representations, computer vision, vector RAG, and large language models.
+        <p className="mt-3 text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+          Overview of the machine learning, computer vision, and language models powering HealthMate AI.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {techStack.map((tech, i) => {
           const Icon = tech.icon;
           return (
-            <Card key={i} className="p-6 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-aurora-teal/10 text-aurora-teal flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-aurora-midnight text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                    {tech.badge}
-                  </span>
-                </div>
-                <div className="text-[11px] font-bold text-aurora-teal uppercase tracking-wider mb-1">
-                  {tech.category}
-                </div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2">
-                  {tech.title}
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
-                  {tech.desc}
-                </p>
+            <Card key={i} className="p-5">
+              <div className="w-9 h-9 rounded-xl bg-aurora-teal/10 text-aurora-teal flex items-center justify-center mb-3">
+                <Icon className="w-5 h-5" />
               </div>
+              <div className="text-[11px] font-semibold text-aurora-teal uppercase tracking-wide mb-1">
+                {tech.category}
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1.5">
+                {tech.title}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                {tech.desc}
+              </p>
             </Card>
           );
         })}
       </div>
 
-      {/* Clinical Disclaimer Callout */}
-      <div className="p-8 rounded-3xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
-        <h4 className="font-bold text-sm mb-2 flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-aurora-amber" />
-          Clinical AI Boundaries & Safety Constraints
+      <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+        <h4 className="font-bold text-sm mb-1.5 flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+          <ShieldCheck className="w-4 h-4" />
+          Clinical Safety Notice
         </h4>
         <p>
-          In adherence to the National Medical Commission (NMC) Telemedicine Practice Guidelines and ethical AI standards, all predictive assessments generated by HealthMate AI are intended for informational triage and clinical decision-support only. The system is architecturally constrained from independently prescribing medications or replacing certified healthcare professionals.
+          AI predictions are intended for triage assistance and informational guidance only. They do not replace certified medical diagnosis or treatment by licensed healthcare professionals.
         </p>
       </div>
     </div>

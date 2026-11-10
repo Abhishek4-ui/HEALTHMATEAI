@@ -44,22 +44,19 @@ export default function AdminModule09_DatasetManagement() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Authentic Clinical Dataset Registry
-            </h2>
-            <Badge variant="teal">Open Research Licenses</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Validated biomedical research corpora utilized for model training with zero synthetic data fabrication.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Training Datasets
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Clinical research datasets and validation benchmarks.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
-          <Database className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
+          <Database className="w-5 h-5" />
         </div>
       </div>
 

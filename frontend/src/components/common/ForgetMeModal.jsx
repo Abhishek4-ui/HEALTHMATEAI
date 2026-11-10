@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, Trash2, CheckCircle2, X } from 'lucide-react';
+import { Trash2, CheckCircle2, X } from 'lucide-react';
 
 export default function ForgetMeModal({ isOpen, onClose }) {
   const [purged, setPurged] = useState(false);
@@ -10,7 +10,6 @@ export default function ForgetMeModal({ isOpen, onClose }) {
   const handlePurge = () => {
     setLoading(true);
     setTimeout(() => {
-      // Clear all local session artifacts and tokens
       sessionStorage.clear();
       localStorage.removeItem('healthmate_temp_session');
       setLoading(false);
@@ -18,56 +17,56 @@ export default function ForgetMeModal({ isOpen, onClose }) {
       setTimeout(() => {
         setPurged(false);
         onClose();
-      }, 1800);
-    }, 600);
+      }, 1500);
+    }, 400);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+      <div className="relative w-full max-w-md bg-white dark:bg-aurora-navy rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-6">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
         >
           <X className="w-5 h-5" />
         </button>
 
         {purged ? (
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="text-center py-4">
+            <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Session Data Purged</h3>
-            <p className="text-sm text-slate-600">
-              Zero residual traces remain in ephemeral cache. In accordance with India's DPDP Act 2023, your temporary session has been wiped.
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Session Data Deleted</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Your temporary symptoms, reports, and conversation data have been removed.
             </p>
           </div>
         ) : (
           <div>
-            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-4">
-              <ShieldAlert className="w-6 h-6" />
+            <div className="w-10 h-10 bg-rose-100 dark:bg-rose-950/50 text-rose-600 rounded-xl flex items-center justify-center mb-3">
+              <Trash2 className="w-5 h-5" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Instant Session Deletion</h3>
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-              HealthMate AI operates in <strong>ephemeral memory by default</strong>. Clicking below immediately purges all active symptom inputs, uploaded laboratory files, and temporary conversation tokens from Redis cache.
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Delete Temporary Session</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
+              This will delete your active symptoms, uploaded reports, and chat history.
             </p>
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 mb-6 font-medium">
-              Note: Confirmed doctor appointments with official payment references are legally retained as minimum necessary transactional records under NMC telemedicine guidelines.
-            </div>
+            <p className="text-[11px] text-slate-400 mb-5">
+              Confirmed appointments and receipts are retained as required by healthcare regulations.
+            </p>
             <div className="flex items-center gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition-colors"
+                className="flex-1 px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePurge}
                 disabled={loading}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-semibold text-sm hover:bg-rose-700 transition-colors flex items-center justify-center gap-2 shadow-md shadow-rose-600/20"
+                className="flex-1 px-4 py-2 rounded-xl bg-rose-600 text-white font-medium text-xs hover:bg-rose-700 flex items-center justify-center gap-2"
               >
-                <Trash2 className="w-4 h-4" />
-                {loading ? 'Purging...' : 'Wipe Session'}
+                <Trash2 className="w-3.5 h-3.5" />
+                {loading ? 'Deleting...' : 'Delete Session'}
               </button>
             </div>
           </div>

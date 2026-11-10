@@ -26,22 +26,19 @@ export default function AdminModule14_SystemSettings() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Global System & Security Settings
-            </h2>
-            <Badge variant="violet">Master Config</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Configure platform commission rules, default Redis TTLs, and administrative access.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            System Settings
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Platform parameters, data retention defaults, and maintenance settings.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-aurora-violet flex items-center justify-center shrink-0">
-          <Settings className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-aurora-violet flex items-center justify-center shrink-0">
+          <Settings className="w-5 h-5" />
         </div>
       </div>
 

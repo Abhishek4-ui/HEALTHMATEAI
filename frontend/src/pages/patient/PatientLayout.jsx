@@ -6,7 +6,6 @@ import {
   Activity, 
   Bot, 
   FileText, 
-  MapPin, 
   Calendar, 
   Video, 
   Pill, 
@@ -25,25 +24,25 @@ import {
 } from 'lucide-react';
 
 export const PATIENT_MODULES = [
-  { id: 'dashboard', name: 'Health Overview', path: '/patient', icon: Activity },
-  { id: 'copilot', name: 'AI Health Assistant', path: '/patient/copilot', icon: Bot, badge: 'AI' },
-  { id: 'symptoms', name: 'Symptom Checker', path: '/patient/symptoms', icon: ClipboardCheck },
-  { id: 'risk', name: 'Risk Assessment', path: '/patient/risk', icon: Heart },
-  { id: 'reports', name: 'Report OCR Analyzer', path: '/patient/reports', icon: FileText, badge: 'OCR' },
-  { id: 'doctors', name: 'Doctor Discovery', path: '/patient/doctors', icon: Stethoscope },
-  { id: 'hospitals', name: 'Hospital Discovery', path: '/patient/hospitals', icon: Building2 },
-  { id: 'appointments', name: 'My Appointments', path: '/patient/appointments', icon: Calendar },
-  { id: 'consultation', name: 'Teleconsultation Room', path: '/patient/consultation', icon: Video },
-  { id: 'prescriptions', name: 'Digital Prescriptions', path: '/patient/prescriptions', icon: Pill },
-  { id: 'medicines', name: 'Medicine Reminders', path: '/patient/medicines', icon: Clock },
-  { id: 'vitals', name: 'Health Monitoring', path: '/patient/vitals', icon: Activity },
+  { id: 'dashboard', name: 'Overview', path: '/patient/dashboard', icon: Activity },
+  { id: 'ai-assistant', name: 'AI Assistant', path: '/patient/ai-assistant', icon: Bot },
+  { id: 'symptom-checker', name: 'Symptom Checker', path: '/patient/symptom-checker', icon: ClipboardCheck },
+  { id: 'risk-assessment', name: 'Risk Assessment', path: '/patient/risk-assessment', icon: Heart },
+  { id: 'reports', name: 'Report Analyzer', path: '/patient/reports', icon: FileText },
+  { id: 'doctors', name: 'Find Doctors', path: '/patient/doctors', icon: Stethoscope },
+  { id: 'hospitals', name: 'Find Hospitals', path: '/patient/hospitals', icon: Building2 },
+  { id: 'appointments', name: 'Appointments', path: '/patient/appointments', icon: Calendar },
+  { id: 'consultations', name: 'Consultations', path: '/patient/consultations', icon: Video },
+  { id: 'prescriptions', name: 'Prescriptions', path: '/patient/prescriptions', icon: Pill },
+  { id: 'medicines', name: 'Medicines & Reminders', path: '/patient/medicines', icon: Clock },
+  { id: 'health-metrics', name: 'Health Monitoring', path: '/patient/health-metrics', icon: Activity },
   { id: 'nutrition', name: 'Nutrition & Fitness', path: '/patient/nutrition', icon: Flame },
-  { id: 'sleep', name: 'Sleep & Mental Wellness', path: '/patient/sleep', icon: Moon },
-  { id: 'labs', name: 'Lab Test Booking', path: '/patient/labs', icon: FlaskConical },
+  { id: 'wellness', name: 'Sleep & Mental Wellness', path: '/patient/wellness', icon: Moon },
+  { id: 'lab-tests', name: 'Lab Tests', path: '/patient/lab-tests', icon: FlaskConical },
   { id: 'emergency', name: 'Emergency SOS', path: '/patient/emergency', icon: ShieldAlert, badge: '112' },
-  { id: 'family', name: 'Family Healthcare', path: '/patient/family', icon: Users },
-  { id: 'notifications', name: 'Notification Center', path: '/patient/notifications', icon: Bell },
-  { id: 'settings', name: 'Privacy & Settings', path: '/patient/settings', icon: Settings },
+  { id: 'family', name: 'Family Health', path: '/patient/family', icon: Users },
+  { id: 'notifications', name: 'Notifications', path: '/patient/notifications', icon: Bell },
+  { id: 'privacy', name: 'Privacy & Settings', path: '/patient/privacy', icon: Settings },
 ];
 
 export default function PatientLayout() {
@@ -51,12 +50,10 @@ export default function PatientLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
-  // Find active module title
-  const activeModule = PATIENT_MODULES.find(m => m.path === location.pathname) || { name: 'Patient Portal' };
+  const activeModule = PATIENT_MODULES.find(m => m.path === location.pathname) || { name: 'Patient' };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-aurora-midnight text-slate-900 dark:text-slate-100 flex transition-colors duration-200">
-      {/* Sidebar */}
       <DashboardSidebar
         role="PATIENT"
         modules={PATIENT_MODULES}
@@ -66,15 +63,14 @@ export default function PatientLayout() {
         setMobileOpen={setMobileOpen}
       />
 
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-72'}`}>
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${collapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         <DashboardTopNav
           role="PATIENT"
           title={activeModule.name}
           setMobileOpen={setMobileOpen}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full">
           <Outlet />
         </main>
       </div>

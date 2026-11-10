@@ -30,23 +30,18 @@ export default function DocModule03_VerificationStatus() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              NMC Credential Verification Status
-            </h2>
-            <Badge variant="teal">{currentTier}</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Compliance pipeline ensuring no unverified doctor is ever displayed to patients as verified.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Medical Verification Status
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Verification status of your medical licenses and certifications.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
-          <Award className="w-6 h-6" />
-        </div>
+        <Badge variant="teal">Verified</Badge>
       </div>
 
       {/* Verification Pipeline Progress Bar */}

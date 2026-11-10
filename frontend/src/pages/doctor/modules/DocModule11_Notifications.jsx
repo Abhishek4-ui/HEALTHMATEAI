@@ -19,18 +19,15 @@ export default function DocModule11_Notifications() {
   const { addToast } = useToast();
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Doctor Clinical Notifications
-            </h2>
-            <Badge variant="blue">Clinical Alerts</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Appointment requests, verification milestones, and system notices.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Notifications
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Appointment updates and clinical alerts.
           </p>
         </div>
 

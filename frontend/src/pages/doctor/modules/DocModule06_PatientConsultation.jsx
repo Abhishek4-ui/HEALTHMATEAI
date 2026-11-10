@@ -56,24 +56,21 @@ export default function DocModule06_PatientConsultation() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Patient Clinical Consultation Workspace
-            </h2>
-            <Badge variant="blue">Active Session</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Review authorized patient context, generate AI SOAP clinical drafts, and document treatment plans.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Clinical Notes
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Review patient context and document SOAP clinical notes.
           </p>
         </div>
 
         <Button size="sm" variant="violet" onClick={handleGenerateSoap} loading={generating}>
           <Sparkles className="w-4 h-4 text-white" />
-          <span>Draft AI SOAP Note</span>
+          <span>Draft SOAP Note</span>
         </Button>
       </div>
 

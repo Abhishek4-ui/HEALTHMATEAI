@@ -44,20 +44,17 @@ export default function DocModule07_VideoConsultation() {
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Doctor Teleconsultation Room
-            </h2>
-            <Badge variant="blue">Encrypted WebRTC</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Encrypted clinical video teleconsultation room with high-fidelity audio and screen sharing.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Video Consultation
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Secure video consultation with patient.
           </p>
         </div>
 
         <span className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800">
           <Wifi className="w-3.5 h-3.5" />
-          <span>STUN/TURN Ready</span>
+          <span>Connected</span>
         </span>
       </div>
 
@@ -68,22 +65,22 @@ export default function DocModule07_VideoConsultation() {
             <div className="w-16 h-16 rounded-full bg-aurora-blue/20 text-aurora-blue flex items-center justify-center mx-auto animate-pulse">
               <User className="w-8 h-8" />
             </div>
-            <div className="font-bold text-base">Connected to Patient (Session #8912)</div>
-            <div className="text-xs text-slate-400">P2P Media Stream Connected via STUN/TURN</div>
+            <div className="font-bold text-base">Connected with Patient</div>
+            <div className="text-xs text-slate-400">Audio and video active</div>
           </div>
         ) : (
           <div className="text-center p-6 space-y-3 text-slate-400">
             <Video className="w-12 h-12 mx-auto opacity-50" />
-            <div className="text-xs font-medium">Awaiting scheduled consultation start time.</div>
+            <div className="text-xs font-medium">Ready for consultation.</div>
             <Button size="sm" variant="blue" onClick={toggleCall}>
-              Start Consultation Session
+              Start Call
             </Button>
           </div>
         )}
 
         {inCall && (
           <div className="absolute bottom-4 right-4 w-32 h-20 rounded-2xl bg-slate-900 border border-white/20 overflow-hidden flex items-center justify-center text-[10px] text-slate-400">
-            {videoOn ? 'Doctor Camera (Active)' : 'Camera Muted'}
+            {videoOn ? 'Camera on' : 'Camera off'}
           </div>
         )}
       </div>

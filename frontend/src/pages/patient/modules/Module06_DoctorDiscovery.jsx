@@ -1,15 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Search, 
   MapPin, 
-  Filter, 
   Stethoscope, 
-  Award, 
   Calendar, 
-  CheckCircle2, 
-  ShieldCheck, 
-  AlertCircle,
-  ExternalLink,
   Navigation
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
@@ -45,7 +40,6 @@ export default function Module06_DoctorDiscovery() {
       });
       setDoctorsList(response.doctors || []);
     } catch (err) {
-      // In accordance with zero-fabrication pledge, do NOT generate fake doctors
       setDoctorsList([]);
     } finally {
       setLoading(false);
@@ -54,7 +48,7 @@ export default function Module06_DoctorDiscovery() {
 
   const handleNearMe = () => {
     if (!navigator.geolocation) {
-      addToast({ type: 'error', title: 'Geolocation Unavailable', message: 'Browser location services are not supported.' });
+      addToast({ type: 'error', title: 'Location Unavailable', message: 'Browser location is not supported.' });
       return;
     }
 
@@ -72,52 +66,47 @@ export default function Module06_DoctorDiscovery() {
             'doctor'
           );
           setDoctorsList(response.doctors || []);
-          addToast({ type: 'success', title: 'Location Acquired', message: 'Searching verified doctors within 10 km radius...' });
         } catch (err) {
           setDoctorsList([]);
         } finally {
           setLoading(false);
         }
       },
-      (err) => {
+      () => {
         setIsLocating(false);
-        addToast({ type: 'warning', title: 'Location Denied', message: 'Please allow location permission to discover nearby clinics.' });
+        addToast({ type: 'warning', title: 'Location Denied', message: 'Please allow location access to find nearby doctors.' });
       }
     );
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+    <div className="max-w-5xl mx-auto space-y-6">
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              India-Wide & Nearby Doctor Discovery
-            </h2>
-            <Badge variant="teal">ABDM & Places APIs</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Search NMC-verified practitioners and accredited hospital specialists without fabricated listings.
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+            Find Doctors
+          </h2>
+          <p className="text-xs text-slate-500">
+            Search verified medical doctors and clinics near you or across India.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
-          <Stethoscope className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
+          <Stethoscope className="w-5 h-5" />
         </div>
       </div>
 
       {/* Filter Box */}
-      <Card className="p-6 space-y-4">
-        <form onSubmit={handleSearch} className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
+      <Card className="p-5 space-y-3.5">
+        <form onSubmit={handleSearch} className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by doctor name, qualification, or hospital affiliation..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-aurora-teal/50"
+                placeholder="Doctor name, hospital, or condition..."
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
 
@@ -127,25 +116,24 @@ export default function Module06_DoctorDiscovery() {
               size="md"
               onClick={handleNearMe}
               loading={isLocating}
-              className="whitespace-nowrap"
             >
-              <Navigation className="w-4 h-4 text-aurora-teal" />
-              <span>Doctors Near Me</span>
+              <Navigation className="w-3.5 h-3.5 text-aurora-teal" />
+              <span>Near Me</span>
             </Button>
 
             <Button type="submit" variant="primary" size="md" loading={loading}>
-              <Search className="w-4 h-4 text-aurora-midnight" />
-              <span>Find Doctors</span>
+              <Search className="w-3.5 h-3.5 text-aurora-midnight" />
+              <span>Search</span>
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Specialization</label>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Specialization</label>
               <select
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
                 <option value="ALL">All Specializations</option>
                 <option value="General Medicine">General Medicine</option>
@@ -158,74 +146,70 @@ export default function Module06_DoctorDiscovery() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">State</label>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">State</label>
               <select
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
-                <option value="ALL">All Indian States</option>
+                <option value="ALL">All States</option>
                 <option value="Karnataka">Karnataka</option>
                 <option value="Delhi">Delhi NCR</option>
                 <option value="Maharashtra">Maharashtra</option>
                 <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="Telangana">Telangana</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">City / Pincode</label>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">City</label>
               <input
                 type="text"
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                placeholder="e.g. Bengaluru, 560038"
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                placeholder="e.g. Bengaluru"
+                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
           </div>
         </form>
       </Card>
 
-      {/* Results List */}
+      {/* Results */}
       <div>
         {doctorsList.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {doctorsList.map((doc, idx) => (
-              <Card key={idx} className="p-6 space-y-4">
+              <Card key={idx} className="p-5 space-y-3">
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center font-bold text-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center font-bold text-xs">
                       Dr
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{doc.fullName}</h4>
-                      <p className="text-xs text-aurora-teal font-semibold">{doc.specialization}</p>
+                      <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{doc.fullName}</h4>
+                      <p className="text-xs text-aurora-teal font-medium">{doc.specialization}</p>
                       <p className="text-[11px] text-slate-400">{doc.qualifications} • {doc.experienceYears} yrs exp</p>
                     </div>
                   </div>
-                  <Badge variant="teal">{doc.verificationStatus || 'CREDENTIAL_VERIFIED'}</Badge>
+                  <Badge variant="teal">Verified</Badge>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-aurora-midnight text-[11px] space-y-1">
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-aurora-midnight text-[11px]">
                   <div className="text-slate-500 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{doc.hospitalAffiliation || 'Verified Clinic'} • {doc.address?.city || 'India'}</span>
-                  </div>
-                  <div className="font-mono text-slate-400 text-[10px]">
-                    NMC Reg: {doc.medicalRegistrationNumber}
+                    <span>{doc.hospitalAffiliation || 'Clinic'} • {doc.address?.city || 'India'}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center justify-between pt-1">
                   <div className="text-xs">
-                    <span className="text-slate-400">Consultation Fee: </span>
+                    <span className="text-slate-400">Fee: </span>
                     <span className="font-bold text-slate-900 dark:text-white">₹{doc.consultationFee || 500}</span>
                   </div>
                   <Link to={`/patient/appointments?doctorId=${doc.id || idx}`}>
                     <Button size="sm" variant="primary">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>Book Slot</span>
+                      <span>Book Appointment</span>
                     </Button>
                   </Link>
                 </div>
@@ -235,10 +219,10 @@ export default function Module06_DoctorDiscovery() {
         ) : (
           <EmptyState
             icon={Stethoscope}
-            title={searched ? 'No Doctors Found in Active Registry' : 'Search India-Wide Doctor Directory'}
+            title={searched ? 'No doctors found' : 'Find a Doctor'}
             description={searched 
-              ? 'No registered doctors match your current criteria. In compliance with strict engineering rules, dummy doctor listings are never fabricated.' 
-              : 'Enter specialization or click "Doctors Near Me" to query verified healthcare facilities via Google Places & ABDM.'}
+              ? 'No doctors found matching your criteria. Try adjusting your filters or location.' 
+              : 'Search by specialty, name, or click Near Me to locate doctors nearby.'}
             actionLabel={searched ? 'Clear Filters' : undefined}
             onAction={searched ? () => { setSearchQuery(''); setSpecialty('ALL'); setStateFilter('ALL'); setCityFilter(''); setSearched(false); } : undefined}
           />

@@ -10,27 +10,24 @@ export default function AdminModule05_PatientAccounts() {
   ]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Patient Account Administration
-            </h2>
-            <Badge variant="teal">DPDP Compliant</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Registered patient authentication accounts and statutory consent records.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Patient Accounts
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Registered patient accounts and consent records.
           </p>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
-          <Users className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
+          <Users className="w-5 h-5" />
         </div>
       </div>
 
       <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
-        <strong>Privacy Protocol:</strong> In accordance with zero-trust privacy, administrators do not possess access to raw patient symptom histories, AI chat dialogues, or uploaded medical files. Only authenticated account metadata is accessible.
+        <strong>Privacy Notice:</strong> Patient health evaluations and chat dialogues are private and temporary. Administrators cannot view raw medical consultations or symptom reports.
       </div>
 
       <Card className="p-6">

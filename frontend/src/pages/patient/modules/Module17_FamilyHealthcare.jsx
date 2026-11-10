@@ -21,7 +21,6 @@ export default function Module17_FamilyHealthcare() {
     relation: 'Child',
     age: 8,
     knownConditions: '',
-    consentSigned: true,
   });
   const { addToast } = useToast();
 
@@ -38,49 +37,44 @@ export default function Module17_FamilyHealthcare() {
       }
     ]);
     setShowAddForm(false);
-    setNewMember({ name: '', relation: 'Child', age: 8, knownConditions: '', consentSigned: true });
+    setNewMember({ name: '', relation: 'Child', age: 8, knownConditions: '' });
     addToast({
       type: 'success',
-      title: 'Family Dependent Added',
-      message: `${newMember.name} added to authorized proxy management.`,
+      title: 'Family Member Added',
+      message: `${newMember.name} has been added.`,
     });
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Family Healthcare & Proxy Profiles
-            </h2>
-            <Badge variant="blue">DPDP Consent Proxy</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Manage dependent children and senior family members under authorized parental/guardian consent.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Family Healthcare
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Manage consultations and records for your family members.
           </p>
         </div>
 
         <Button size="sm" variant="primary" onClick={() => setShowAddForm(!showAddForm)}>
           <UserPlus className="w-4 h-4 text-aurora-midnight" />
-          <span>Add Dependent</span>
+          <span>Add Member</span>
         </Button>
       </div>
 
-      {/* Add Dependent Form */}
       {showAddForm && (
-        <Card className="p-6 space-y-4 border-aurora-teal/50">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Register Family Dependent</h3>
+        <Card className="p-6 space-y-4">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Add Family Member</h3>
           <form onSubmit={handleAddMember} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
               <input
                 type="text"
                 required
                 value={newMember.name}
                 onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-                placeholder="Dependent Full Name"
+                placeholder="Name"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
@@ -92,8 +86,8 @@ export default function Module17_FamilyHealthcare() {
                 onChange={(e) => setNewMember({ ...newMember, relation: e.target.value })}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
-                <option value="Child">Child / Minor (&lt;18)</option>
-                <option value="Parent">Parent / Senior Citizen</option>
+                <option value="Child">Child</option>
+                <option value="Parent">Parent</option>
                 <option value="Spouse">Spouse</option>
                 <option value="Sibling">Sibling</option>
               </select>
@@ -112,25 +106,24 @@ export default function Module17_FamilyHealthcare() {
             </div>
 
             <div className="sm:col-span-3">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Known Allergies or Chronic Conditions</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Known Allergies or Conditions</label>
               <input
                 type="text"
                 value={newMember.knownConditions}
                 onChange={(e) => setNewMember({ ...newMember, knownConditions: e.target.value })}
-                placeholder="e.g. Asthma, Penicillin allergy"
+                placeholder="e.g. Asthma, Penicillin allergy (optional)"
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
 
             <div className="sm:col-span-3 flex items-center justify-end gap-3 pt-2">
               <Button size="sm" variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
-              <Button size="sm" variant="primary" type="submit">Save Dependent Profile</Button>
+              <Button size="sm" variant="primary" type="submit">Save</Button>
             </div>
           </form>
         </Card>
       )}
 
-      {/* Members Grid */}
       {members.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {members.map((m) => (
@@ -140,22 +133,21 @@ export default function Module17_FamilyHealthcare() {
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white">{m.name}</h4>
                   <p className="text-xs text-aurora-teal font-semibold">{m.relation} • {m.age} years old</p>
                 </div>
-                <Badge variant="blue">Proxy Consent Granted</Badge>
               </div>
 
               {m.knownConditions && (
-                <div className="text-[11px] text-slate-500">
+                <div className="text-xs text-slate-500">
                   Conditions: <span className="text-slate-700 dark:text-slate-300 font-medium">{m.knownConditions}</span>
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-400">
                 <span>Added: {m.addedAt}</span>
                 <button
                   onClick={() => setMembers(members.filter(item => item.id !== m.id))}
-                  className="text-rose-500 hover:underline"
+                  className="text-rose-500 hover:underline font-semibold"
                 >
-                  Remove Dependent
+                  Remove
                 </button>
               </div>
             </Card>
@@ -164,9 +156,9 @@ export default function Module17_FamilyHealthcare() {
       ) : (
         <EmptyState
           icon={Users}
-          title="No Family Dependents Configured"
-          description="You have not enrolled any family members. Add children or senior parents to coordinate their consultations and triage under proxy consent."
-          actionLabel="Add Dependent Profile"
+          title="No family members added"
+          description="Add family members to book appointments and track records together."
+          actionLabel="Add Member"
           onAction={() => setShowAddForm(true)}
         />
       )}

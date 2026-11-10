@@ -6,9 +6,7 @@ import {
   ArrowRight, 
   User, 
   Stethoscope, 
-  ShieldAlert, 
-  CheckCircle2,
-  KeyRound
+  ShieldAlert
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -31,7 +29,7 @@ export default function LoginPage() {
       addToast({
         type: 'warning',
         title: 'Missing Fields',
-        message: 'Please provide both your registered email and password.',
+        message: 'Please enter both email and password.',
       });
       return;
     }
@@ -42,38 +40,38 @@ export default function LoginPage() {
       setLoading(false);
       addToast({
         type: 'success',
-        title: 'Authentication Successful',
-        message: `Welcome to HealthMate AI. Signed in as ${role}.`,
+        title: 'Signed In',
+        message: `Welcome. Signed in as ${role.toLowerCase()}.`,
       });
 
-      if (role === 'PATIENT') navigate('/patient');
-      else if (role === 'DOCTOR') navigate('/doctor');
-      else if (role === 'ADMINISTRATION') navigate('/admin');
-    }, 600);
+      if (role === 'PATIENT') navigate('/patient/dashboard');
+      else if (role === 'DOCTOR') navigate('/doctor/dashboard');
+      else if (role === 'ADMINISTRATION') navigate('/admin/dashboard');
+    }, 400);
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 space-y-8">
+    <div className="max-w-md mx-auto px-4 py-12 space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Sign In to HealthMate AI
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Sign In
         </h1>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Select your authorized role to access clinical, patient, or administrative workspaces.
+        <p className="mt-1 text-xs text-slate-500">
+          Select your role to access your account.
         </p>
       </div>
 
-      <Card className="p-8 space-y-6">
+      <Card className="p-6 space-y-5">
         {/* Role Selector Tabs */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-            Select Your Role (Strictly Tri-Role)
+          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+            Role
           </label>
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-aurora-midnight border border-slate-200 dark:border-slate-800">
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-aurora-midnight border border-slate-200 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setRole('PATIENT')}
-              className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 ${
+              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'PATIENT'
                   ? 'bg-aurora-teal text-aurora-midnight shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -86,7 +84,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole('DOCTOR')}
-              className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 ${
+              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'DOCTOR'
                   ? 'bg-aurora-blue text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -99,7 +97,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setRole('ADMINISTRATION')}
-              className={`py-2 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 ${
+              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
                 role === 'ADMINISTRATION'
                   ? 'bg-aurora-violet text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -112,10 +110,10 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-3.5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              Email Address
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Email
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -124,19 +122,19 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="registered@healthmate.ai"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-aurora-teal/50"
+                placeholder="name@example.com"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Password
               </label>
-              <Link to="/forgot-password" className="text-[11px] text-aurora-teal hover:underline font-semibold">
-                Forgot Password?
+              <Link to="/forgot-password" className="text-xs text-aurora-teal hover:underline">
+                Forgot?
               </Link>
             </div>
             <div className="relative">
@@ -146,8 +144,8 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-aurora-teal/50"
+                placeholder="Password"
+                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
           </div>
@@ -156,24 +154,24 @@ export default function LoginPage() {
             type="submit"
             loading={loading}
             variant={role === 'PATIENT' ? 'primary' : role === 'DOCTOR' ? 'blue' : 'violet'}
-            className="w-full mt-2"
+            className="w-full"
           >
-            <span>Sign In as {role}</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Sign In</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </form>
 
-        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
-          <span>Don't have an account? </span>
-          <Link to="/register" className="text-aurora-teal font-bold hover:underline">
-            Register here
+        <div className="pt-3 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
+          <span>New here? </span>
+          <Link to="/register" className="text-aurora-teal font-semibold hover:underline">
+            Create an account
           </Link>
         </div>
       </Card>
 
       <div className="text-center">
-        <Link to="/patient" className="text-xs text-slate-400 hover:text-aurora-teal transition-colors font-medium">
-          Continue as Anonymous Guest Patient (No Account Required) &rarr;
+        <Link to="/patient/dashboard" className="text-xs text-slate-400 hover:text-aurora-teal transition-colors">
+          Continue as Guest Patient &rarr;
         </Link>
       </div>
     </div>

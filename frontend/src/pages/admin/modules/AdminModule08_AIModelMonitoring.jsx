@@ -73,24 +73,21 @@ export default function AdminModule08_AIModelMonitoring() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              AI/ML Model Registry & Drift Telemetry
-            </h2>
-            <Badge variant="violet">MLflow Registry</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Real-time tracking of validation metrics, inference latencies, and Population Stability Index (PSI) drift alarms.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            AI Models & Telemetry
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Performance metrics, response latency, and model status.
           </p>
         </div>
 
         <Button size="sm" variant="violet" onClick={handleRunEvaluation} loading={evaluating}>
           <RefreshCw className="w-3.5 h-3.5 text-white" />
-          <span>Run Evaluation Benchmark</span>
+          <span>Run Evaluation</span>
         </Button>
       </div>
 

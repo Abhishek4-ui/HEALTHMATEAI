@@ -21,31 +21,28 @@ export default function AdminModule04_HospitalDirectory() {
       setSyncing(false);
       addToast({
         type: 'success',
-        title: 'Facility Sync Completed',
-        message: 'Google Places and ABDM HFR delta sync executed with zero duplicates.',
+        title: 'Sync Complete',
+        message: 'Hospital directory updated.',
       });
-    }, 1200);
+    }, 1000);
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Hospital & Facility Catalog Administration
-            </h2>
-            <Badge variant="blue">Automated Discovery</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Ingestion, normalization, and deduplication of clinics and hospitals across India.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Hospital Directory
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Registered hospitals and clinics across India.
           </p>
         </div>
 
         <Button size="sm" variant="blue" onClick={handleTriggerSync} loading={syncing}>
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>Trigger Registry Sync</span>
+          <span>Sync Directory</span>
         </Button>
       </div>
 

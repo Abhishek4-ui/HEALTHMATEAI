@@ -50,24 +50,21 @@ export default function AdminModule12_AuditLogs() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              DPDP Compliance & Access Audit Trails
-            </h2>
-            <Badge variant="teal">Immutable Records</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Cryptographically sealed access trails documenting administrative actions and patient consent changes.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Audit Trails
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Access trails documenting administrative actions and consent changes.
           </p>
         </div>
 
         <Button size="sm" variant="outline" onClick={handleExport}>
           <Download className="w-3.5 h-3.5" />
-          <span>Export Audit Log</span>
+          <span>Export Logs</span>
         </Button>
       </div>
 

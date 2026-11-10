@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Phone, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Phone, ArrowRight } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
@@ -25,7 +25,6 @@ export default function MobileOTPPage() {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value && index < 5) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();
@@ -36,7 +35,7 @@ export default function MobileOTPPage() {
     e.preventDefault();
     const enteredOtp = otp.join('');
     if (enteredOtp.length < 6) {
-      addToast({ type: 'warning', title: 'Incomplete OTP', message: 'Please enter all 6 digits.' });
+      addToast({ type: 'warning', title: 'Incomplete Code', message: 'Please enter all 6 digits.' });
       return;
     }
 
@@ -46,31 +45,31 @@ export default function MobileOTPPage() {
       login(role, email);
       addToast({
         type: 'success',
-        title: 'Phone Verified',
-        message: 'Your contact verification is complete.',
+        title: 'Verified',
+        message: 'Phone verification complete.',
       });
-      if (role === 'DOCTOR') navigate('/doctor');
-      else navigate('/patient');
-    }, 600);
+      if (role === 'DOCTOR') navigate('/doctor/dashboard');
+      else navigate('/patient/dashboard');
+    }, 400);
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-16 space-y-8">
+    <div className="max-w-md mx-auto px-4 py-12 space-y-6">
       <div className="text-center">
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center mx-auto mb-4">
-          <Phone className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center mx-auto mb-3">
+          <Phone className="w-5 h-5" />
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Verify Mobile OTP
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+          Verify Phone Number
         </h1>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          A 6-digit cryptographic verification code has been dispatched to <strong>{phone}</strong>.
+        <p className="mt-1 text-xs text-slate-500">
+          Enter the 6-digit code sent to <strong>{phone}</strong>.
         </p>
       </div>
 
-      <Card className="p-8 space-y-6">
-        <form onSubmit={handleVerify} className="space-y-6">
-          <div className="flex justify-between gap-2">
+      <Card className="p-6 space-y-5">
+        <form onSubmit={handleVerify} className="space-y-5">
+          <div className="flex justify-between gap-1.5">
             {otp.map((digit, idx) => (
               <input
                 key={idx}
@@ -80,14 +79,14 @@ export default function MobileOTPPage() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleOtpChange(idx, e.target.value)}
-                className="w-12 h-12 text-center text-lg font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-aurora-teal/50"
+                className="w-10 h-11 text-center text-base font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-slate-900 dark:text-white"
               />
             ))}
           </div>
 
           <Button type="submit" loading={loading} variant="primary" className="w-full">
-            <span>Verify & Authenticate</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>Verify & Continue</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </form>
 
@@ -95,10 +94,10 @@ export default function MobileOTPPage() {
           <span>Didn't receive code? </span>
           <button
             type="button"
-            onClick={() => addToast({ type: 'info', title: 'OTP Resent', message: 'A new 6-digit code has been dispatched.' })}
-            className="text-aurora-teal font-bold hover:underline"
+            onClick={() => addToast({ type: 'info', title: 'Code Resent', message: 'A new code has been sent.' })}
+            className="text-aurora-teal font-semibold hover:underline"
           >
-            Resend OTP
+            Resend
           </button>
         </div>
       </Card>

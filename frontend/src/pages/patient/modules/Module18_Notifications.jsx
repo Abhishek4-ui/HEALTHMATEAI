@@ -18,18 +18,18 @@ export default function Module18_Notifications() {
   const [notifications, setNotifications] = useState([
     {
       id: 'notif_1',
-      type: 'SECURITY',
-      title: 'Ephemeral Session Allocated',
-      message: 'Zero-trust Redis session active with 60-minute automatic TTL expiration.',
+      type: 'APPOINTMENTS',
+      title: 'Appointment Reminder',
+      message: 'Your teleconsultation with Dr. Aisha Sharma is tomorrow at 10:30 AM.',
       time: 'Just now',
       read: false,
     },
     {
       id: 'notif_2',
-      type: 'SYSTEM',
-      title: 'DPDP Act 2023 Consent Active',
-      message: 'Your personal data protection preferences are enforced across all interactions.',
-      time: '15 mins ago',
+      type: 'REPORTS',
+      title: 'Lab Report Analyzed',
+      message: 'Your Complete Blood Count report has been processed and is ready to view.',
+      time: '2 hours ago',
       read: true,
     }
   ]);
@@ -38,29 +38,25 @@ export default function Module18_Notifications() {
 
   const markAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    addToast({ type: 'info', title: 'Notifications Updated', message: 'All alerts marked as read.' });
+    addToast({ type: 'info', title: 'Updated', message: 'All notifications marked as read.' });
   };
 
   const clearAll = () => {
     setNotifications([]);
-    addToast({ type: 'info', title: 'Alerts Cleared', message: 'Notification tray emptied.' });
+    addToast({ type: 'info', title: 'Cleared', message: 'All notifications cleared.' });
   };
 
   const filtered = notifications.filter(n => filter === 'ALL' || n.type === filter);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              Notification & Security Alerts Center
-            </h2>
-            <Badge variant="teal">Real-Time Dispatch</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            System notices, teleconsultation reminders, and privacy audit logs.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Notifications
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Appointment updates, report analysis, and health reminders.
           </p>
         </div>
 
@@ -74,9 +70,8 @@ export default function Module18_Notifications() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 text-xs">
-        {['ALL', 'APPOINTMENT', 'SECURITY', 'SYSTEM'].map((cat) => (
+        {['ALL', 'APPOINTMENTS', 'REPORTS'].map((cat) => (
           <button
             key={cat}
             onClick={() => setFilter(cat)}
@@ -91,7 +86,6 @@ export default function Module18_Notifications() {
         ))}
       </div>
 
-      {/* Notification List */}
       {filtered.length > 0 ? (
         <div className="space-y-3">
           {filtered.map((n) => (
@@ -112,8 +106,8 @@ export default function Module18_Notifications() {
       ) : (
         <EmptyState
           icon={Bell}
-          title="No Notifications in this Category"
-          description="Your alert tray is clear. Important appointment reminders and security alerts will appear here."
+          title="No notifications"
+          description="You are all caught up."
         />
       )}
     </div>

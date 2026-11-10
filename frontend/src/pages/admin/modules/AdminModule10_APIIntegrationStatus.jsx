@@ -33,24 +33,21 @@ export default function AdminModule10_APIIntegrationStatus() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-              External API Integration & Service Health
-            </h2>
-            <Badge variant="teal">8 Active Endpoints</Badge>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Real-time status monitoring, response latencies, and fallback failover telemetry.
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            API Services & Integrations
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Status and response times for connected external services.
           </p>
         </div>
 
         <Button size="sm" variant="primary" onClick={handlePingAll} loading={checking}>
           <RefreshCw className="w-3.5 h-3.5 text-aurora-midnight" />
-          <span>Ping All Services</span>
+          <span>Test All Services</span>
         </Button>
       </div>
 
