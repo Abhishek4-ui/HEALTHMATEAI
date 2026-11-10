@@ -6,7 +6,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 
-// Public Pages
+// Public Layout & Pages
+import PublicLayout from './pages/public/PublicLayout';
 import HomePage from './pages/public/HomePage';
 import AboutPage from './pages/public/AboutPage';
 import FeaturesPage from './pages/public/FeaturesPage';
@@ -88,28 +89,30 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <ToastProvider>
-          <div className="min-h-screen bg-slate-50 dark:bg-midnight-navy text-slate-800 dark:text-slate-100 transition-colors duration-200">
+          <div className="min-h-screen bg-slate-50 dark:bg-aurora-midnight text-slate-800 dark:text-slate-100 transition-colors duration-200">
             <Routes>
               {/* Public Marketing Routes */}
-              <Route path="/" element={<HomePage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/how-it-works" element={<HowItWorksPage />} />
-              <Route path="/ai-technology" element={<AITechnologyPage />} />
-              <Route path="/privacy-security" element={<PrivacySecurityPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPolicyPage />} />
-
-              {/* Authentication Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/verify-otp" element={<MobileOTPPage />} />
-              <Route path="/verify-email" element={<EmailVerificationPage />} />
-              <Route path="/session-expired" element={<SessionExpiredPage />} />
-              <Route path="/logout-confirm" element={<LogoutConfirmPage />} />
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/features" element={<FeaturesPage />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/ai-technology" element={<AITechnologyPage />} />
+                <Route path="/privacy-security" element={<PrivacySecurityPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                
+                {/* Authentication Routes inside Public Layout */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/verify-otp" element={<MobileOTPPage />} />
+                <Route path="/verify-email" element={<EmailVerificationPage />} />
+                <Route path="/session-expired" element={<SessionExpiredPage />} />
+                <Route path="/logout-confirm" element={<LogoutConfirmPage />} />
+              </Route>
 
               {/* Patient Portal Routes */}
               <Route path="/patient" element={<PatientLayout />}>

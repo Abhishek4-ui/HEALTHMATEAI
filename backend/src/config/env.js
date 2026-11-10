@@ -7,7 +7,7 @@ dotenv.config();
 
 const config = {
   env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '5000', 10),
+  port: parseInt(process.env.PORT || '5001', 10),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   aiServiceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',
 
