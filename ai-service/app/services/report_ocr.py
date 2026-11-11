@@ -30,13 +30,13 @@ class ReportOCRExtractor:
         # Pattern search heuristics for clinical laboratory parameters
         patterns = {
             "hemoglobin": r"(?:hemoglobin|hb)\s*(?:level|count)?\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
-            "wbc": r"(?:wbc count|wbc|tlc|total leukocyte count)\s*[:=-]?\s*([0-9]+,?([0-9]+)?)",
+            "wbc": r"(?:wbc count|total leukocyte count|wbc|tlc)\s*[:=-]?\s*([0-9]+,?([0-9]+)?)",
             "platelets": r"(?:platelet count|platelets)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
-            "fasting_glucose": r"(?:fasting blood glucose|fasting blood sugar|fasting glucose|fbs)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
+            "fasting_glucose": r"(?:fasting blood sugar|blood sugar fasting|fasting blood glucose|blood glucose fasting|fasting glucose|fbs)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
             "hba1c": r"(?:hba1c|glycated hemoglobin)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
-            "cholesterol": r"(?:total cholesterol|cholesterol)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
+            "cholesterol": r"(?:total cholesterol|cholesterol total|cholesterol)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
             "triglycerides": r"(?:triglycerides|tg)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
-            "creatinine": r"(?:serum creatinine|creatinine)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
+            "creatinine": r"(?:serum creatinine|s\.?\s*creatinine|creatinine)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
             "urea": r"(?:blood urea nitrogen|blood urea|urea|bun)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
             "tsh": r"(?:tsh|thyroid stimulating hormone)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
             "alt_sgpt": r"(?:sgpt|alt)\s*[:=-]?\s*([0-9]+\.?[0-9]*)",
@@ -73,17 +73,10 @@ class ReportOCRExtractor:
                 except ValueError:
                     pass
 
-        # If no regex matched directly (e.g. general text or clean scan), provide standard baseline panel
-        if not extracted_biomarkers:
-            extracted_biomarkers = [
-                {"name": "Hemoglobin (Hb)", "panel": "Complete Blood Count", "observed": "13.6", "unit": "g/dL", "reference": "12.0 - 17.5", "flag": "NORMAL"},
-                {"name": "Total Leukocyte Count (WBC)", "panel": "Complete Blood Count", "observed": "7,400", "unit": "/mcL", "reference": "4,000 - 11,000", "flag": "NORMAL"},
-                {"name": "Fasting Blood Glucose", "panel": "Glycemic Profile", "observed": "92", "unit": "mg/dL", "reference": "70 - 100", "flag": "NORMAL"},
-                {"name": "Serum Creatinine", "panel": "Renal Function", "observed": "0.95", "unit": "mg/dL", "reference": "0.6 - 1.2", "flag": "NORMAL"}
-            ]
-
         # Clinical Summary Synthesis
-        if abnormal_count > 0:
+        if not extracted_biomarkers:
+            summary = "No standard laboratory blood biomarkers were detected in this document. Please ensure you upload a laboratory pathology report."
+        elif abnormal_count > 0:
             summary = f"Detected {abnormal_count} parameter(s) outside standard reference intervals. Please review with your treating physician."
         else:
             summary = "All extracted parameters are within standard clinical laboratory reference intervals."
@@ -94,7 +87,7 @@ class ReportOCRExtractor:
             "biomarkers": extracted_biomarkers,
             "abnormal_findings_count": abnormal_count,
             "clinical_summary": summary,
-            "disclaimer": "Automated OCR biomarker extraction. Values should be verified against original physical laboratory report."
+            "disclaimer": "Automated OCR biomarker extraction for research and informational awareness. Values should be verified against original physical laboratory report."
         }
 
 report_ocr_extractor = ReportOCRExtractor()

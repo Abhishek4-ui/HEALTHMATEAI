@@ -84,8 +84,15 @@ class SymptomClassifier:
                 "triage": "INSUFFICIENT_DATA"
             }
 
-        # Check for emergency red flags directly
-        emergency_keywords = ["chest pain", "arm pain", "shortness of breath", "unconscious", "hemoptysis", "stroke", "paralysis"]
+        # Check for emergency red flags directly using clinical triage keywords and equivalents
+        emergency_keywords = [
+            "chest pain", "arm pain", "shortness of breath", "breathlessness", "chest tightness",
+            "retrosternal", "substernal", "crushing pain", "pressure in chest", "unconscious", "unresponsive",
+            "hemoptysis", "coughing blood", "bright red blood", "stroke", "paralysis", "facial droop",
+            "slurred speech", "slurred words", "thunderclap", "worst headache", "cannot breathe",
+            "inability to breathe", "stridor", "choking", "gasping", "cyanosis", "severe bleeding",
+            "bleeding profusely", "neck stiffness", "neck rigidity", "confusion", "tearing chest"
+        ]
         has_emergency = any(k in cleaned for k in emergency_keywords)
 
         vec = self.vectorizer.transform([cleaned])
