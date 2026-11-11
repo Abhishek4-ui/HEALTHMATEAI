@@ -6,6 +6,7 @@ import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { apiClient } from '../../../services/api';
+import { sendFirebasePhoneOtp, verifyFirebasePhoneOtp } from '../../../config/firebase';
 
 export default function MobileOTPPage() {
   const location = useLocation();
@@ -25,12 +26,36 @@ export default function MobileOTPPage() {
   const [resending, setResending] = useState(false);
   const [currentOtpCode, setCurrentOtpCode] = useState(initialBackupOtp);
   const [showBackupAssistance, setShowBackupAssistance] = useState(false);
+  const [firebaseActive, setFirebaseActive] = useState(false);
 
-  // If no OTP was passed in state, request one
+  // If phone is provided, trigger Google Firebase Phone SMS dispatch
   useEffect(() => {
+    let isMounted = true;
+    if (phone) {
+      sendFirebasePhoneOtp(phone)
+        .then(() => {
+          if (isMounted) {
+            setFirebaseActive(true);
+            addToast({
+              type: 'success',
+              title: 'SMS Sent',
+              message: `Verification code dispatched via Google SMS to ${phone}.`,
+            });
+          }
+        })
+        .catch(err => {
+          console.warn('Firebase SMS dispatch notice:', err.message);
+          // Seamlessly fallback to backend carrier SMS
+        });
+    }
+
     if (!currentOtpCode && email) {
       handleResend(true);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleOtpChange = (index, value) => {
@@ -77,35 +102,51 @@ export default function MobileOTPPage() {
 
     setLoading(true);
     try {
-      try {
-        await apiClient.post('/auth/otp/verify', {
-          target: email,
-          phone,
-          type: 'EMAIL',
-          otp: enteredOtp,
-          purpose: 'VERIFICATION',
-        });
-      } catch (backendErr) {
-        // Also check against phone directly if email route missed it
-        if (phone) {
-          try {
-            await apiClient.post('/auth/otp/verify', {
-              target: phone,
-              type: 'MOBILE',
-              otp: enteredOtp,
-              purpose: 'VERIFICATION',
-            });
-          } catch (phoneErr) {
-            if (currentOtpCode && enteredOtp === currentOtpCode) {
-              // Validated against synchronized session code
-            } else {
-              throw backendErr;
+      let isVerified = false;
+
+      // 1. Check with Google Firebase Phone Auth if session is active
+      if (firebaseActive) {
+        try {
+          const fbSuccess = await verifyFirebasePhoneOtp(enteredOtp);
+          if (fbSuccess) isVerified = true;
+        } catch (fbErr) {
+          console.warn('Firebase verify check notice:', fbErr.message);
+        }
+      }
+
+      // 2. Check with Backend Carrier SMS and Database API
+      if (!isVerified) {
+        try {
+          await apiClient.post('/auth/otp/verify', {
+            target: email,
+            phone,
+            type: 'EMAIL',
+            otp: enteredOtp,
+            purpose: 'VERIFICATION',
+          });
+          isVerified = true;
+        } catch (backendErr) {
+          if (phone) {
+            try {
+              await apiClient.post('/auth/otp/verify', {
+                target: phone,
+                type: 'MOBILE',
+                otp: enteredOtp,
+                purpose: 'VERIFICATION',
+              });
+              isVerified = true;
+            } catch (phoneErr) {
+              if (currentOtpCode && enteredOtp === currentOtpCode) {
+                isVerified = true;
+              } else {
+                throw backendErr;
+              }
             }
+          } else if (currentOtpCode && enteredOtp === currentOtpCode) {
+            isVerified = true;
+          } else {
+            throw backendErr;
           }
-        } else if (currentOtpCode && enteredOtp === currentOtpCode) {
-          // Validated against synchronized session code
-        } else {
-          throw backendErr;
         }
       }
 
@@ -135,6 +176,14 @@ export default function MobileOTPPage() {
   const handleResend = async (silent = false) => {
     setResending(true);
     try {
+      // 1. Try Firebase Phone SMS re-send if phone exists
+      if (phone) {
+        sendFirebasePhoneOtp(phone)
+          .then(() => setFirebaseActive(true))
+          .catch(() => {});
+      }
+
+      // 2. Also dispatch backend carrier SMS & Email
       const res = await apiClient.post('/auth/otp/send', {
         target: email,
         phone,
@@ -173,6 +222,9 @@ export default function MobileOTPPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-12 space-y-6">
+      {/* Invisible container for Google reCAPTCHA phone verification */}
+      <div id="recaptcha-container"></div>
+
       <div className="text-center">
         <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-3 shadow-sm border border-teal-100 dark:border-teal-900">
           <KeyRound className="w-6 h-6" />
@@ -189,7 +241,7 @@ export default function MobileOTPPage() {
       </div>
 
       <Card className="p-6 space-y-6">
-        {/* Verification Status Notification Banner (No code shown on screen) */}
+        {/* Verification Status Notification Banner */}
         <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-center space-y-1.5 shadow-sm">
           <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-teal-800 dark:text-teal-300">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
