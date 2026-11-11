@@ -46,12 +46,45 @@ class CommunicationService {
   }
 
   /**
-   * Send Email Notification (via Resend HTTP API or SMTP)
+   * Send Email Notification (via Brevo HTTP API, Resend HTTP API, or SMTP)
    */
   async sendEmail({ to, subject, html, text }) {
     if (!to) return { success: false, reason: 'NO_RECIPIENT' };
 
-    // Try Resend API if EMAIL_API_KEY is present
+    // 1. Try Brevo (Sendinblue) HTTPS API (Port 443, reliable on Render)
+    const brevoKey = process.env.BREVO_API_KEY;
+    if (brevoKey && brevoKey.startsWith('xkeysib-')) {
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          signal: AbortSignal.timeout(3000),
+          headers: {
+            'api-key': brevoKey,
+            'Content-Type': 'application/json',
+            'accept': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: 'HealthMate AI', email: process.env.SMTP_USER || 'abhishekgga140@gmail.com' },
+            to: [{ email: to }],
+            subject,
+            htmlContent: html || `<p>${text}</p>`,
+            textContent: text || '',
+          }),
+        });
+
+        const brevoData = await brevoRes.json();
+        if (brevoRes.ok) {
+          logger.info('Email sent successfully via Brevo API', { messageId: brevoData.messageId, to });
+          return { success: true, provider: 'brevo', messageId: brevoData.messageId };
+        } else {
+          logger.warn('Brevo API response:', { message: brevoData.message, code: brevoData.code, to });
+        }
+      } catch (brevoErr) {
+        logger.warn('Brevo API delivery error, attempting fallback:', { error: brevoErr.message });
+      }
+    }
+
+    // 2. Try Resend API if EMAIL_API_KEY is present
     if (process.env.EMAIL_API_KEY && process.env.EMAIL_API_KEY.startsWith('re_')) {
       try {
         const res = await fetch('https://api.resend.com/emails', {
@@ -79,7 +112,7 @@ class CommunicationService {
       }
     }
 
-    // Fallback to Nodemailer SMTP
+    // 3. Fallback to Nodemailer SMTP
     if (this.smtpTransporter) {
       try {
         const info = await this.smtpTransporter.sendMail({
@@ -96,34 +129,86 @@ class CommunicationService {
       }
     }
 
-    // If both real providers failed or are unconfigured, return honest provider failure status
+    // If all real providers failed or are unconfigured, return honest provider failure status
     logger.warn('Email delivery failed across all configured providers', { to });
     return {
       success: false,
       provider: 'none',
       error: 'EMAIL_DELIVERY_FAILED',
-      message: 'Email could not be delivered. In development, Resend requires verified recipient (abhishekgga140@gmail.com) and Gmail SMTP requires a 16-character App Password.'
+      message: 'Email could not be delivered.'
     };
   }
 
   /**
-   * Send SMS Notification via Twilio
+   * Send SMS Notification (via Fast2SMS Indian Gateway or Twilio)
    */
   async sendSMS({ to, body }) {
     if (process.env.SMS_ENABLED === 'false') {
       return {
         success: false,
-        provider: 'twilio',
+        provider: 'none',
         error: 'SMS_DISABLED_BY_CONFIG',
-        message: 'SMS dispatch is administratively disabled or requires verified TRAI DLT registration and production sender ID in production.'
+        message: 'SMS dispatch is administratively disabled.'
       };
     }
 
     if (!to) return { success: false, reason: 'NO_PHONE_NUMBER' };
 
+    // Clean Indian phone number to 10 digits
+    const cleanedDigits = to.replace(/\D/g, '');
+    const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
+
+    // 1. Try Fast2SMS Indian SMS Gateway (Direct HTTPS Port 443 to Indian Carriers)
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
+    if (fast2smsKey && mobile10.length === 10) {
+      try {
+        // Extract 6-digit OTP from message body if present
+        const otpMatch = body.match(/\b\d{6}\b/);
+        const otpCode = otpMatch ? otpMatch[0] : '';
+
+        // Try OTP Route first
+        if (otpCode) {
+          const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&variables_values=${otpCode}&route=otp&numbers=${mobile10}`;
+          const fastRes = await fetch(otpUrl, { method: 'GET', signal: AbortSignal.timeout(3000) });
+          const fastData = await fastRes.json();
+          if (fastData.return || fastData.status_code === 200) {
+            logger.info('SMS delivered via Fast2SMS OTP route', { to: mobile10, reqId: fastData.request_id });
+            return { success: true, provider: 'fast2sms', requestId: fastData.request_id };
+          } else {
+            logger.warn('Fast2SMS OTP route response:', fastData);
+          }
+        }
+
+        // Try Quick SMS Route fallback
+        const quickRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+          method: 'POST',
+          signal: AbortSignal.timeout(3000),
+          headers: {
+            'authorization': fast2smsKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            route: 'q',
+            message: body,
+            flash: 0,
+            numbers: mobile10
+          })
+        });
+        const quickData = await quickRes.json();
+        if (quickData.return || quickData.status_code === 200) {
+          logger.info('SMS delivered via Fast2SMS Quick route', { to: mobile10, reqId: quickData.request_id });
+          return { success: true, provider: 'fast2sms', requestId: quickData.request_id };
+        } else {
+          logger.warn('Fast2SMS Quick route response:', quickData);
+        }
+      } catch (fastErr) {
+        logger.warn('Fast2SMS delivery error, attempting Twilio fallback:', { error: fastErr.message });
+      }
+    }
+
+    // 2. Try Twilio Fallback
     let formattedPhone = to.trim();
     if (!formattedPhone.startsWith('+')) {
-      // Standardize Indian mobile number
       if (formattedPhone.length === 10) formattedPhone = `+91${formattedPhone}`;
       else formattedPhone = `+${formattedPhone}`;
     }
@@ -148,7 +233,6 @@ class CommunicationService {
           provider: 'twilio',
           error: 'TWILIO_PROVIDER_ERROR',
           details: twErr.message,
-          message: 'SMS delivery rejected by Twilio. Trial accounts require provisioned Twilio phone numbers and verified recipient numbers.'
         };
       }
     }
