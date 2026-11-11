@@ -44,9 +44,22 @@ class AuthController {
   async sendOTP(req, res, next) {
     try {
       const { target, type, purpose, phone } = req.body;
-      const result = await otpService.sendOTP(target, type, purpose);
-      if (phone) {
-        await otpService.sendOTP(phone, 'MOBILE', purpose || 'VERIFICATION', result.rawOTP).catch(() => {});
+      const targetPhone = phone || (type === 'MOBILE' ? target : null);
+      const targetEmail = type === 'EMAIL' ? target : (phone ? null : target);
+
+      let result = null;
+      if (targetEmail) {
+        result = await otpService.sendOTP(targetEmail, 'EMAIL', purpose || 'VERIFICATION');
+      }
+      if (targetPhone) {
+        const phoneResult = await otpService.sendOTP(targetPhone, 'MOBILE', purpose || 'VERIFICATION', result?.rawOTP || null).catch((e) => {
+          logger.warn('Mobile SMS dispatch error in sendOTP controller:', { error: e.message, phone: targetPhone });
+          return null;
+        });
+        if (!result && phoneResult) result = phoneResult;
+      }
+      if (!result) {
+        result = await otpService.sendOTP(target, type || 'EMAIL', purpose || 'VERIFICATION');
       }
       return successResponse(res, result, 'Verification code dispatched.');
     } catch (err) {

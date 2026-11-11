@@ -71,7 +71,9 @@ class AuthService {
     // 5. Send unified verification OTP (exact same code to both email and phone)
     const otpResult = await otpService.sendOTP(user.email, 'EMAIL', 'VERIFICATION');
     if (user.phone) {
-      await otpService.sendOTP(user.phone, 'MOBILE', 'VERIFICATION', otpResult.rawOTP).catch(() => {});
+      await otpService.sendOTP(user.phone, 'MOBILE', 'VERIFICATION', otpResult.rawOTP).catch((err) => {
+        logger.warn('Mobile OTP dispatch warning during register:', { error: err.message, phone: user.phone });
+      });
     }
 
     return {

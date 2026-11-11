@@ -36,7 +36,7 @@ class CommunicationService {
       try {
         const twilio = require('twilio');
         this.twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN, {
-          timeout: 2000, // 2s timeout to prevent test hangs
+          timeout: 10000, // 10s timeout to allow real carrier SMS delivery
         });
         logger.info('Twilio SMS client initialized', { accountSid: process.env.TWILIO_ACCOUNT_SID });
       } catch (twErr) {

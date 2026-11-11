@@ -28,29 +28,24 @@ export default function MobileOTPPage() {
   const [showBackupAssistance, setShowBackupAssistance] = useState(false);
   const [firebaseActive, setFirebaseActive] = useState(false);
 
-  // If phone is provided, trigger Google Firebase Phone SMS dispatch
+  // Always trigger fresh carrier SMS & email dispatch upon landing on this page
   useEffect(() => {
     let isMounted = true;
+
+    // 1. Dispatches real carrier SMS to phone and email via backend
+    handleResend(true);
+
+    // 2. Also initialize Firebase phone verification session in parallel
     if (phone) {
       sendFirebasePhoneOtp(phone)
         .then(() => {
           if (isMounted) {
             setFirebaseActive(true);
-            addToast({
-              type: 'success',
-              title: 'SMS Sent',
-              message: `Verification code dispatched via Google SMS to ${phone}.`,
-            });
           }
         })
         .catch(err => {
-          console.warn('Firebase SMS dispatch notice:', err.message);
-          // Seamlessly fallback to backend carrier SMS
+          console.warn('Firebase SMS dispatch notice:', err?.message);
         });
-    }
-
-    if (!currentOtpCode && email) {
-      handleResend(true);
     }
 
     return () => {
