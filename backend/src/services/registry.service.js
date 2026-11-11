@@ -379,6 +379,14 @@ const OFFICIAL_CREDENTIAL_DOCTORS = [
 ];
 
 class RegistryService {
+  getOfficialHospitalsDataset() {
+    return OFFICIAL_INDIAN_HOSPITALS;
+  }
+
+  getOfficialDoctorsDataset() {
+    return OFFICIAL_CREDENTIAL_DOCTORS;
+  }
+
   /**
    * Synchronize and ingest authorized Indian healthcare datasets idempotently
    */

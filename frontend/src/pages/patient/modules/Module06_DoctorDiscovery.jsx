@@ -7,9 +7,12 @@ import {
   Calendar, 
   Navigation,
   ExternalLink,
-  ShieldCheck,
+  ShieldCheck, 
   AlertCircle,
-  Building
+  Building,
+  Phone,
+  GraduationCap,
+  Award
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -23,7 +26,12 @@ export default function Module06_DoctorDiscovery() {
   const [specialty, setSpecialty] = useState('ALL');
   const [stateFilter, setStateFilter] = useState('ALL');
   const [cityFilter, setCityFilter] = useState('');
+  const [pincodeFilter, setPincodeFilter] = useState('');
+  const [qualificationFilter, setQualificationFilter] = useState('');
   const [verificationFilter, setVerificationFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('default');
+  const [userCoords, setUserCoords] = useState(null);
+
   const [isLocating, setIsLocating] = useState(false);
   const [doctorsList, setDoctorsList] = useState([]);
   const [searched, setSearched] = useState(false);
@@ -31,10 +39,9 @@ export default function Module06_DoctorDiscovery() {
 
   const { addToast } = useToast();
 
-  // Load initial doctors on mount
   useEffect(() => {
     loadDoctors();
-  }, []);
+  }, [sortBy]);
 
   const loadDoctors = async (overrideFilters = {}) => {
     setLoading(true);
@@ -44,7 +51,12 @@ export default function Module06_DoctorDiscovery() {
         specialization: specialty !== 'ALL' ? specialty : undefined,
         state: stateFilter !== 'ALL' ? stateFilter : undefined,
         city: cityFilter || undefined,
+        pincode: pincodeFilter || undefined,
+        qualification: qualificationFilter || undefined,
         verificationStatus: verificationFilter !== 'ALL' ? verificationFilter : undefined,
+        latitude: userCoords?.latitude,
+        longitude: userCoords?.longitude,
+        sortBy: sortBy !== 'default' ? sortBy : undefined,
         ...overrideFilters,
       });
       setDoctorsList(response.doctors || []);
@@ -73,14 +85,21 @@ export default function Module06_DoctorDiscovery() {
         setIsLocating(false);
         setSearched(true);
         setLoading(true);
+        const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        setUserCoords(coords);
         try {
           const response = await discoveryService.getNearbyFacilities(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            25000,
+            coords.latitude,
+            coords.longitude,
+            30000,
             'doctor'
           );
           setDoctorsList(response.doctors || []);
+          addToast({
+            type: 'success',
+            title: 'Nearby Doctors Located',
+            message: `Found ${response.doctors?.length || 0} providers within 30 km.`,
+          });
         } catch (err) {
           setDoctorsList([]);
         } finally {
@@ -94,6 +113,31 @@ export default function Module06_DoctorDiscovery() {
     );
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSpecialty('ALL');
+    setStateFilter('ALL');
+    setCityFilter('');
+    setPincodeFilter('');
+    setQualificationFilter('');
+    setVerificationFilter('ALL');
+    setSortBy('default');
+    setUserCoords(null);
+    setSearched(false);
+    loadDoctors({
+      search: undefined,
+      specialization: undefined,
+      state: undefined,
+      city: undefined,
+      pincode: undefined,
+      qualification: undefined,
+      verificationStatus: undefined,
+      latitude: undefined,
+      longitude: undefined,
+      sortBy: undefined,
+    });
+  };
+
   const renderBadge = (doc) => {
     if (doc.verificationStatus === 'CREDENTIAL_VERIFIED') {
       return (
@@ -103,7 +147,7 @@ export default function Module06_DoctorDiscovery() {
         </Badge>
       );
     }
-    if (doc.verificationStatus === 'SOURCE_VERIFIED' || doc.sourceType === 'OPEN_GOVERNMENT_DATA_INDIA') {
+    if (doc.verificationStatus === 'SOURCE_VERIFIED' || doc.sourceType === 'OPEN_GOVERNMENT_DATA_INDIA' || doc.sourceType === 'NATIONAL_HEALTH_REGISTRY') {
       return (
         <Badge variant="blue" className="flex items-center gap-1 text-[10px]">
           <Building className="w-3 h-3" />
@@ -114,7 +158,7 @@ export default function Module06_DoctorDiscovery() {
     return (
       <Badge variant="amber" className="flex items-center gap-1 text-[10px]">
         <AlertCircle className="w-3 h-3" />
-        <span>Google Places Listing</span>
+        <span>Discovered Listing</span>
       </Badge>
     );
   };
@@ -167,36 +211,35 @@ export default function Module06_DoctorDiscovery() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Specialization</label>
               <select
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
-                <option value="ALL">All Specializations</option>
+                <option value="ALL">All Specialties</option>
                 <option value="Cardiology">Cardiology</option>
                 <option value="Neurology">Neurology</option>
                 <option value="Oncology">Oncology</option>
                 <option value="Orthopedics">Orthopedics</option>
                 <option value="Pediatrics">Pediatrics</option>
                 <option value="General Medicine">General Medicine</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Endocrinology">Endocrinology</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Verification Status</label>
-              <select
-                value={verificationFilter}
-                onChange={(e) => setVerificationFilter(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
-              >
-                <option value="ALL">All Statuses</option>
-                <option value="CREDENTIAL_VERIFIED">Council Verified</option>
-                <option value="SOURCE_VERIFIED">Govt Registry Verified</option>
-                <option value="DISCOVERED">Discovered (Google Places)</option>
-              </select>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Qualification</label>
+              <input
+                type="text"
+                value={qualificationFilter}
+                onChange={(e) => setQualificationFilter(e.target.value)}
+                placeholder="MBBS, MD, MS"
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+              />
             </div>
 
             <div>
@@ -204,7 +247,7 @@ export default function Module06_DoctorDiscovery() {
               <select
                 value={stateFilter}
                 onChange={(e) => setStateFilter(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
                 <option value="ALL">All States</option>
                 <option value="Delhi">Delhi</option>
@@ -212,6 +255,8 @@ export default function Module06_DoctorDiscovery() {
                 <option value="Maharashtra">Maharashtra</option>
                 <option value="Tamil Nadu">Tamil Nadu</option>
                 <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Gujarat">Gujarat</option>
               </select>
             </div>
 
@@ -221,9 +266,36 @@ export default function Module06_DoctorDiscovery() {
                 type="text"
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                placeholder="e.g. New Delhi"
-                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                placeholder="City name"
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">PIN Code</label>
+              <input
+                type="text"
+                value={pincodeFilter}
+                onChange={(e) => setPincodeFilter(e.target.value)}
+                placeholder="e.g. 110029"
+                maxLength={6}
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Sort By</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+              >
+                <option value="default">Council Rank</option>
+                <option value="distance">Distance (Nearest)</option>
+                <option value="experience">Experience</option>
+                <option value="rating">Rating</option>
+                <option value="fee">Consultation Fee</option>
+              </select>
             </div>
           </div>
         </form>
@@ -235,7 +307,7 @@ export default function Module06_DoctorDiscovery() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {doctorsList.map((doc, idx) => {
               const degrees = Array.isArray(doc.qualifications)
-                ? doc.qualifications.map(q => q.degree).join(', ')
+                ? doc.qualifications.map(q => q.degree || q).join(', ')
                 : (doc.qualifications || 'Qualified Practitioner');
 
               return (
@@ -249,28 +321,55 @@ export default function Module06_DoctorDiscovery() {
                         <div>
                           <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{doc.fullName}</h4>
                           <p className="text-xs text-aurora-teal font-medium">{doc.specialization}</p>
-                          <p className="text-[11px] text-slate-400">
-                            {degrees}
-                            {doc.experienceYears ? ` • ${doc.experienceYears} yrs experience` : ''}
+                          <p className="text-[11px] text-slate-400 flex items-center gap-1.5 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3 text-slate-400" />
+                              {degrees}
+                            </span>
+                            {doc.experienceYears && (
+                              <span>• {doc.experienceYears} yrs exp</span>
+                            )}
                           </p>
                         </div>
                       </div>
-                      {renderBadge(doc)}
+                      <div className="flex flex-col items-end gap-1">
+                        {renderBadge(doc)}
+                        {doc.distanceKm !== null && doc.distanceKm !== undefined && (
+                          <span className="text-[10px] font-mono font-semibold text-aurora-teal bg-teal-50 dark:bg-teal-950/50 px-1.5 py-0.5 rounded">
+                            📍 {doc.distanceKm} km
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {doc.medicalRegistrationNumber && (
-                      <div className="text-[10px] text-slate-500 font-mono">
-                        Reg: <span className="font-semibold text-slate-700 dark:text-slate-300">{doc.medicalRegistrationNumber}</span> ({doc.stateMedicalCouncil || 'Medical Council of India'})
+                      <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1.5">
+                        <Award className="w-3 h-3 text-aurora-teal" />
+                        <span>Reg:</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">{doc.medicalRegistrationNumber}</span>
+                        <span>({doc.stateMedicalCouncil || 'Medical Council of India'})</span>
                       </div>
                     )}
 
                     <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-aurora-midnight text-[11px] space-y-1">
                       <div className="text-slate-500 flex items-center gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{doc.address?.street ? `${doc.address.street}, ` : ''}{doc.address?.city || 'India'}</span>
+                        <span className="truncate">
+                          {doc.address?.street ? `${doc.address.street}, ` : ''}
+                          {doc.address?.city || 'India'}
+                          {doc.address?.pincode ? ` - ${doc.address.pincode}` : ''}
+                        </span>
                       </div>
+
+                      {doc.contact?.phone && (
+                        <div className="text-slate-500 flex items-center gap-1.5">
+                          <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span>{doc.contact.phone}</span>
+                        </div>
+                      )}
+
                       {doc.bookingNotice && (
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
                           {doc.bookingNotice}
                         </p>
                       )}
@@ -281,7 +380,9 @@ export default function Module06_DoctorDiscovery() {
                     <div className="flex items-center gap-3">
                       <div>
                         <span className="text-slate-400 text-[11px]">Fee: </span>
-                        <span className="font-bold text-slate-900 dark:text-white">₹{doc.consultationFee || 500}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {doc.consultationFee ? `₹${doc.consultationFee}` : 'Standard'}
+                        </span>
                       </div>
                       {doc.directionsUrl && (
                         <a
@@ -320,10 +421,10 @@ export default function Module06_DoctorDiscovery() {
             icon={Stethoscope}
             title={searched ? 'No doctors found' : 'Find a Doctor'}
             description={searched 
-              ? 'No doctors matched your criteria. Try adjusting your specialty or state filters.' 
-              : 'Search by specialty, location, or click Near Me to locate doctors nearby.'}
-            actionLabel={searched ? 'Clear Filters' : undefined}
-            onAction={searched ? () => { setSearchQuery(''); setSpecialty('ALL'); setStateFilter('ALL'); setCityFilter(''); setVerificationFilter('ALL'); setSearched(false); loadDoctors({ search: '', specialization: undefined, state: undefined, city: undefined, verificationStatus: undefined }); } : undefined}
+              ? 'No doctors matched your criteria. Try adjusting your specialty, city or PIN code filters.' 
+              : 'Search by specialty, PIN code, or click Near Me to locate doctors nearby.'}
+            actionLabel={searched ? 'Reset Filters' : undefined}
+            onAction={searched ? handleResetFilters : undefined}
           />
         )}
       </div>

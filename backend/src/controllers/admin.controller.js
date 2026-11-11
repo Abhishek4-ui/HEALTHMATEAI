@@ -1,5 +1,6 @@
 const monitoringService = require('../services/monitoring.service');
 const auditService = require('../services/audit.service');
+const syncService = require('../services/sync.service');
 const { DoctorVerification, DoctorProfile, User, Hospital } = require('../models');
 const { successResponse, errorResponse } = require('../utils/response');
 
@@ -123,6 +124,101 @@ class AdminController {
       return successResponse(res, result, 'Audit logs retrieved.');
     } catch (err) {
       return errorResponse(res, err.message, 500, 'AUDIT_LOG_ERROR');
+    }
+  }
+
+  async getSyncStatus(req, res, next) {
+    try {
+      const status = await syncService.getSyncStatus();
+      return successResponse(res, status, 'Synchronization status retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'SYNC_STATUS_ERROR');
+    }
+  }
+
+  async triggerSync(req, res, next) {
+    try {
+      const result = await syncService.executeSyncJob(req.body.triggerType || 'ADMIN_MANUAL');
+      await auditService.recordEvent({
+        actorId: req.user.id,
+        actorRole: 'ADMINISTRATION',
+        action: 'TRIGGER_DATA_SYNC',
+        targetResource: { resourceType: 'SYNC_JOB', resourceId: result.jobId },
+        ipAddress: req.ip,
+        statusCode: 200,
+      });
+      return successResponse(res, result, 'Healthcare data synchronization complete.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'SYNC_TRIGGER_ERROR');
+    }
+  }
+
+  async toggleAutoSync(req, res, next) {
+    try {
+      const { active } = req.body;
+      const result = syncService.setAutoSync(active);
+      await auditService.recordEvent({
+        actorId: req.user.id,
+        actorRole: 'ADMINISTRATION',
+        action: active ? 'ENABLE_AUTO_SYNC' : 'DISABLE_AUTO_SYNC',
+        targetResource: { resourceType: 'SYSTEM_SETTINGS', resourceId: 'auto_sync' },
+        ipAddress: req.ip,
+        statusCode: 200,
+      });
+      return successResponse(res, result, `Automatic synchronization ${active ? 'enabled' : 'disabled'}.`);
+    } catch (err) {
+      return errorResponse(res, err.message, 400, 'SYNC_TOGGLE_ERROR');
+    }
+  }
+
+  async getQuarantinedRecords(req, res, next) {
+    try {
+      const records = await syncService.getQuarantinedRecords(parseInt(req.query.limit, 10) || 50);
+      return successResponse(res, records, 'Quarantined sync records retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'QUARANTINE_FETCH_ERROR');
+    }
+  }
+
+  async listFacilities(req, res, next) {
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) {
+        return successResponse(res, {
+          facilities: [],
+          total: 0,
+          page: 1,
+          totalPages: 0,
+        }, 'Healthcare facilities retrieved.');
+      }
+
+      const { statusTier, facilityType, search, page = 1, limit = 20 } = req.query;
+      const filter = {};
+      if (statusTier && statusTier !== 'ALL') filter.statusTier = statusTier;
+      if (facilityType && facilityType !== 'ALL') filter.facilityType = facilityType;
+      if (search) {
+        filter.$or = [
+          { name: new RegExp(search, 'i') },
+          { 'address.city': new RegExp(search, 'i') },
+          { 'address.state': new RegExp(search, 'i') },
+          { departments: new RegExp(search, 'i') },
+        ];
+      }
+
+      const total = await Hospital.countDocuments(filter);
+      const facilities = await Hospital.find(filter)
+        .sort({ statusTier: 1, lastSynchronizedAt: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit, 10));
+
+      return successResponse(res, {
+        facilities,
+        total,
+        page: parseInt(page, 10),
+        totalPages: Math.ceil(total / limit),
+      }, 'Healthcare facilities retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'FACILITY_FETCH_ERROR');
     }
   }
 }

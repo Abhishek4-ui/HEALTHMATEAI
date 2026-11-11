@@ -17,6 +17,30 @@ export const adminService = {
     return apiClient.get('/admin/discovery/sync-status');
   },
 
+  getSyncStatus: async () => {
+    return apiClient.get('/admin/sync/status');
+  },
+
+  triggerSync: async (triggerType = 'ADMIN_MANUAL') => {
+    return apiClient.post('/admin/sync/trigger', { triggerType });
+  },
+
+  toggleAutoSync: async (active) => {
+    return apiClient.put('/admin/sync/toggle', { active });
+  },
+
+  getQuarantinedRecords: async (limit = 50) => {
+    return apiClient.get('/admin/sync/quarantine', { params: { limit } });
+  },
+
+  getFacilities: async (params = {}) => {
+    return apiClient.get('/admin/facilities', { params });
+  },
+
+  getIntegrations: async () => {
+    return apiClient.get('/admin/integrations');
+  },
+
   triggerFacilitySync: async (source) => {
     return apiClient.post('/admin/discovery/trigger-sync', { source });
   },

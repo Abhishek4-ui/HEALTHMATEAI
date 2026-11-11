@@ -8,6 +8,7 @@ const { initRedis } = require('./config/redis');
 const { initIndexes } = require('./models');
 const { initSocketIO } = require('./sockets/socketHandler');
 const authService = require('./services/auth.service');
+const syncService = require('./services/sync.service');
 const logger = require('./utils/logger');
 
 const server = http.createServer(app);
@@ -37,7 +38,10 @@ const startServer = async () => {
     // 3. Idempotently ensure initial Administrator exists
     await authService.provisionInitialAdmin();
 
-    // 4. Start HTTP & WebSocket listener
+    // 4. Initialize Phase 7 Scheduled Healthcare Synchronization Worker
+    syncService.startScheduledWorker();
+
+    // 5. Start HTTP & WebSocket listener
     server.listen(config.port, () => {
       console.log(`==================================================`);
       console.log(`🚀 HealthMate AI Backend listening on port ${config.port}`);
@@ -57,6 +61,7 @@ const startServer = async () => {
 // Graceful shutdown handling
 const gracefulShutdown = (signal) => {
   console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
+  syncService.stopScheduledWorker();
   server.close(() => {
     console.log('[Server] HTTP and Socket.IO servers closed.');
     process.exit(0);

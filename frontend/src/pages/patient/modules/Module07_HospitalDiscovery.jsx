@@ -5,9 +5,11 @@ import {
   Phone, 
   ExternalLink, 
   Compass,
-  ShieldCheck,
+  ShieldCheck, 
   AlertCircle,
-  Building
+  Building,
+  MapPin,
+  Globe
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -19,7 +21,11 @@ import { discoveryService } from '../../../services/discoveryService';
 export default function Module07_HospitalDiscovery() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('');
+  const [stateFilter, setStateFilter] = useState('ALL');
+  const [pincodeFilter, setPincodeFilter] = useState('');
   const [facilityType, setFacilityType] = useState('ALL');
+  const [userCoords, setUserCoords] = useState(null);
+
   const [hospitalsList, setHospitalsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -36,7 +42,11 @@ export default function Module07_HospitalDiscovery() {
       const response = await discoveryService.searchHospitals({
         query: searchQuery || undefined,
         city: cityFilter || undefined,
+        state: stateFilter !== 'ALL' ? stateFilter : undefined,
+        pincode: pincodeFilter || undefined,
         facilityType: facilityType !== 'ALL' ? facilityType : undefined,
+        latitude: userCoords?.latitude,
+        longitude: userCoords?.longitude,
         ...overrideParams,
       });
       setHospitalsList(response.facilities || []);
@@ -65,14 +75,21 @@ export default function Module07_HospitalDiscovery() {
         setIsLocating(false);
         setSearched(true);
         setLoading(true);
+        const coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        setUserCoords(coords);
         try {
           const response = await discoveryService.getNearbyFacilities(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            25000,
+            coords.latitude,
+            coords.longitude,
+            30000,
             'hospital'
           );
           setHospitalsList(response.facilities || []);
+          addToast({
+            type: 'success',
+            title: 'Nearby Facilities Located',
+            message: `Found ${response.facilities?.length || 0} hospitals within 30 km.`,
+          });
         } catch (err) {
           setHospitalsList([]);
         } finally {
@@ -86,8 +103,27 @@ export default function Module07_HospitalDiscovery() {
     );
   };
 
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setCityFilter('');
+    setStateFilter('ALL');
+    setPincodeFilter('');
+    setFacilityType('ALL');
+    setUserCoords(null);
+    setSearched(false);
+    loadHospitals({
+      query: undefined,
+      city: undefined,
+      state: undefined,
+      pincode: undefined,
+      facilityType: undefined,
+      latitude: undefined,
+      longitude: undefined,
+    });
+  };
+
   const renderBadge = (fac) => {
-    if (fac.statusTier === 'SOURCE_VERIFIED' || fac.sourceType === 'OPEN_GOVERNMENT_DATA_INDIA') {
+    if (fac.statusTier === 'SOURCE_VERIFIED' || fac.sourceType === 'OPEN_GOVERNMENT_DATA_INDIA' || fac.sourceType === 'NATIONAL_HEALTH_REGISTRY') {
       return (
         <Badge variant="blue" className="flex items-center gap-1 text-[10px]">
           <Building className="w-3 h-3" />
@@ -106,7 +142,7 @@ export default function Module07_HospitalDiscovery() {
     return (
       <Badge variant="amber" className="flex items-center gap-1 text-[10px]">
         <AlertCircle className="w-3 h-3" />
-        <span>Google Places Listing</span>
+        <span>Discovered Listing</span>
       </Badge>
     );
   };
@@ -158,7 +194,7 @@ export default function Module07_HospitalDiscovery() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <div>
               <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">Facility Type</label>
               <select
@@ -169,7 +205,24 @@ export default function Module07_HospitalDiscovery() {
                 <option value="ALL">All Facilities</option>
                 <option value="HOSPITAL">Tertiary Hospital</option>
                 <option value="CLINIC">Specialty Clinic</option>
-                <option value="DIAGNOSTIC_LAB">Diagnostic Center</option>
+                <option value="DIAGNOSTIC_CENTER">Diagnostic Center</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">State</label>
+              <select
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+              >
+                <option value="ALL">All States</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="West Bengal">West Bengal</option>
               </select>
             </div>
 
@@ -179,7 +232,19 @@ export default function Module07_HospitalDiscovery() {
                 type="text"
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                placeholder="e.g. New Delhi, Bengaluru, Mumbai"
+                placeholder="e.g. New Delhi, Bengaluru"
+                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">PIN Code</label>
+              <input
+                type="text"
+                value={pincodeFilter}
+                onChange={(e) => setPincodeFilter(e.target.value)}
+                placeholder="e.g. 560076"
+                maxLength={6}
                 className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
@@ -196,9 +261,19 @@ export default function Module07_HospitalDiscovery() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{fac.name}</h4>
-                      <p className="text-xs text-slate-400">{fac.address?.formattedAddress || `${fac.address?.city || ''}, ${fac.address?.state || 'India'}`}</p>
+                      <p className="text-xs text-slate-400">
+                        {fac.address?.formattedAddress || `${fac.address?.city || ''}, ${fac.address?.state || 'India'}`}
+                        {fac.address?.pincode ? ` - ${fac.address.pincode}` : ''}
+                      </p>
                     </div>
-                    {renderBadge(fac)}
+                    <div className="flex flex-col items-end gap-1">
+                      {renderBadge(fac)}
+                      {fac.distanceKm !== null && fac.distanceKm !== undefined && (
+                        <span className="text-[10px] font-mono font-semibold text-aurora-blue bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded">
+                          📍 {fac.distanceKm} km
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {fac.verificationDisclaimer && (
@@ -219,31 +294,47 @@ export default function Module07_HospitalDiscovery() {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                  <div className="flex items-center gap-1.5 text-slate-500">
+                  <div className="flex items-center gap-2 text-slate-500">
                     <Phone className="w-3.5 h-3.5 text-aurora-teal" />
-                    <span className="text-[11px]">{fac.contact?.phone || fac.contact?.emergencyHotline || 'Helpline Available'}</span>
+                    <span className="text-[11px] font-mono">
+                      {fac.contact?.phone || fac.contact?.emergencyHotline || 'Helpline Available'}
+                    </span>
                   </div>
-                  {fac.directionsUrl ? (
-                    <a
-                      href={fac.directionsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-aurora-blue font-semibold flex items-center gap-1 hover:underline text-xs"
-                    >
-                      <span>Directions</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : (
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(fac.name + ' ' + (fac.address?.city || ''))}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-aurora-blue font-semibold flex items-center gap-1 hover:underline text-xs"
-                    >
-                      <span>Directions</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
+
+                  <div className="flex items-center gap-2">
+                    {fac.contact?.website && (
+                      <a
+                        href={fac.contact.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-white text-xs flex items-center gap-1"
+                      >
+                        <Globe className="w-3 h-3" />
+                        <span>Web</span>
+                      </a>
+                    )}
+                    {fac.directionsUrl ? (
+                      <a
+                        href={fac.directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-aurora-blue font-semibold flex items-center gap-1 hover:underline text-xs"
+                      >
+                        <span>Directions</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(fac.name + ' ' + (fac.address?.city || ''))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-aurora-blue font-semibold flex items-center gap-1 hover:underline text-xs"
+                      >
+                        <span>Directions</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}
@@ -253,10 +344,10 @@ export default function Module07_HospitalDiscovery() {
             icon={Building2}
             title={searched ? 'No hospitals found' : 'Find a Hospital'}
             description={searched
-              ? 'No facilities matched your search. Try another location or keyword.'
-              : 'Search by hospital name or click Near Me to locate healthcare centers near you.'}
+              ? 'No facilities matched your search. Try another location, PIN code or keyword.'
+              : 'Search by hospital name, PIN code, or click Near Me to locate healthcare centers near you.'}
             actionLabel={searched ? 'Reset Search' : undefined}
-            onAction={searched ? () => { setSearchQuery(''); setCityFilter(''); setFacilityType('ALL'); setSearched(false); loadHospitals({ query: undefined, city: undefined, facilityType: undefined }); } : undefined}
+            onAction={searched ? handleResetFilters : undefined}
           />
         )}
       </div>

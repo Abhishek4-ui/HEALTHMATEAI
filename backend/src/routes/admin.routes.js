@@ -23,16 +23,16 @@ router.get('/doctors', adminController.listDoctors);
 
 // System Telemetry & Integrations
 router.get('/integrations', adminController.getIntegrations);
-router.get('/discovery/sync-status', adminController.getIntegrations);
-router.post('/discovery/trigger-sync', async (req, res, next) => {
-  try {
-    const registryService = require('../services/registry.service');
-    const result = await registryService.syncAuthorizedData();
-    res.status(200).json({ success: true, message: 'Facility registry synchronization complete.', data: result });
-  } catch (err) {
-    next(err);
-  }
-});
+
+// Data Synchronization & Health Registries (Phase 7)
+router.get('/sync/status', adminController.getSyncStatus);
+router.get('/discovery/sync-status', adminController.getSyncStatus);
+router.post('/sync/trigger', adminController.triggerSync);
+router.post('/discovery/trigger-sync', adminController.triggerSync);
+router.put('/sync/toggle', adminController.toggleAutoSync);
+router.get('/sync/quarantine', adminController.getQuarantinedRecords);
+router.get('/facilities', adminController.listFacilities);
+
 router.get('/ai-models', adminController.getAIModels);
 router.get('/mlops/models', adminController.getAIModels);
 router.get('/datasets', adminController.getDatasets);
