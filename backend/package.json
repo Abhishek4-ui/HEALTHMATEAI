@@ -10,10 +10,12 @@
     "test:unit": "jest tests/unit --runInBand --forceExit",
     "test:integration": "jest tests/integration --runInBand --forceExit",
     "verify:integrations": "node scripts/verify-integrations.js",
+    "verify:s3": "node scripts/verify-s3-permissions.js",
     "sync:data": "node scripts/sync-healthcare-data.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1166.0",
+    "@aws-sdk/client-sts": "^3.1166.0",
     "argon2": "^0.45.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",

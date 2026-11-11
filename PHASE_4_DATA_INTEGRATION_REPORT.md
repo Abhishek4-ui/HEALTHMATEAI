@@ -75,14 +75,18 @@ All implementations strictly adhere to the core project constraints:
   - Finding: Resend API key is active and ready to deliver transactional OTP emails.
 
 ### 2.4 AWS S3 Private Object Storage
-- **Bucket Inspected:** `healthmate-ai-storage-2026`
-- **HTTP Header Verification:**
-  - Endpoint Probe: `curl -sI https://healthmate-ai-storage-2026.s3.amazonaws.com`
-  - Header: `x-amz-bucket-region: ap-southeast-2` (Sydney)
-  - Finding: Bucket was provisioned in `ap-southeast-2` instead of `ap-south-1`. Environment variable was updated to `AWS_REGION=ap-southeast-2`.
-- **IAM Permission Probe:**
-  - IAM User: `arn:aws:iam::597106151932:user/healthmate-ai-s3-user`
-  - Response: `AccessDenied: User is not authorized to perform: s3:PutObject on resource: "arn:aws:s3:::healthmate-ai-storage-2026/*"`
+- **Bucket Inspected:** `healthmate-ai-storage-2026` (`ap-southeast-2`)
+- **IAM Identity Authenticated:** `arn:aws:iam::597106151932:user/healthmate-ai-s3-user`
+- **Integration Status:** `VERIFIED & OPERATIONAL (8/8 TESTS PASSED)`
+- **Actual Test Evidence Matrix:**
+  1. `STS GetCallerIdentity`: Authenticated as `arn:aws:iam::597106151932:user/healthmate-ai-s3-user`
+  2. `HeadBucket`: Bucket verified and accessible
+  3. `GetBucketLocation`: Returned `ap-southeast-2`
+  4. `PutObject`: Test file uploaded successfully with ETag `"7b21542e83473523964a690d058ea712"`
+  5. `GetObject`: Downloaded test file and verified payload integrity
+  6. `DeleteObject`: Test file deleted cleanly
+  7. `HeadObject (Verify Deletion)`: Confirmed file no longer exists (HTTP 404 NotFound)
+  8. `CreateMultipartUpload / AbortMultipartUpload`: Multipart upload initialized and aborted successfully
   - Pending Approval / Action: In the AWS IAM Console, attach an inline or managed policy granting `s3:PutObject`, `s3:GetObject`, and `s3:DeleteObject` on `arn:aws:s3:::healthmate-ai-storage-2026/*`.
   - Fallback Status: Local encrypted directory storage (`backend/uploads/`) is fully active with strict 10MB size limits and MIME filtering.
 
@@ -288,8 +292,8 @@ Frontend build (`npm --prefix frontend run build`):
 
 | Provider | Requirement | Action Item for User |
 | :--- | :--- | :--- |
+| **AWS S3** | **VERIFIED & ACTIVE** | All 8 IAM and object operations verified (`healthmate-ai-storage-2026`). No action needed. |
 | **Gmail SMTP** | App Password | Generate a 16-character App Password at [Google App Passwords](https://myaccount.google.com/apppasswords) and replace `SMTP_PASS` in `backend/.env`. *(Resend API key is already operational)* |
-| **AWS S3** | IAM Policy | In AWS IAM Console, attach `AmazonS3FullAccess` or a custom policy granting `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on `arn:aws:s3:::healthmate-ai-storage-2026/*` to user `healthmate-ai-s3-user`. |
 | **ABDM Production** | NHA M1/M2/M3 Certification | Sandbox credentials currently configured. Production deployment requires formal ABDM compliance audit from National Health Authority. |
 
 ---

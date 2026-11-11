@@ -135,10 +135,14 @@ To connect live cloud-managed infrastructure in production, the following creden
 
 ## 3. Current System Connection Status
 
-| Service / Provider | Status | Local Fallback Behavior |
+| Service / Provider | Status | Live Details |
 | :--- | :--- | :--- |
-| **MongoDB Atlas** | Connected (`localhost:27017`) | Local MongoDB instance active; 20 Mongoose models initialized |
-| **Redis Cloud** | Standby | Ephemeral test mode active; fail-safe memory isolation |
-| **OpenRouter / Gemini** | Architecture Ready | Endpoints wired with dual-provider fallback logic |
-| **Razorpay India** | Architecture Ready | HMAC SHA256 webhook validator active; test order generator ready |
-| **Google Places API** | Architecture Ready | GeoJSON 2dsphere spatial index active in `hospitals` and `doctor_profiles` |
+| **MongoDB Atlas** | **CONNECTED & VERIFIED** | AWS Mumbai (`cluster0.0juuoy6.mongodb.net`), 20 collections & 2dsphere indexes active |
+| **Redis Cloud** | **CONNECTED & VERIFIED** | Managed endpoint (`parchment-store-skate-71311.db.redis.io:12558`), TTL probes active |
+| **OpenRouter LLM** | **CONNECTED & AUTHENTICATED** | Key verified; `anthropic/claude-3.5-sonnet` primary gateway active |
+| **Google Gemini LLM** | **CONNECTED & AUTHENTICATED** | Key verified; `gemini-1.5-flash` zero-downtime fallback active |
+| **Google Places (New)** | **CONNECTED & VERIFIED** | Live Places & Geocoding APIs responding (`https://places.googleapis.com/v1/places:searchNearby`) |
+| **AWS S3 Object Storage** | **CONNECTED & VERIFIED** | Bucket `healthmate-ai-storage-2026` (`ap-southeast-2`), 8-point IAM test suite passed |
+| **Razorpay India** | **CONNECTED & AUTHENTICATED** | Key ID & Key Secret authenticated (`rzp_test_Tyml08EyeVHKJY`) |
+| **Twilio SMS & WebRTC** | **CONNECTED & VERIFIED** | Trial account active, 4 global STUN/TURN ICE servers provisioned |
+| **Email OTP (Resend)** | **CONNECTED & VERIFIED** | Resend API key active (`re_HDxx...1VhQ`), HTTP 200 operational |

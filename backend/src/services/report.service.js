@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const redisSessionService = require('./redisSession.service');
 const logger = require('../utils/logger');
 
@@ -13,6 +14,24 @@ class ReportService {
     if (!fs.existsSync(this.uploadDir)) {
       fs.mkdirSync(this.uploadDir, { recursive: true });
     }
+
+    this.s3Bucket = process.env.AWS_S3_BUCKET_NAME;
+    this.s3Region = process.env.AWS_REGION || 'ap-southeast-2';
+    this.s3Client = null;
+
+    if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY && this.s3Bucket) {
+      this.s3Client = new S3Client({
+        region: this.s3Region,
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        },
+      });
+    }
+  }
+
+  isS3Enabled() {
+    return Boolean(this.s3Client && this.s3Bucket);
   }
 
   /**
@@ -30,13 +49,42 @@ class ReportService {
     }
 
     const uploadToken = 'rep_' + crypto.randomBytes(16).toString('hex');
-    const safeFileName = `${uploadToken}_${path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-    const destinationPath = path.join(this.uploadDir, safeFileName);
+    const safeExtension = path.extname(file.originalname) || '.pdf';
+    const s3Key = `ephemeral-reports/${uploadToken}${safeExtension}`;
+    let storageType = 'LOCAL';
+    let destinationPath = null;
 
-    // Write file to secure private storage
-    fs.writeFileSync(destinationPath, file.buffer);
+    // 1. If AWS S3 is active, upload object to private bucket with ephemeral tag
+    if (this.isS3Enabled()) {
+      try {
+        await this.s3Client.send(
+          new PutObjectCommand({
+            Bucket: this.s3Bucket,
+            Key: s3Key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+            Metadata: {
+              uploadToken,
+              uploadedBy: userId ? String(userId) : 'GUEST',
+              expiresAt: new Date(Date.now() + 1800 * 1000).toISOString(),
+            },
+          })
+        );
+        storageType = 'AWS_S3';
+        logger.info('Staged report file securely in AWS S3 bucket', { uploadToken, s3Key, bucket: this.s3Bucket });
+      } catch (s3Err) {
+        logger.warn('S3 upload fallback to local storage:', { error: s3Err.message });
+      }
+    }
 
-    // Stage temporary extraction record in Redis with 30-min TTL
+    // 2. Local fallback if S3 was not used or failed
+    if (storageType === 'LOCAL') {
+      const safeFileName = `${uploadToken}_${path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      destinationPath = path.join(this.uploadDir, safeFileName);
+      fs.writeFileSync(destinationPath, file.buffer);
+    }
+
+    // 3. Stage metadata in Redis with 30-min TTL
     const stageMetadata = {
       uploadToken,
       originalName: file.originalname,
@@ -44,6 +92,8 @@ class ReportService {
       fileSizeBytes: file.size,
       uploadedBy: userId || 'GUEST',
       uploadedAt: new Date().toISOString(),
+      storageType,
+      s3Key: storageType === 'AWS_S3' ? s3Key : null,
       filePath: destinationPath,
       processingStatus: 'STAGED_FOR_OCR',
     };
@@ -57,6 +107,7 @@ class ReportService {
       originalName: file.originalname,
       mimeType: file.mimetype,
       fileSizeKb: Math.round(file.size / 1024),
+      storageType,
       expiresInMinutes: 30,
       status: 'STAGED_FOR_OCR',
     };
@@ -71,9 +122,25 @@ class ReportService {
       metadata = await redisSessionService.getReportExtraction(uploadToken);
     }
 
-    if (metadata && metadata.filePath && fs.existsSync(metadata.filePath)) {
-      fs.unlinkSync(metadata.filePath);
-      logger.info('Deleted ephemeral report file from disk.', { uploadToken });
+    if (metadata) {
+      if (metadata.storageType === 'AWS_S3' && metadata.s3Key && this.isS3Enabled()) {
+        try {
+          await this.s3Client.send(
+            new DeleteObjectCommand({
+              Bucket: this.s3Bucket,
+              Key: metadata.s3Key,
+            })
+          );
+          logger.info('Deleted ephemeral report file from AWS S3 bucket.', { uploadToken, s3Key: metadata.s3Key });
+        } catch (e) {
+          logger.warn('Failed to delete S3 file on purge:', { error: e.message });
+        }
+      }
+
+      if (metadata.filePath && fs.existsSync(metadata.filePath)) {
+        fs.unlinkSync(metadata.filePath);
+        logger.info('Deleted ephemeral report file from local disk.', { uploadToken });
+      }
     }
 
     return { success: true, message: 'Report removed.' };
