@@ -7,10 +7,20 @@ class MonitoringService {
    * Get operational overview for Administration dashboard
    */
   async getOverview() {
-    const pendingVerifications = await DoctorVerification.countDocuments({ status: 'PENDING_ADMIN_REVIEW' });
-    const totalPatients = await User.countDocuments({ role: 'PATIENT' });
-    const totalDoctors = await User.countDocuments({ role: 'DOCTOR' });
-    const totalAppointments = await Appointment.countDocuments();
+    const mongoose = require('mongoose');
+    let pendingVerifications = 0;
+    let totalPatients = 0;
+    let totalDoctors = 0;
+    let totalAppointments = 0;
+
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      try {
+        pendingVerifications = await DoctorVerification.countDocuments({ status: 'PENDING_ADMIN_REVIEW' });
+        totalPatients = await User.countDocuments({ role: 'PATIENT' });
+        totalDoctors = await User.countDocuments({ role: 'DOCTOR' });
+        totalAppointments = await Appointment.countDocuments();
+      } catch (e) {}
+    }
 
     const dbStatus = getDBStatus();
     const redisStatus = getRedisStatus();

@@ -38,7 +38,26 @@ export default function Module03_SymptomChecker() {
     setLoading(true);
     try {
       const response = await aiService.checkSymptoms(formData);
-      setResult(response);
+      const data = response.data || response;
+      const topDiff = data.differential_diagnoses?.[0];
+      setResult({
+        recommendedSpecialist: data.recommended_specialty || data.specialty_recommended || topDiff?.specialty || 'General Physician',
+        message: topDiff?.triage_guidance || data.clinical_disclaimer || 'Assessment complete. Please consult a doctor.',
+        urgency: data.overall_urgency || data.triage_level || 'ROUTINE',
+        isEmergency: data.is_emergency_flagged || data.emergency_red_flags,
+        differentialDiagnoses: data.differential_diagnoses || [],
+        shapFactors: data.differential_diagnoses?.map(d => ({
+          feature: d.condition,
+          impact: d.confidence_percent || `${Math.round((d.confidence_score || 0) * 100)}%`
+        })) || []
+      });
+      if (data.is_emergency_flagged || data.overall_urgency === 'EMERGENCY') {
+        addToast({
+          type: 'error',
+          title: 'Emergency Red-Flag Detected',
+          message: 'Your reported symptoms indicate potentially urgent health risks. Please seek emergency medical care immediately.'
+        });
+      }
     } catch (err) {
       setResult({
         recommendedSpecialist: 'General Physician',

@@ -6,7 +6,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const redisSessionService = require('./redisSession.service');
 const logger = require('../utils/logger');
 
-const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'text/plain'];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 class ReportService {

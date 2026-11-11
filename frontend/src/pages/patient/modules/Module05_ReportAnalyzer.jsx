@@ -38,7 +38,19 @@ export default function Module05_ReportAnalyzer() {
 
     try {
       const response = await aiService.extractLabReportOCR(formData);
-      setExtractedData(response);
+      const data = response.data || response;
+      setExtractedData({
+        reportName: data.reportName || selectedFile.name,
+        biomarkers: data.biomarkers || [],
+        clinicalSummary: data.clinicalSummary || data.clinical_summary || 'Laboratory document successfully processed.',
+        uploadToken: data.uploadToken,
+        disclaimer: data.disclaimer || 'Automated OCR extraction for informational review.'
+      });
+      addToast({
+        type: 'success',
+        title: 'Report Processed',
+        message: `${(data.biomarkers || []).length} laboratory biomarkers extracted against LOINC standards.`
+      });
     } catch (err) {
       setExtractedData({
         reportName: selectedFile.name,

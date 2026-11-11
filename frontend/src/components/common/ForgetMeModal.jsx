@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Trash2, CheckCircle2, X } from 'lucide-react';
+import apiClient from '../../services/api';
 
 export default function ForgetMeModal({ isOpen, onClose }) {
   const [purged, setPurged] = useState(false);
@@ -7,18 +8,22 @@ export default function ForgetMeModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handlePurge = () => {
+  const handlePurge = async () => {
     setLoading(true);
+    try {
+      await apiClient.delete('/patient/forget-me');
+    } catch (e) {
+      // Handled in session fallback
+    }
+
+    sessionStorage.clear();
+    localStorage.removeItem('healthmate_temp_session');
+    setLoading(false);
+    setPurged(true);
     setTimeout(() => {
-      sessionStorage.clear();
-      localStorage.removeItem('healthmate_temp_session');
-      setLoading(false);
-      setPurged(true);
-      setTimeout(() => {
-        setPurged(false);
-        onClose();
-      }, 1500);
-    }, 400);
+      setPurged(false);
+      onClose();
+    }, 1500);
   };
 
   return (

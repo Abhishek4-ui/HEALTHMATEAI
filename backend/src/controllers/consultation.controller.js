@@ -11,6 +11,15 @@ class ConsultationController {
     }
   }
 
+  async getVideoToken(req, res, next) {
+    try {
+      const data = await consultationService.generateVideoToken(req.params.appointmentId, req.user.id, req.user.role);
+      return successResponse(res, data, 'Consultation video room token generated.');
+    } catch (err) {
+      return errorResponse(res, err.message, 400, 'TOKEN_GENERATION_FAILED');
+    }
+  }
+
   async updateSoapNotes(req, res, next) {
     try {
       const updated = await consultationService.updateSoapNotes(req.params.id, req.user.id, req.body);

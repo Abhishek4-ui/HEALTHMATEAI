@@ -60,13 +60,15 @@ export default function Module02_AIAssistant() {
 
     try {
       const response = await aiService.sendHealthQuery(userMsg.text, language, messages);
+      const data = response.data || response;
+      const replyText = data.response || data.content || response.content || response.message || 'I have reviewed your query.';
       setMessages(prev => [
         ...prev,
         {
           id: 'ai_' + Date.now(),
           sender: 'ai',
-          text: response.content || response.message,
-          citations: response.citations || ['Clinical Guidelines - MoHFW India'],
+          text: replyText,
+          citations: data.citations || ['Clinical Guidelines - MoHFW India'],
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);

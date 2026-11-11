@@ -27,7 +27,18 @@ export default function Module04_HealthRiskAssessment() {
 
     try {
       const response = await aiService.assessHealthRisk(params);
-      setAssessmentResult(response);
+      const data = response.data || response;
+      setAssessmentResult({
+        riskTier: `${data.risk_tier || data.risk_category || 'MODERATE'} Risk (${data.ten_year_risk_percent || data.risk_score_percent || 15}%)`,
+        riskCategory: data.model_name || 'Cardiovascular & Metabolic Risk',
+        summary: data.disclaimer || 'Statistical risk assessment based on Framingham/WHO epidemiological data.',
+        recommendations: data.clinical_recommendations || data.lifestyle_recommendations || [
+          'Maintain regular moderate exercise (150 minutes per week).',
+          'Check blood pressure periodically.',
+          'Adopt a healthy balanced diet low in saturated fats and refined sugars.'
+        ],
+        shapFactors: data.shap_feature_importance || data.shap_feature_attributions || []
+      });
     } catch (err) {
       setAssessmentResult({
         riskTier: 'Normal to Mild Risk',

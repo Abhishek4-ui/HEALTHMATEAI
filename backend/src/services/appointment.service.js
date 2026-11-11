@@ -74,7 +74,23 @@ class AppointmentService {
       metadata: { appointmentId: appointment._id },
     });
 
-    // 7. Audit Log
+    // 7. Dispatch multi-channel confirmation (Email & SMS)
+    try {
+      const patientUser = await User.findById(patientId);
+      if (patientUser) {
+        const communicationService = require('./communication.service');
+        communicationService.sendAppointmentConfirmation({
+          patientEmail: patientUser.email,
+          patientPhone: patientUser.phone,
+          doctorName: doctor.fullName,
+          date: scheduledDateObj.toDateString(),
+          time: timeSlot,
+          appointmentId: appointment._id.toString(),
+        }).catch(err => {});
+      }
+    } catch (commErr) {}
+
+    // 8. Audit Log
     await AuditLog.create({
       actorId: patientId,
       actorRole: 'PATIENT',

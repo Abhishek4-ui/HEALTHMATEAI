@@ -11,6 +11,10 @@ router.use(authenticateToken);
 // Start or load consultation session
 router.post('/appointment/:appointmentId', consultationController.getOrCreateConsultation);
 
+// Get real-time WebRTC / Twilio Video Room Access Token
+router.get('/:appointmentId/token', consultationController.getVideoToken);
+router.post('/:appointmentId/token', consultationController.getVideoToken);
+
 // Update SOAP Notes (Doctor only)
 router.put('/:id/notes', requireRoles(['DOCTOR']), validate(saveSoapNotesSchema), consultationController.updateSoapNotes);
 

@@ -131,30 +131,42 @@ class OTPService {
    * Connects to actual configured email or SMS provider, or logs to secure terminal in development
    */
   async dispatchProvider(target, type, rawOTP, purpose) {
+    const communicationService = require('./communication.service');
+
     if (type === 'EMAIL') {
-      // In production with EMAIL_API_KEY / SMTP, dispatch to provider
-      if (process.env.EMAIL_API_KEY) {
-        logger.info(`Dispatched email verification code to provider for target`, { target });
-      } else {
-        // Development terminal notification
-        console.log(`\n==================================================`);
-        console.log(`📩 [HealthMate AI Security] Verification Code`);
-        console.log(`Target: ${target} (${type} - ${purpose})`);
-        console.log(`Code:   >>> ${rawOTP} <<<`);
-        console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
-        console.log(`==================================================\n`);
+      try {
+        await communicationService.sendEmail({
+          to: target,
+          subject: `HealthMate AI Verification Code: ${rawOTP}`,
+          text: `Your HealthMate AI verification code is ${rawOTP}. This code will expire in 5 minutes. Do not share this code with anyone.`,
+          html: `<div style="font-family: Arial, sans-serif; padding: 20px;"><h2 style="color: #0D9488;">HealthMate AI Security</h2><p>Your one-time verification code is:</p><h1 style="letter-spacing: 5px; color: #0f172a;">${rawOTP}</h1><p>Expires in 5 minutes (Maximum 3 attempts).</p></div>`
+        });
+      } catch (e) {
+        logger.warn('Email OTP provider dispatch error:', { error: e.message });
       }
+
+      console.log(`\n==================================================`);
+      console.log(`📩 [HealthMate AI Security] Verification Code Dispatched`);
+      console.log(`Target: ${target} (${type} - ${purpose})`);
+      console.log(`Code:   >>> ${rawOTP} <<<`);
+      console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
+      console.log(`==================================================\n`);
     } else if (type === 'MOBILE') {
-      if (process.env.SMS_API_KEY) {
-        logger.info(`Dispatched SMS verification code to provider for target`, { target });
-      } else {
-        console.log(`\n==================================================`);
-        console.log(`📱 [HealthMate AI Security] Mobile SMS Code`);
-        console.log(`Target: ${target} (${type} - ${purpose})`);
-        console.log(`Code:   >>> ${rawOTP} <<<`);
-        console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
-        console.log(`==================================================\n`);
+      try {
+        await communicationService.sendSMS({
+          to: target,
+          body: `HealthMate AI verification code: ${rawOTP}. Valid for 5 minutes.`
+        });
+      } catch (e) {
+        logger.warn('SMS OTP provider dispatch error:', { error: e.message });
       }
+
+      console.log(`\n==================================================`);
+      console.log(`📱 [HealthMate AI Security] Mobile SMS Code Dispatched`);
+      console.log(`Target: ${target} (${type} - ${purpose})`);
+      console.log(`Code:   >>> ${rawOTP} <<<`);
+      console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
+      console.log(`==================================================\n`);
     }
   }
 }
