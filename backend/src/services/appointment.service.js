@@ -56,14 +56,16 @@ class AppointmentService {
     });
 
     // 6. Notify Doctor and Patient
-    await Notification.create({
-      recipientId: doctor.userId,
-      recipientRole: 'DOCTOR',
-      type: 'APPOINTMENTS',
-      title: 'New Consultation Booked',
-      message: `A patient has confirmed a ${consultationType || 'video'} consultation for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
-      metadata: { appointmentId: appointment._id },
-    });
+    if (doctor.userId) {
+      await Notification.create({
+        recipientId: doctor.userId,
+        recipientRole: 'DOCTOR',
+        type: 'APPOINTMENTS',
+        title: 'New Consultation Booked',
+        message: `A patient has confirmed a ${consultationType || 'video'} consultation for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
+        metadata: { appointmentId: appointment._id },
+      });
+    }
 
     await Notification.create({
       recipientId: patientId,
