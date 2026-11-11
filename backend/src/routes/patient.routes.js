@@ -22,6 +22,17 @@ router.post('/session', optionalAuth, patientController.updateSession);
 router.delete('/forget-me', optionalAuth, patientController.forgetMe);
 router.delete('/session/:sessionId', optionalAuth, patientController.forgetMe); // Client alias
 
+const multer = require('multer');
+const reportController = require('../controllers/report.controller');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+// Ephemeral Diagnostic Report Upload & AI OCR Staging
+router.post('/reports/ocr-extract', optionalAuth, upload.single('report'), reportController.uploadReport);
+
 // Data Export
 router.get('/data-export', authenticateToken, requireRoles(['PATIENT']), patientController.getConsents);
 

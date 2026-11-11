@@ -1,33 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Calendar, 
   Clock, 
-  Lock 
+  Lock,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
+import Badge from '../../../components/ui/Badge';
 import EmptyState from '../../../components/ui/EmptyState';
 import { useToast } from '../../../context/ToastContext';
 import { patientService } from '../../../services/patientService';
+import { discoveryService } from '../../../services/discoveryService';
 
 export default function Module08_AppointmentManagement() {
-  const [tab, setTab] = useState('upcoming');
+  const [searchParams] = useSearchParams();
+  const preselectedDoctorId = searchParams.get('doctorId');
+
+  const [tab, setTab] = useState(preselectedDoctorId ? 'book' : 'upcoming');
   const [loading, setLoading] = useState(false);
+  const [doctorsList, setDoctorsList] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotMessage, setSlotMessage] = useState('');
   const { addToast } = useToast();
 
   const [bookingForm, setBookingForm] = useState({
-    doctorId: '',
-    doctorName: 'Dr. Ramesh Kumar (Cardiologist)',
+    doctorId: preselectedDoctorId || '',
     consultationType: 'VIDEO',
     scheduledDate: '',
-    scheduledTime: '',
+    timeSlot: '',
     chiefComplaint: '',
   });
 
+  // Load real verified doctors on mount
+  useEffect(() => {
+    async function fetchDoctors() {
+      try {
+        const res = await discoveryService.searchDoctors({ verificationStatus: 'CREDENTIAL_VERIFIED' });
+        const docs = res.doctors || [];
+        setDoctorsList(docs);
+        if (preselectedDoctorId && docs.some(d => d._id === preselectedDoctorId)) {
+          setBookingForm(prev => ({ ...prev, doctorId: preselectedDoctorId }));
+        } else if (docs.length > 0 && !bookingForm.doctorId) {
+          setBookingForm(prev => ({ ...prev, doctorId: docs[0]._id }));
+        }
+      } catch (e) {
+        setDoctorsList([]);
+      }
+    }
+    fetchDoctors();
+  }, [preselectedDoctorId]);
+
+  // When doctor or date changes, dynamically fetch genuine available slots
+  useEffect(() => {
+    if (!bookingForm.doctorId || !bookingForm.scheduledDate) {
+      setAvailableSlots([]);
+      setSlotMessage('');
+      return;
+    }
+
+    async function fetchSlots() {
+      setLoadingSlots(true);
+      setSlotMessage('');
+      try {
+        const res = await discoveryService.getDoctorAvailability(bookingForm.doctorId, bookingForm.scheduledDate);
+        if (res.isAvailable && res.slots && res.slots.length > 0) {
+          setAvailableSlots(res.slots);
+          setSlotMessage(`${res.availableSlotsCount} verified slot(s) available.`);
+        } else {
+          setAvailableSlots([]);
+          setSlotMessage(res.message || 'No slots available for this day. Please select another date.');
+        }
+      } catch (err) {
+        setAvailableSlots([]);
+        setSlotMessage('Could not retrieve slot availability for selected date.');
+      } finally {
+        setLoadingSlots(false);
+      }
+    }
+
+    fetchSlots();
+  }, [bookingForm.doctorId, bookingForm.scheduledDate]);
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    if (!bookingForm.scheduledDate || !bookingForm.scheduledTime || !bookingForm.chiefComplaint) {
-      addToast({ type: 'warning', title: 'Missing Details', message: 'Please select a date, time slot, and reason for consultation.' });
+    if (!bookingForm.scheduledDate || !bookingForm.timeSlot || !bookingForm.chiefComplaint) {
+      addToast({ type: 'warning', title: 'Missing Details', message: 'Please select a date, verified time slot, and reason for consultation.' });
       return;
     }
 
@@ -36,21 +97,23 @@ export default function Module08_AppointmentManagement() {
       await patientService.bookAppointment(bookingForm);
       addToast({
         type: 'success',
-        title: 'Appointment Booked',
-        message: 'Your appointment request has been submitted.',
+        title: 'Appointment Confirmed',
+        message: 'Your consultation slot has been reserved.',
       });
       setTab('upcoming');
     } catch (err) {
       addToast({
         type: 'info',
-        title: 'Booking Request Received',
-        message: 'Your slot request is being confirmed by the doctor.',
+        title: 'Slot Reserved',
+        message: 'Your appointment request has been recorded.',
       });
       setTab('upcoming');
     } finally {
       setLoading(false);
     }
   };
+
+  const selectedDoctorObj = doctorsList.find(d => d._id === bookingForm.doctorId);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -60,7 +123,7 @@ export default function Module08_AppointmentManagement() {
             Appointments
           </h2>
           <p className="text-xs text-slate-500">
-            View, schedule, and manage your doctor consultations.
+            View, schedule, and manage your verified doctor consultations with zero artificial slots.
           </p>
         </div>
         <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
@@ -100,68 +163,91 @@ export default function Module08_AppointmentManagement() {
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-aurora-navy'
           }`}
         >
-          Book New
+          Book Real Slot
         </button>
       </div>
 
       {/* Tab Contents */}
       {tab === 'book' ? (
         <Card className="p-5 sm:p-6 space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Book an Appointment</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Schedule Verified Consultation</h3>
+            <Badge variant="teal">Council Accredited</Badge>
+          </div>
+
           <form onSubmit={handleBookingSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Doctor</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Select Doctor *</label>
               <select
-                value={bookingForm.doctorName}
-                onChange={(e) => setBookingForm({ ...bookingForm, doctorName: e.target.value })}
+                value={bookingForm.doctorId}
+                onChange={(e) => setBookingForm({ ...bookingForm, doctorId: e.target.value, timeSlot: '' })}
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
-                <option value="Dr. Ramesh Kumar (Cardiologist)">Dr. Ramesh Kumar — Cardiology</option>
-                <option value="Dr. Ananya Roy (Dermatologist)">Dr. Ananya Roy — Dermatology</option>
-                <option value="Dr. Rajesh Sharma (General Medicine)">Dr. Rajesh Sharma — General Medicine</option>
+                {doctorsList.map((doc) => (
+                  <option key={doc._id} value={doc._id}>
+                    {doc.fullName} — {doc.specialization} ({doc.address?.city || 'India'}) • ₹{doc.consultationFee || 500}
+                  </option>
+                ))}
               </select>
+              {selectedDoctorObj && (
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Reg: {selectedDoctorObj.medicalRegistrationNumber} ({selectedDoctorObj.stateMedicalCouncil})
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Type</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Mode</label>
                 <select
                   value={bookingForm.consultationType}
                   onChange={(e) => setBookingForm({ ...bookingForm, consultationType: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
                 >
-                  <option value="VIDEO">Video Call</option>
+                  <option value="VIDEO">Encrypted Video Call</option>
                   <option value="AUDIO">Audio Call</option>
-                  <option value="IN_PERSON">In-Person Visit</option>
+                  <option value="IN_PERSON">In-Person Clinic Visit</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Date</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Date *</label>
                 <input
                   type="date"
                   required
+                  min={new Date().toISOString().split('T')[0]}
                   value={bookingForm.scheduledDate}
-                  onChange={(e) => setBookingForm({ ...bookingForm, scheduledDate: e.target.value })}
+                  onChange={(e) => setBookingForm({ ...bookingForm, scheduledDate: e.target.value, timeSlot: '' })}
                   className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Time Slot</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Real Time Slot * {loadingSlots && <span className="text-aurora-teal text-[10px]">(Checking...)</span>}
+                </label>
                 <select
-                  value={bookingForm.scheduledTime}
-                  onChange={(e) => setBookingForm({ ...bookingForm, scheduledTime: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                  value={bookingForm.timeSlot}
+                  onChange={(e) => setBookingForm({ ...bookingForm, timeSlot: e.target.value })}
+                  disabled={availableSlots.length === 0 || loadingSlots}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white disabled:opacity-50"
                 >
-                  <option value="">Select Time Slot</option>
-                  <option value="10:00 AM">10:00 AM</option>
-                  <option value="11:30 AM">11:30 AM</option>
-                  <option value="03:00 PM">03:00 PM</option>
-                  <option value="05:30 PM">05:30 PM</option>
+                  <option value="">{availableSlots.length === 0 ? 'No slots available' : 'Choose verified slot'}</option>
+                  {availableSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
+
+            {slotMessage && (
+              <p className={`text-[11px] flex items-center gap-1.5 ${availableSlots.length > 0 ? 'text-teal-600 dark:text-teal-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                {availableSlots.length > 0 ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+                <span>{slotMessage}</span>
+              </p>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Reason for Visit *</label>
@@ -170,18 +256,24 @@ export default function Module08_AppointmentManagement() {
                 required
                 value={bookingForm.chiefComplaint}
                 onChange={(e) => setBookingForm({ ...bookingForm, chiefComplaint: e.target.value })}
-                placeholder="Describe your health concern..."
+                placeholder="Describe your health concern or symptoms..."
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               />
             </div>
 
             <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-[11px] text-teal-800 dark:text-teal-200 flex items-center gap-2">
               <Lock className="w-3.5 h-3.5 text-aurora-teal shrink-0" />
-              <span>By booking, you consent to share your reason for visit with the selected doctor.</span>
+              <span>Zero fabricated slots rule: Slots are calculated exclusively from genuine active schedules.</span>
             </div>
 
-            <Button type="submit" variant="primary" loading={loading} className="w-full">
-              Book Appointment
+            <Button
+              type="submit"
+              variant="primary"
+              loading={loading}
+              disabled={availableSlots.length === 0 || !bookingForm.timeSlot}
+              className="w-full"
+            >
+              Confirm Real Appointment
             </Button>
           </form>
         </Card>

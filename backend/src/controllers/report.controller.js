@@ -21,6 +21,15 @@ class ReportController {
       return errorResponse(res, err.message, 400, 'DELETE_FAILED');
     }
   }
+
+  async getSignedUrl(req, res, next) {
+    try {
+      const result = await reportService.getSecureSignedUrl(req.params.token, req.user?.id);
+      return successResponse(res, result, 'Secure short-lived access URL generated.');
+    } catch (err) {
+      return errorResponse(res, err.message, 403, 'ACCESS_DENIED');
+    }
+  }
 }
 
 module.exports = new ReportController();

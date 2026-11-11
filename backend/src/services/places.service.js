@@ -13,6 +13,23 @@ class PlacesService {
   }
 
   /**
+   * Calculate distance between two coordinates using Haversine formula (returns distance in km)
+   */
+  calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return parseFloat((R * c).toFixed(2));
+  }
+
+  /**
    * Geocode an Indian address or city name into [latitude, longitude]
    */
   async geocodeAddress(address) {
@@ -37,7 +54,7 @@ class PlacesService {
 
         if (getRedisStatus() === 'connected') {
           try {
-            await getRedisClient().setex(cacheKey, 86400, JSON.stringify(coords)); // 24h cache
+            await getRedisClient().setex(cacheKey, 86400, JSON.stringify(coords)); // 24h ephemeral cache
           } catch (e) {}
         }
         return coords;
@@ -49,12 +66,51 @@ class PlacesService {
   }
 
   /**
+   * Reverse geocode [latitude, longitude] into city, state, formatted address
+   */
+  async reverseGeocode(latitude, longitude) {
+    if (!this.isConfigured()) return null;
+
+    const roundedLat = latitude.toFixed(3);
+    const roundedLng = longitude.toFixed(3);
+    const cacheKey = `revgeo:${roundedLat}:${roundedLng}`;
+
+    if (getRedisStatus() === 'connected') {
+      try {
+        const cached = await getRedisClient().get(cacheKey);
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+
+    try {
+      const url = `${this.geocodeEndpoint}?latlng=${latitude},${longitude}&region=in&key=${this.apiKey}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const first = data.results[0];
+        const result = {
+          formattedAddress: first.formatted_address,
+          city: this.extractCity(first.formatted_address),
+          state: this.extractState(first.formatted_address),
+          pincode: this.extractPincode(first.formatted_address),
+        };
+
+        if (getRedisStatus() === 'connected') {
+          try {
+            await getRedisClient().setex(cacheKey, 86400, JSON.stringify(result));
+          } catch (e) {}
+        }
+        return result;
+      }
+    } catch (err) {
+      logger.warn('Google Reverse Geocoding error', { error: err.message, latitude, longitude });
+    }
+    return null;
+  }
+
+  /**
    * Search nearby healthcare facilities via Google Places (New) API
-   * @param {Object} params
-   * @param {number} params.latitude
-   * @param {number} params.longitude
-   * @param {number} params.radiusMeters
-   * @param {string[]} params.includedTypes - e.g. ['hospital', 'doctor']
    */
   async searchNearbyHealthcare({ latitude, longitude, radiusMeters = 5000, includedTypes = ['hospital', 'doctor'] }) {
     if (!this.isConfigured()) {
@@ -110,6 +166,7 @@ class PlacesService {
         const placeLat = p.location?.latitude || latitude;
         const placeLng = p.location?.longitude || longitude;
         const isDoctor = p.types && (p.types.includes('doctor') || p.types.includes('physiotherapist'));
+        const distKm = this.calculateDistance(latitude, longitude, placeLat, placeLng);
 
         return {
           id: `gp_${p.id}`,
@@ -119,6 +176,7 @@ class PlacesService {
           isDoctorListing: Boolean(isDoctor),
           sourceType: 'GOOGLE_PLACES',
           statusTier: 'DISCOVERED',
+          distanceKm: distKm,
           verificationBadge: {
             code: 'DISCOVERED',
             label: 'Google Places Public Listing',
@@ -150,9 +208,12 @@ class PlacesService {
         };
       });
 
+      // Sort by distance from patient
+      standardized.sort((a, b) => a.distanceKm - b.distanceKm);
+
       if (getRedisStatus() === 'connected' && standardized.length > 0) {
         try {
-          await getRedisClient().setex(cacheKey, 7200, JSON.stringify(standardized)); // 2h cache
+          await getRedisClient().setex(cacheKey, 7200, JSON.stringify(standardized)); // 2h ephemeral cache compliant with Google TOS
         } catch (e) {}
       }
 

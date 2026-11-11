@@ -11,6 +11,7 @@ const upload = multer({
 
 // Upload report (Accessible to Guest or Patient)
 router.post('/upload', optionalAuth, upload.single('report'), reportController.uploadReport);
+router.get('/:token/signed-url', optionalAuth, reportController.getSignedUrl);
 router.delete('/:token', optionalAuth, reportController.deleteReport);
 
 module.exports = router;

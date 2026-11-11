@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const redisSessionService = require('./redisSession.service');
 const logger = require('../utils/logger');
 
@@ -110,6 +111,45 @@ class ReportService {
       storageType,
       expiresInMinutes: 30,
       status: 'STAGED_FOR_OCR',
+    };
+  }
+
+  /**
+   * Generate short-lived presigned download URL (15 minutes) for authorized viewing
+   */
+  async getSecureSignedUrl(uploadToken, userId) {
+    let metadata = null;
+    if (redisSessionService.isAvailable()) {
+      metadata = await redisSessionService.getReportExtraction(uploadToken);
+    }
+
+    if (!metadata) {
+      throw new Error('Report has expired or is not found.');
+    }
+
+    // Access authorization check
+    if (metadata.uploadedBy !== 'GUEST' && userId && metadata.uploadedBy !== String(userId)) {
+      throw new Error('Unauthorized access to confidential diagnostic report.');
+    }
+
+    if (metadata.storageType === 'AWS_S3' && metadata.s3Key && this.isS3Enabled()) {
+      const command = new GetObjectCommand({
+        Bucket: this.s3Bucket,
+        Key: metadata.s3Key,
+      });
+      const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 900 }); // 15 mins
+      return {
+        uploadToken,
+        signedUrl,
+        expiresInSeconds: 900,
+        storageType: 'AWS_S3',
+      };
+    }
+
+    return {
+      uploadToken,
+      localPath: metadata.filePath,
+      storageType: 'LOCAL',
     };
   }
 

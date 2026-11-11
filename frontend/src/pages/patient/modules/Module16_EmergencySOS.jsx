@@ -3,20 +3,23 @@ import {
   ShieldAlert, 
   Phone, 
   MapPin, 
-  AlertTriangle, 
   Heart, 
   ExternalLink,
   Navigation,
-  Info
+  Building2,
+  Ambulance
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import { useToast } from '../../../context/ToastContext';
+import { discoveryService } from '../../../services/discoveryService';
 
 export default function Module16_EmergencySOS() {
   const [locating, setLocating] = useState(false);
   const [currentCoords, setCurrentCoords] = useState(null);
+  const [nearbyTraumaCenters, setNearbyTraumaCenters] = useState([]);
+  const [loadingCenters, setLoadingCenters] = useState(false);
   const { addToast } = useToast();
 
   const handleAcquireLocation = () => {
@@ -26,18 +29,31 @@ export default function Module16_EmergencySOS() {
     }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setLocating(false);
-        setCurrentCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setCurrentCoords(coords);
         addToast({
           type: 'emergency',
           title: 'Emergency Coordinates Resolved',
-          message: `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)} ready for emergency responders.`,
+          message: `GPS Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`,
         });
+
+        // Automatically fetch nearest emergency trauma centers
+        setLoadingCenters(true);
+        try {
+          const res = await discoveryService.getNearbyFacilities(coords.lat, coords.lng, 15000, 'hospital');
+          const facilities = res.facilities || res.data || [];
+          setNearbyTraumaCenters(facilities.slice(0, 3));
+        } catch (e) {
+          setNearbyTraumaCenters([]);
+        } finally {
+          setLoadingCenters(false);
+        }
       },
       () => {
         setLocating(false);
-        addToast({ type: 'warning', title: 'Location Access Denied', message: 'Please allow GPS location permission to guide responders.' });
+        addToast({ type: 'warning', title: 'Location Access Denied', message: 'Please allow GPS location permission to locate nearest emergency centers.' });
       }
     );
   };
@@ -53,7 +69,7 @@ export default function Module16_EmergencySOS() {
           </div>
 
           <h2 className="text-3xl font-extrabold tracking-tight">
-            Emergency SOS & First-Aid Guidance
+            Emergency SOS & Immediate Triage
           </h2>
           <p className="text-xs sm:text-sm text-rose-200 leading-relaxed">
             In acute life-threatening situations (severe trauma, cardiac arrest, respiratory failure), immediately dial India's National Emergency Helpline <strong>112</strong> or Ambulance <strong>108</strong>.
@@ -72,7 +88,7 @@ export default function Module16_EmergencySOS() {
               href="tel:108"
               className="px-6 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm border border-white/20 flex items-center gap-2 transition-transform hover:scale-105"
             >
-              <Phone className="w-4 h-4 text-aurora-teal" />
+              <Ambulance className="w-4 h-4 text-aurora-teal" />
               <span>Call 108 (Ambulance)</span>
             </a>
           </div>
@@ -88,7 +104,7 @@ export default function Module16_EmergencySOS() {
           </h3>
           <Button size="sm" variant="outline" onClick={handleAcquireLocation} loading={locating}>
             <Navigation className="w-3.5 h-3.5 text-aurora-red" />
-            <span>Pin Current Location</span>
+            <span>Locate Nearest Emergency Centers</span>
           </Button>
         </div>
 
@@ -96,7 +112,7 @@ export default function Module16_EmergencySOS() {
           <div className="p-4 rounded-2xl bg-slate-100 dark:bg-aurora-midnight font-mono text-xs text-slate-800 dark:text-slate-200 flex items-center justify-between">
             <span>Latitude: {currentCoords.lat.toFixed(6)} | Longitude: {currentCoords.lng.toFixed(6)}</span>
             <a
-              href={`https://maps.google.com/?q=${currentCoords.lat},${currentCoords.lng}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${currentCoords.lat},${currentCoords.lng}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-aurora-blue font-bold flex items-center gap-1 hover:underline"
@@ -107,10 +123,57 @@ export default function Module16_EmergencySOS() {
           </div>
         ) : (
           <p className="text-xs text-slate-500">
-            Click 'Pin Current Location' to allow GPS access so responders can locate you accurately.
+            Click 'Locate Nearest Emergency Centers' to resolve your GPS coordinates and fetch live emergency trauma hospitals.
           </p>
         )}
       </Card>
+
+      {/* Nearby Emergency Trauma Centers */}
+      {nearbyTraumaCenters.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-aurora-teal" />
+            <span>Nearest Emergency Hospitals & Trauma Centers</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {nearbyTraumaCenters.map((hosp, idx) => (
+              <Card key={idx} className="p-4 space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-start justify-between gap-1">
+                    <h4 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1">{hosp.name}</h4>
+                    <Badge variant="blue" className="text-[9px] shrink-0">Emergency</Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
+                    {hosp.address?.formattedAddress || hosp.address?.city || 'India'}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                  <a
+                    href={`tel:${hosp.contact?.emergencyHotline || hosp.contact?.phone || '112'}`}
+                    className="text-aurora-teal font-semibold flex items-center gap-1 text-[11px]"
+                  >
+                    <Phone className="w-3 h-3" />
+                    <span>{hosp.contact?.emergencyHotline || hosp.contact?.phone || '112'}</span>
+                  </a>
+                  {hosp.directionsUrl && (
+                    <a
+                      href={hosp.directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-aurora-blue font-bold flex items-center gap-1 hover:underline text-[11px]"
+                    >
+                      <span>Navigate</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* First-Aid Emergency Protocols */}
       <div className="space-y-4">

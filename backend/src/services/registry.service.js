@@ -505,11 +505,24 @@ class RegistryService {
    * Deduplicate incoming external discovery items against MongoDB records
    * @param {Array} discoveredPlaces
    */
-  async deduplicateDiscoveredFacilities(discoveredPlaces) {
+  /**
+   * Deduplicate incoming external discovery items against MongoDB records
+   * @param {Array} discoveredPlaces
+   * @param {Array} [existingRecords]
+   */
+  async deduplicateDiscoveredFacilities(discoveredPlaces, existingRecords = null) {
     if (!discoveredPlaces || discoveredPlaces.length === 0) return [];
 
-    const existingHospitals = await Hospital.find({}).select('name location address sourceIdentifier');
-    
+    let existingHospitals = existingRecords;
+    if (!existingHospitals) {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        existingHospitals = await Hospital.find({}).select('name location address sourceIdentifier');
+      } else {
+        existingHospitals = [];
+      }
+    }
+
     return discoveredPlaces.filter(dp => {
       // 1. Check place ID
       const hasIdMatch = existingHospitals.some(h => h.sourceIdentifier === dp.googlePlaceId || h.sourceIdentifier === dp.id);
