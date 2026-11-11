@@ -57,11 +57,22 @@ class AuthController {
   async verifyOTP(req, res, next) {
     try {
       const { target, type, otp, purpose, phone } = req.body;
+      const communicationService = require('../services/communication.service');
+
+      // 1. Direct Twilio Verify carrier check if phone is available
+      const phoneCandidate = phone || (type === 'MOBILE' ? target : null);
+      if (phoneCandidate) {
+        const twCheck = await communicationService.checkTwilioVerify({ to: phoneCandidate, code: otp });
+        if (twCheck && twCheck.success) {
+          return successResponse(res, { verified: true }, 'Code verified successfully via SMS.');
+        }
+      }
+
+      // 2. Standard internal store verification check
       let verified = false;
       try {
         verified = await otpService.verifyOTP(target, type, otp, purpose);
       } catch (primaryErr) {
-        // If verification fails against target, try verifying against phone if provided
         if (phone && phone !== target) {
           try {
             verified = await otpService.verifyOTP(phone, 'MOBILE', otp, purpose);

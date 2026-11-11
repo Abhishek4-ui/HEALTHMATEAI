@@ -140,7 +140,7 @@ class CommunicationService {
   }
 
   /**
-   * Send SMS Notification (via Fast2SMS Indian Gateway or Twilio)
+   * Send SMS Notification (via Twilio Verify Service, Fast2SMS, or Twilio Messages)
    */
   async sendSMS({ to, body }) {
     if (process.env.SMS_ENABLED === 'false') {
@@ -154,65 +154,50 @@ class CommunicationService {
 
     if (!to) return { success: false, reason: 'NO_PHONE_NUMBER' };
 
-    // Clean Indian phone number to 10 digits
-    const cleanedDigits = to.replace(/\D/g, '');
-    const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
-
-    // 1. Try Fast2SMS Indian SMS Gateway (Direct HTTPS Port 443 to Indian Carriers)
-    const fast2smsKey = process.env.FAST2SMS_API_KEY;
-    if (fast2smsKey && mobile10.length === 10) {
-      try {
-        // Extract 6-digit OTP from message body if present
-        const otpMatch = body.match(/\b\d{6}\b/);
-        const otpCode = otpMatch ? otpMatch[0] : '';
-
-        // Try OTP Route first
-        if (otpCode) {
-          const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&variables_values=${otpCode}&route=otp&numbers=${mobile10}`;
-          const fastRes = await fetch(otpUrl, { method: 'GET', signal: AbortSignal.timeout(3000) });
-          const fastData = await fastRes.json();
-          if (fastData.return || fastData.status_code === 200) {
-            logger.info('SMS delivered via Fast2SMS OTP route', { to: mobile10, reqId: fastData.request_id });
-            return { success: true, provider: 'fast2sms', requestId: fastData.request_id };
-          } else {
-            logger.warn('Fast2SMS OTP route response:', fastData);
-          }
-        }
-
-        // Try Quick SMS Route fallback
-        const quickRes = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-          method: 'POST',
-          signal: AbortSignal.timeout(3000),
-          headers: {
-            'authorization': fast2smsKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            route: 'q',
-            message: body,
-            flash: 0,
-            numbers: mobile10
-          })
-        });
-        const quickData = await quickRes.json();
-        if (quickData.return || quickData.status_code === 200) {
-          logger.info('SMS delivered via Fast2SMS Quick route', { to: mobile10, reqId: quickData.request_id });
-          return { success: true, provider: 'fast2sms', requestId: quickData.request_id };
-        } else {
-          logger.warn('Fast2SMS Quick route response:', quickData);
-        }
-      } catch (fastErr) {
-        logger.warn('Fast2SMS delivery error, attempting Twilio fallback:', { error: fastErr.message });
-      }
-    }
-
-    // 2. Try Twilio Fallback
     let formattedPhone = to.trim();
     if (!formattedPhone.startsWith('+')) {
       if (formattedPhone.length === 10) formattedPhone = `+91${formattedPhone}`;
       else formattedPhone = `+${formattedPhone}`;
     }
 
+    // 1. Try Twilio Verify API (Delivers real carrier SMS to Indian numbers without template rejections)
+    if (this.twilioClient) {
+      const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID || 'VA22d1ecf19c36afe90c791b3298263573';
+      try {
+        const verification = await this.twilioClient.verify.v2.services(serviceSid)
+          .verifications
+          .create({ to: formattedPhone, channel: 'sms' });
+        logger.info('SMS dispatched via Twilio Verify Service', { sid: verification.sid, to: formattedPhone });
+        return { success: true, provider: 'twilio-verify', sid: verification.sid };
+      } catch (verifyErr) {
+        logger.warn('Twilio Verify dispatch notice:', { error: verifyErr.message, to: formattedPhone });
+      }
+    }
+
+    // 2. Try Fast2SMS Indian SMS Gateway fallback
+    const cleanedDigits = to.replace(/\D/g, '');
+    const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
+    const fast2smsKey = process.env.FAST2SMS_API_KEY;
+
+    if (fast2smsKey && mobile10.length === 10) {
+      try {
+        const otpMatch = body.match(/\b\d{6}\b/);
+        const otpCode = otpMatch ? otpMatch[0] : '';
+        if (otpCode) {
+          const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&variables_values=${otpCode}&route=otp&numbers=${mobile10}`;
+          const fastRes = await fetch(otpUrl, { method: 'GET', signal: AbortSignal.timeout(2000) });
+          const fastData = await fastRes.json();
+          if (fastData.return || fastData.status_code === 200) {
+            logger.info('SMS delivered via Fast2SMS', { to: mobile10 });
+            return { success: true, provider: 'fast2sms', requestId: fastData.request_id };
+          }
+        }
+      } catch (fastErr) {
+        logger.warn('Fast2SMS fallback error:', { error: fastErr.message });
+      }
+    }
+
+    // 3. Try Standard Twilio Messages API
     if (this.twilioClient && process.env.TWILIO_PHONE_NUMBER) {
       try {
         let fromNumber = process.env.TWILIO_PHONE_NUMBER.trim();
@@ -224,26 +209,44 @@ class CommunicationService {
           to: formattedPhone,
         });
 
-        logger.info('SMS message dispatched via Twilio', { sid: message.sid, to: formattedPhone });
+        logger.info('SMS message dispatched via Twilio Messages', { sid: message.sid, to: formattedPhone });
         return { success: true, provider: 'twilio', sid: message.sid };
       } catch (twErr) {
-        logger.warn('Twilio SMS dispatch rejected by provider:', { error: twErr.message, to: formattedPhone });
-        return {
-          success: false,
-          provider: 'twilio',
-          error: 'TWILIO_PROVIDER_ERROR',
-          details: twErr.message,
-        };
+        logger.warn('Twilio Messages dispatch rejected by provider:', { error: twErr.message, to: formattedPhone });
       }
     }
 
-    logger.warn('Twilio client or sender phone number not configured for SMS', { to: formattedPhone });
     return {
       success: false,
-      provider: 'twilio',
-      error: 'TWILIO_NOT_CONFIGURED',
-      message: 'Twilio SMS is not fully configured with a provisioned sender phone number.'
+      provider: 'none',
+      error: 'NO_SMS_PROVIDER_AVAILABLE',
     };
+  }
+
+  /**
+   * Check verification code directly against Twilio Verify Service
+   */
+  async checkTwilioVerify({ to, code }) {
+    if (!this.twilioClient || !to || !code) return { success: false };
+    let formattedPhone = to.trim();
+    if (!formattedPhone.startsWith('+')) {
+      if (formattedPhone.length === 10) formattedPhone = `+91${formattedPhone}`;
+      else formattedPhone = `+${formattedPhone}`;
+    }
+    const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID || 'VA22d1ecf19c36afe90c791b3298263573';
+    try {
+      const check = await this.twilioClient.verify.v2.services(serviceSid)
+        .verificationChecks
+        .create({ to: formattedPhone, code: code.trim() });
+      if (check.status === 'approved' || check.valid) {
+        logger.info('Twilio Verify code approved successfully', { to: formattedPhone });
+        return { success: true, status: 'approved' };
+      }
+      return { success: false, status: check.status };
+    } catch (err) {
+      logger.warn('Twilio Verify check rejected or expired:', { error: err.message, to: formattedPhone });
+      return { success: false, error: err.message };
+    }
   }
 
   /**
