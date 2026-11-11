@@ -67,7 +67,7 @@ export default function RegisterPage() {
       addToast({
         type: 'success',
         title: 'Account Registered',
-        message: otpCode ? `Verification code: ${otpCode} (also dispatched to email)` : 'Verification code dispatched to your email and phone.',
+        message: 'A 6-digit verification code has been dispatched to your email.',
       });
 
       navigate('/verify-otp', { 

@@ -17,6 +17,7 @@ import PrivacySecurityPage from './pages/public/PrivacySecurityPage';
 import ContactPage from './pages/public/ContactPage';
 import TermsPage from './pages/public/TermsPage';
 import PrivacyPolicyPage from './pages/public/PrivacyPolicyPage';
+import EmergencyPage from './pages/public/EmergencyPage';
 import NotFoundPage from './pages/public/NotFoundPage';
 
 // Auth Pages
@@ -103,6 +104,7 @@ export default function App() {
                 <Route path="/ai-technology" element={<AITechnologyPage />} />
                 <Route path="/privacy-security" element={<PrivacySecurityPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/emergency" element={<EmergencyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 
