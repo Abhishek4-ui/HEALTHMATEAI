@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/v1/ai", tags=["Clinical Hybrid AI Pipeline"])
 
 # Pydantic Schemas
 class SymptomCheckRequest(BaseModel):
-    symptom_text: str = Field(..., example="I have had a throbbing headache with light sensitivity and nausea for two days.")
+    symptom_text: str = Field(..., json_schema_extra={"example": "I have had a throbbing headache with light sensitivity and nausea for two days."})
 
 class CardioRiskRequest(BaseModel):
     age: int = Field(50, ge=18, le=100)
@@ -40,7 +40,7 @@ class SoapSummarizeRequest(BaseModel):
     patient_info: Optional[Dict[str, Any]] = None
 
 class DrugInteractionRequest(BaseModel):
-    medications: List[str] = Field(..., example=["Aspirin 75mg", "Warfarin 5mg"])
+    medications: List[str] = Field(..., json_schema_extra={"example": ["Aspirin 75mg", "Warfarin 5mg"]})
 
 # Endpoints
 @router.post("/symptom-check")
@@ -105,7 +105,7 @@ async def drug_interactions(payload: DrugInteractionRequest):
     return clinical_copilot.check_drug_interactions(payload.medications)
 
 class RAGQueryRequest(BaseModel):
-    query: str = Field(..., example="What are the diagnostic thresholds for Type 2 Diabetes according to ADA guidelines?")
+    query: str = Field(..., json_schema_extra={"example": "What are the diagnostic thresholds for Type 2 Diabetes according to ADA guidelines?"})
     top_k: int = Field(2, ge=1, le=5)
 
 @router.post("/rag/retrieve")

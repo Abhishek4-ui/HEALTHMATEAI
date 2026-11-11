@@ -59,13 +59,11 @@ export default function Module03_SymptomChecker() {
         });
       }
     } catch (err) {
-      setResult({
-        recommendedSpecialist: 'General Physician',
-        message: 'Based on reported duration and severity, a consultation with a general physician is recommended.',
-        shapFactors: [
-          { feature: 'Duration', impact: `${formData.durationDays} days` },
-          { feature: 'Severity', impact: `${formData.severity}/10` },
-        ]
+      setResult(null);
+      addToast({
+        type: 'error',
+        title: 'Triage Service Unavailable',
+        message: err?.response?.data?.message || err?.message || 'Unable to analyze reported symptoms. If you are experiencing severe symptoms, please seek emergency care immediately.',
       });
     } finally {
       setLoading(false);

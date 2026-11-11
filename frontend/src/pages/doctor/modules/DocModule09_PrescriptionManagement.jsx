@@ -106,19 +106,21 @@ export default function DocModule09_PrescriptionManagement() {
     const signedData = {
       ...prescription,
       doctorName: user?.name || 'Dr. Medical Practitioner',
-      doctorNmcNumber: 'KMC/2018/98712',
+      doctorNmcNumber: user?.nmcNumber || user?.doctorProfile?.registrationNumber || 'NMC-REGISTERED',
       signedAt: new Date().toISOString(),
       digitalSignatureHash: hash,
     };
 
     try {
-      await doctorService.issuePrescription({
-        appointmentId: prescription.appointmentId || 'apt_mock_session',
-        diagnosis: prescription.diagnosis,
-        medications: prescription.medications,
-        dietaryAndLifestyleAdvice: prescription.lifestyleAdvice,
-        followUpDate: prescription.followUpDate,
-      });
+      if (prescription.appointmentId) {
+        await doctorService.issuePrescription({
+          appointmentId: prescription.appointmentId,
+          diagnosis: prescription.diagnosis,
+          medications: prescription.medications,
+          dietaryAndLifestyleAdvice: prescription.lifestyleAdvice,
+          followUpDate: prescription.followUpDate,
+        });
+      }
     } catch (e) {
       // Handled in session fallback
     }
@@ -226,6 +228,16 @@ export default function DocModule09_PrescriptionManagement() {
             <div className="p-3 rounded-xl bg-slate-100 dark:bg-aurora-midnight text-xs text-slate-500 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-aurora-teal animate-spin" />
               <span>Running AI Pharmacovigilance cross-check...</span>
+            </div>
+          )}
+
+          {!checkingInteractions && prescription.medications.length >= 2 && interactions.length === 0 && (
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-aurora-midnight border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Formulary Status: <strong>NOT_ASSESSED</strong> (No documented contraindications in local monograph index. Clinician pharmacology review required).</span>
+              </div>
+              <Badge variant="neutral">NOT_ASSESSED</Badge>
             </div>
           )}
 

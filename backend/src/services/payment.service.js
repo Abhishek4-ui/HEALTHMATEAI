@@ -56,11 +56,18 @@ class PaymentService {
         orderId = rzpOrder.id;
         logger.info('Live Razorpay test order created successfully', { orderId, amount: payableAmount });
       } catch (rzpErr) {
-        logger.warn('Razorpay API order creation failed, falling back to simulated order:', rzpErr.message);
-        orderId = 'order_' + crypto.randomBytes(12).toString('hex');
+        logger.error('Razorpay gateway order creation rejected:', { error: rzpErr.message });
+        if (process.env.NODE_ENV === 'production') {
+          throw new Error(`Payment Gateway Error: ${rzpErr.message}`);
+        }
+        // In local test / dev offline environments:
+        orderId = 'order_test_' + crypto.randomBytes(8).toString('hex');
       }
     } else {
-      orderId = 'order_' + crypto.randomBytes(12).toString('hex');
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Payment gateway credentials are not configured in production.');
+      }
+      orderId = 'order_test_' + crypto.randomBytes(8).toString('hex');
     }
 
     const transaction = await PaymentTransaction.create({

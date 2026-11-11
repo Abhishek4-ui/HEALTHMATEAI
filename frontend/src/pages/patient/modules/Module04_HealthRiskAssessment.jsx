@@ -40,15 +40,11 @@ export default function Module04_HealthRiskAssessment() {
         shapFactors: data.shap_feature_importance || data.shap_feature_attributions || []
       });
     } catch (err) {
-      setAssessmentResult({
-        riskTier: 'Normal to Mild Risk',
-        riskCategory: 'Cardiovascular & Metabolic Overview',
-        summary: 'Your submitted vital parameters are within typical healthy ranges.',
-        recommendations: [
-          'Maintain regular moderate exercise (150 minutes per week).',
-          'Check blood pressure every 6 months.',
-          'Eat a balanced diet low in saturated fats and refined sugars.'
-        ]
+      setAssessmentResult(null);
+      addToast({
+        type: 'error',
+        title: 'Assessment Unavailable',
+        message: err?.response?.data?.message || err?.message || 'Unable to compute risk calculation. Please verify entered parameters.',
       });
     } finally {
       setLoading(false);

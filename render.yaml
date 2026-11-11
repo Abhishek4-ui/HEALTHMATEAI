@@ -1,0 +1,60 @@
+services:
+  # 1. HealthMate AI Core Backend (Node.js Express Gateway)
+  - type: web
+    name: healthmate-backend
+    env: node
+    rootDir: backend
+    plan: standard
+    buildCommand: npm ci --only=production
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CLIENT_URL
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: INTERNAL_SERVICE_SECRET
+        generateValue: true
+      - key: AI_SERVICE_URL
+        fromService:
+          name: healthmate-ai-service
+          type: web
+          property: host
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SMS_ENABLED
+        value: "false"
+
+  # 2. HealthMate AI Python Microservice (FastAPI + PyTorch + Scikit-Learn)
+  - type: web
+    name: healthmate-ai-service
+    env: docker
+    rootDir: ai-service
+    dockerfilePath: Dockerfile
+    plan: standard
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8000
+      - key: REDIS_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false

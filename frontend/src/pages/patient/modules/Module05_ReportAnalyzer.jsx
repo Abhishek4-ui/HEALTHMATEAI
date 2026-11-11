@@ -52,15 +52,11 @@ export default function Module05_ReportAnalyzer() {
         message: `${(data.biomarkers || []).length} laboratory biomarkers extracted against LOINC standards.`
       });
     } catch (err) {
-      setExtractedData({
-        reportName: selectedFile.name,
-        biomarkers: [
-          { name: 'Hemoglobin (Hb)', observed: '13.8', unit: 'g/dL', reference: '13.0 - 17.0', flag: 'NORMAL' },
-          { name: 'Total WBC Count', observed: '7,800', unit: '/mcL', reference: '4,000 - 11,000', flag: 'NORMAL' },
-          { name: 'Fasting Blood Glucose', observed: '94', unit: 'mg/dL', reference: '70 - 100', flag: 'NORMAL' },
-          { name: 'Serum Creatinine', observed: '0.9', unit: 'mg/dL', reference: '0.7 - 1.3', flag: 'NORMAL' }
-        ],
-        clinicalSummary: 'All detected test values are within standard reference ranges.',
+      setExtractedData(null);
+      addToast({
+        type: 'error',
+        title: 'Extraction Error',
+        message: err?.response?.data?.message || err?.message || 'Unable to extract biomarkers from document. Please ensure the scan is clear, high-resolution, and legible.',
       });
     } finally {
       setAnalyzing(false);

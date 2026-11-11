@@ -176,11 +176,10 @@ export default function Module08_AppointmentManagement() {
       setTab('upcoming');
     } catch (err) {
       addToast({
-        type: 'info',
-        title: 'Slot Reserved',
-        message: 'Your appointment request has been recorded.',
+        type: 'error',
+        title: 'Booking Request Failed',
+        message: err?.response?.data?.message || err?.message || 'Could not complete appointment booking. Please try another slot or contact the clinic.',
       });
-      setTab('upcoming');
     } finally {
       setLoading(false);
     }

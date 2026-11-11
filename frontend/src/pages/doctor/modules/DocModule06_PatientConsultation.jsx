@@ -65,9 +65,9 @@ export default function DocModule06_PatientConsultation() {
       }
     } catch (err) {
       addToast({
-        type: 'info',
-        title: 'Clinical SOAP Note Drafted',
-        message: 'Synthesized using rule-based clinical engine.',
+        type: 'error',
+        title: 'Drafting Failed',
+        message: err?.response?.data?.message || err?.message || 'Unable to synthesize clinical SOAP summary. Please record notes manually.',
       });
     } finally {
       setGenerating(false);
