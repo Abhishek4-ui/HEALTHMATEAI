@@ -17,9 +17,9 @@ class CommunicationService {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: parseInt(process.env.SMTP_PORT || '587', 10),
           secure: process.env.SMTP_PORT === '465',
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 10000,
+          connectionTimeout: 2500,
+          greetingTimeout: 2500,
+          socketTimeout: 2500,
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
