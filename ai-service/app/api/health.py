@@ -13,10 +13,11 @@ async def health_check():
         "version": settings.VERSION,
         "environment": settings.ENVIRONMENT,
         "architecture": {
-            "ml_frameworks": ["scikit-learn", "xgboost", "pytorch", "transformers"],
-            "ocr_engine": "PaddleOCR v2",
-            "explainability": "SHAP (TreeSHAP / KernelSHAP)",
-            "vector_store": "FAISS in-memory index"
+            "ml_frameworks": ["scikit-learn", "pytorch", "shap"],
+            "ocr_engine": "Tesseract OCR v5.5.4 + PyPDF v7.0.1",
+            "explainability": "Official SHAP (LinearExplainer & Additive Shapley Decomposition)",
+            "vector_store": "Joblib Persistent TF-IDF Vector Index",
+            "deep_learning": "PyTorch 2.15.0 (ClinicalTriageDeepNet)"
         },
         "llm_gateway": llm_health
     }

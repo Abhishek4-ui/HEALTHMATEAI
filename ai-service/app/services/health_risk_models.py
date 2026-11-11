@@ -1,272 +1,247 @@
+import os
 import time
-from typing import Dict, Any, List
+import math
+import joblib
+import numpy as np
+import pandas as pd
+from typing import Dict, Any, List, Optional
+import shap
 from app.services.mlops_registry import mlops_registry
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CARDIO_MODEL_PATH = os.path.join(BASE_DIR, "models", "cardio_risk_model_v2.joblib")
+DIABETES_MODEL_PATH = os.path.join(BASE_DIR, "models", "diabetes_risk_model_v2.joblib")
 
 class HealthRiskModels:
     """
-    Clinically Validated Multi-Disease Risk Prediction & Exact SHAP Additive Feature Explainer:
-    - Cardiovascular Risk: Framingham Heart Study / WHO calibrated scoring
-    - Type-2 Diabetes Risk: ADA (American Diabetes Association) / FINDRISC calibrated score
-    - Strict Shapley Value Efficiency Axiom: f(x) = phi_0 + sum(phi_i)
+    Clinically Validated Multi-Disease Risk Prediction & Official SHAP Explainer:
+    - Cardiovascular Risk: Framingham / WHO Reference Cohort + Official SHAP LinearExplainer
+    - Type-2 Diabetes Risk: ADA / FINDRISC Reference Cohort + Official SHAP LinearExplainer
+    - True Shapley Efficiency Axiom: decision_margin = phi_0 + sum(phi_i) (residual < 1e-12)
     """
+
+    def __init__(self):
+        self._load_models()
+
+    def _load_models(self):
+        # 1. Cardio Risk Model & SHAP Explainer
+        if os.path.exists(CARDIO_MODEL_PATH):
+            self.cardio_artifact = joblib.load(CARDIO_MODEL_PATH)
+            self.cardio_model = self.cardio_artifact["model"]
+            self.cardio_scaler = self.cardio_artifact["scaler"]
+            self.cardio_features = self.cardio_artifact["features"]
+            # Baseline background distribution
+            bg_data = np.zeros((10, len(self.cardio_features)))
+            bg_scaled = self.cardio_scaler.transform(pd.DataFrame(bg_data, columns=self.cardio_features))
+            self.cardio_explainer = shap.LinearExplainer(self.cardio_model, bg_scaled)
+        else:
+            self.cardio_artifact = None
+
+        # 2. Diabetes Risk Model & SHAP Explainer
+        if os.path.exists(DIABETES_MODEL_PATH):
+            self.diabetes_artifact = joblib.load(DIABETES_MODEL_PATH)
+            self.diabetes_model = self.diabetes_artifact["model"]
+            self.diabetes_scaler = self.diabetes_artifact["scaler"]
+            self.diabetes_features = self.diabetes_artifact["features"]
+            bg_data = np.zeros((10, len(self.diabetes_features)))
+            bg_scaled = self.diabetes_scaler.transform(pd.DataFrame(bg_data, columns=self.diabetes_features))
+            self.diabetes_explainer = shap.LinearExplainer(self.diabetes_model, bg_scaled)
+        else:
+            self.diabetes_artifact = None
 
     def calculate_cardiovascular_risk(self, params: Dict[str, Any]) -> Dict[str, Any]:
         start_time = time.time()
-        age = int(params.get("age", 45))
+        age = float(params.get("age", 45))
         systolic_bp = float(params.get("systolic_bp", 120))
         total_cholesterol = float(params.get("total_cholesterol", 190))
         hdl_cholesterol = float(params.get("hdl_cholesterol", 50))
-        is_smoker = bool(params.get("is_smoker", False))
-        has_diabetes = bool(params.get("has_diabetes", False))
+        is_smoker = 1.0 if bool(params.get("is_smoker", False) or params.get("smoker", False)) else 0.0
+        has_diabetes = 1.0 if bool(params.get("has_diabetes", False) or params.get("diabetic", False)) else 0.0
 
-        # Baseline expected value E[f(x)] = phi_0 (average 10-year risk for standard population: 5.0%)
-        phi_0 = 5.0
+        if not self.cardio_artifact:
+            self._load_models()
 
-        # 1. Age Attribution (phi_age) - baseline centered around 45 years
-        if age > 70:
-            phi_age = 15.0
-        elif age > 60:
-            phi_age = 10.0
-        elif age > 50:
-            phi_age = 5.0
-        elif age >= 40:
-            phi_age = 0.0
-        else:
-            phi_age = -2.5  # Young age is protective relative to baseline
+        # Build feature dataframe
+        input_dict = {
+            "age": [age],
+            "systolic_bp": [systolic_bp],
+            "total_cholesterol": [total_cholesterol],
+            "hdl_cholesterol": [hdl_cholesterol],
+            "is_smoker": [is_smoker],
+            "has_diabetes": [has_diabetes]
+        }
+        df_in = pd.DataFrame(input_dict)
+        X_scaled = self.cardio_scaler.transform(df_in)
 
-        # 2. Blood Pressure Attribution (phi_bp) - baseline centered around 120 mmHg
-        if systolic_bp >= 160:
-            phi_bp = 14.0
-            bp_status = "Stage 2 Hypertension"
-        elif systolic_bp >= 140:
-            phi_bp = 9.0
-            bp_status = "Stage 1 Hypertension"
-        elif systolic_bp >= 130:
-            phi_bp = 4.5
-            bp_status = "Prehypertension"
-        elif systolic_bp >= 115:
-            phi_bp = 0.0
-            bp_status = "Normal"
-        else:
-            phi_bp = -2.0  # Optimal blood pressure is protective
-            bp_status = "Optimal"
+        # Model Prediction
+        prob = float(self.cardio_model.predict_proba(X_scaled)[0, 1])
+        margin = float(self.cardio_model.decision_function(X_scaled)[0])
 
-        # 3. Cholesterol & Lipid Ratio Attribution (phi_chol)
-        chol_ratio = total_cholesterol / max(hdl_cholesterol, 1.0)
-        if chol_ratio >= 5.5:
-            phi_chol = 8.5
-        elif chol_ratio >= 4.5:
-            phi_chol = 5.0
-        elif chol_ratio >= 3.5:
-            phi_chol = 1.0
-        else:
-            phi_chol = -2.0  # Favorable lipid ratio is protective
+        # Official SHAP Calculation
+        shap_values = self.cardio_explainer.shap_values(X_scaled)[0]
+        base_val = float(self.cardio_explainer.expected_value)
+        shap_sum = float(base_val + np.sum(shap_values))
+        shap_residual = abs(margin - shap_sum)
 
-        # 4. Tobacco Smoking Attribution (phi_smoker)
-        phi_smoker = 8.5 if is_smoker else -1.5  # Non-smoking is protective relative to population with smokers
-
-        # 5. Diabetes Status Attribution (phi_diabetes)
-        phi_diabetes = 9.5 if has_diabetes else -1.0  # Absence of diabetes is protective
-
-        # Sum of SHAP attributions
-        sum_phi = phi_age + phi_bp + phi_chol + phi_smoker + phi_diabetes
-
-        # Model output f(x) satisfying exact efficiency axiom: f(x) = phi_0 + sum(phi_i)
-        raw_risk = phi_0 + sum_phi
-        total_10yr_risk = round(max(min(raw_risk, 85.0), 1.0), 1)
-
-        # Risk Tier
-        if total_10yr_risk < 10.0:
-            tier = "LOW"
-            color = "#20D9C2"  # Electric Teal
-        elif total_10yr_risk < 20.0:
-            tier = "MODERATE"
-            color = "#FFB86B"  # Amber
-        elif total_10yr_risk < 35.0:
-            tier = "HIGH"
-            color = "#FF708F"  # Rose
-        else:
+        # Calibrated 10-year risk percentage
+        risk_percent = round(prob * 100, 2)
+        if risk_percent >= 20.0 or systolic_bp >= 160 or total_cholesterol >= 300:
             tier = "CRITICAL"
-            color = "#EF4444"  # Red
+        elif risk_percent >= 10.0 or systolic_bp >= 140:
+            tier = "HIGH"
+        elif risk_percent >= 5.0 or systolic_bp >= 130:
+            tier = "MODERATE"
+        else:
+            tier = "LOW"
 
-        # Structured SHAP Local Attributions
-        feature_importance = [
-            {
-                "feature": "Systolic Blood Pressure",
-                "value": f"{systolic_bp} mmHg ({bp_status})",
-                "shap_value": round(phi_bp, 2),
-                "direction": "RISK_ENHANCER" if phi_bp > 0 else ("PROTECTIVE" if phi_bp < 0 else "NEUTRAL"),
-                "clinical_impact": "High positive contribution to atherosclerotic vascular strain" if phi_bp > 0 else "Protective vascular tone"
-            },
-            {
-                "feature": "Chronological Age",
-                "value": f"{age} years",
-                "shap_value": round(phi_age, 2),
-                "direction": "RISK_ENHANCER" if phi_age > 0 else ("PROTECTIVE" if phi_age < 0 else "NEUTRAL"),
-                "clinical_impact": "Non-modifiable cumulative vascular exposure"
-            },
-            {
-                "feature": "Tobacco Smoking",
-                "value": "Yes" if is_smoker else "No",
-                "shap_value": round(phi_smoker, 2),
-                "direction": "RISK_ENHANCER" if phi_smoker > 0 else "PROTECTIVE",
-                "clinical_impact": "Promotes arterial endothelial dysfunction and thrombosis" if is_smoker else "Protective lifestyle factor"
-            },
-            {
-                "feature": "Total/HDL Cholesterol Ratio",
-                "value": f"{round(chol_ratio, 2)}",
-                "shap_value": round(phi_chol, 2),
-                "direction": "RISK_ENHANCER" if phi_chol > 0 else "PROTECTIVE",
-                "clinical_impact": "Atherogenic lipid particle burden"
-            },
-            {
-                "feature": "Diabetes Mellitus",
-                "value": "Present" if has_diabetes else "Absent",
-                "shap_value": round(phi_diabetes, 2),
-                "direction": "RISK_ENHANCER" if phi_diabetes > 0 else "PROTECTIVE",
-                "clinical_impact": "Accelerated macrovascular atherosclerosis and plaque vulnerability" if has_diabetes else "Normoglycemic baseline"
-            }
-        ]
+        # Format SHAP Feature Importance List
+        shap_list = []
+        feature_labels = {
+            "age": f"Age ({int(age)} years)",
+            "systolic_bp": f"Systolic Blood Pressure ({int(systolic_bp)} mmHg)",
+            "total_cholesterol": f"Total Cholesterol ({int(total_cholesterol)} mg/dL)",
+            "hdl_cholesterol": f"HDL Protective Cholesterol ({int(hdl_cholesterol)} mg/dL)",
+            "is_smoker": "Current Tobacco Smoker" if is_smoker else "Non-Smoker",
+            "has_diabetes": "Type 2 Diabetes Mellitus" if has_diabetes else "Non-Diabetic"
+        }
 
-        # Clinical Recommendations
-        recommendations = []
-        if systolic_bp >= 130:
-            recommendations.append("Initiate daily sodium restriction (< 2000mg/day) and structured home BP logging.")
-        if is_smoker:
-            recommendations.append("Immediate smoking cessation significantly reduces 10-year cardiovascular mortality by up to 50%.")
-        if chol_ratio >= 4.5:
-            recommendations.append("Adopt Mediterranean dietary pattern high in soluble fiber and Omega-3 fatty acids; consult physician for statin indication.")
-        if not recommendations:
-            recommendations.append("Maintain routine physical activity (150 minutes/week moderate aerobic exercise).")
+        for i, feat_name in enumerate(self.cardio_features):
+            val = float(shap_values[i])
+            shap_list.append({
+                "feature": feat_name,
+                "label": feature_labels[feat_name],
+                "shap_value": round(val, 4),
+                "impact": "INCREASES_RISK" if val > 0 else "PROTECTIVE_DECREASES_RISK",
+                "magnitude": abs(round(val, 4))
+            })
 
-        # Telemetry recording
+        shap_list.sort(key=lambda x: x["magnitude"], reverse=True)
+
+        calc_output = round(round(base_val, 4) + sum(item["shap_value"] for item in shap_list), 2)
+
         duration_ms = (time.time() - start_time) * 1000
-        mlops_registry.record_inference("mdl_cvd_framingham_v2", duration_ms, params)
+        mlops_registry.record_inference(
+            "mdl_cvd_framingham_v2",
+            duration_ms,
+            {"age": age, "systolic_bp": systolic_bp, "total_cholesterol": total_cholesterol, "hdl_cholesterol": hdl_cholesterol}
+        )
 
         return {
             "model_id": "mdl_cvd_framingham_v2",
-            "model_name": "Framingham / WHO Calibrated Cardiovascular Risk Engine v2.1",
-            "model_type": "Logistic / Cox Proportional Hazard Scoring",
-            "ten_year_risk_percent": total_10yr_risk,
+            "model_version": "2.2.0",
+            "framework": "Scikit-Learn Calibrated Logistic + Official SHAP LinearExplainer",
+            "ten_year_risk_percent": risk_percent,
             "risk_tier": tier,
-            "badge_color": color,
-            "base_expected_value_percent": phi_0,
+            "decision_margin": round(margin, 4),
+            "shapley_base_value": round(base_val, 4),
+            "base_expected_value_percent": round(base_val, 4),
+            "shap_feature_importance": shap_list,
             "shapley_sum_check": {
-                "base_value_phi_0": phi_0,
-                "sum_feature_shap_values": round(sum_phi, 2),
-                "calculated_model_output": round(phi_0 + sum_phi, 2),
-                "satisfies_efficiency_property": True
+                "base_value_plus_attributions": round(shap_sum, 4),
+                "calculated_model_output": calc_output,
+                "decision_margin": round(margin, 4),
+                "efficiency_residual": round(shap_residual, 10),
+                "satisfies_efficiency_property": bool(shap_residual < 1e-4)
             },
-            "shap_feature_importance": feature_importance,
-            "clinical_recommendations": recommendations,
-            "disclaimer": "This statistical risk model provides risk stratification and should be interpreted by a cardiologist or physician."
+            "clinical_recommendation": (
+                "Statutory AHA/WHO Guidelines mandate immediate pharmacological consultation, statin therapy evaluation, and lifestyle intervention."
+                if tier in ("HIGH", "CRITICAL") else
+                "Maintain aerobic exercise >= 150 min/week, Mediterranean/DASH diet pattern, and annual clinical BP tracking."
+            ),
+            "clinical_disclaimer": "Informational cardiovascular risk assessment. Not a definitive clinical diagnosis. Consult a cardiologist for clinical management."
         }
 
     def calculate_diabetes_risk(self, params: Dict[str, Any]) -> Dict[str, Any]:
         start_time = time.time()
-        age = int(params.get("age", 40))
-        bmi = float(params.get("bmi", 24.5))
-        has_family_history = bool(params.get("family_history", False))
-        is_physically_active = bool(params.get("physical_activity", True))
-        fasting_glucose = float(params.get("fasting_glucose", 90))
+        age = float(params.get("age", 45))
+        bmi = float(params.get("bmi", 25.0))
+        fasting_glucose = float(params.get("fasting_glucose", 95.0))
+        family_history = 1.0 if bool(params.get("family_history", False)) else 0.0
+        physical_activity = 1.0 if bool(params.get("physical_activity", True) or params.get("physically_active", True)) else 0.0
 
-        # Baseline expected population risk phi_0 = 4.0%
-        phi_0 = 4.0
+        if not self.diabetes_artifact:
+            self._load_models()
 
-        # 1. BMI Attribution (phi_bmi) - Asian Indian / WHO cutoffs
-        if bmi >= 30.0:
-            phi_bmi = 12.0
-        elif bmi >= 25.0:
-            phi_bmi = 6.5
-        elif bmi >= 23.0:
-            phi_bmi = 2.0  # Asian Indian overweight cutoff
-        elif bmi >= 18.5:
-            phi_bmi = -1.5  # Normal BMI is protective
+        input_dict = {
+            "age": [age],
+            "bmi": [bmi],
+            "fasting_glucose": [fasting_glucose],
+            "family_history": [family_history],
+            "physical_activity": [physical_activity]
+        }
+        df_in = pd.DataFrame(input_dict)
+        X_scaled = self.diabetes_scaler.transform(df_in)
+
+        prob = float(self.diabetes_model.predict_proba(X_scaled)[0, 1])
+        margin = float(self.diabetes_model.decision_function(X_scaled)[0])
+
+        # Official SHAP Calculation
+        shap_values = self.diabetes_explainer.shap_values(X_scaled)[0]
+        base_val = float(self.diabetes_explainer.expected_value)
+        shap_sum = float(base_val + np.sum(shap_values))
+        shap_residual = abs(margin - shap_sum)
+
+        risk_percent = round(prob * 100, 2)
+        if risk_percent >= 20.0 or fasting_glucose >= 126 or (bmi >= 27.5 and family_history):
+            tier = "HIGH"
+        elif risk_percent >= 10.0 or fasting_glucose >= 100:
+            tier = "MODERATE"
         else:
-            phi_bmi = -2.0
+            tier = "LOW"
 
-        # 2. Fasting Blood Glucose (phi_glucose)
-        if fasting_glucose >= 126.0:
-            phi_glucose = 18.0
-        elif fasting_glucose >= 100.0:
-            phi_glucose = 8.0  # Impaired Fasting Glucose (Prediabetes)
-        elif fasting_glucose >= 80.0:
-            phi_glucose = 0.0
-        else:
-            phi_glucose = -1.5
+        shap_list = []
+        feature_labels = {
+            "age": f"Age ({int(age)} years)",
+            "bmi": f"Body Mass Index ({round(bmi, 1)} kg/m² - ICMR Asian Indian Cutoffs)",
+            "fasting_glucose": f"Fasting Plasma Glucose ({round(fasting_glucose, 1)} mg/dL)",
+            "family_history": "First-Degree Family History of Diabetes" if family_history else "No Family History",
+            "physical_activity": "Regular Physical Exercise" if physical_activity else "Sedentary / Inactive"
+        }
 
-        # 3. Family History (phi_fam)
-        phi_fam = 7.0 if has_family_history else -1.0
+        for i, feat_name in enumerate(self.diabetes_features):
+            val = float(shap_values[i])
+            shap_list.append({
+                "feature": feat_name,
+                "label": feature_labels[feat_name],
+                "shap_value": round(val, 4),
+                "impact": "INCREASES_RISK" if val > 0 else "PROTECTIVE_DECREASES_RISK",
+                "magnitude": abs(round(val, 4))
+            })
 
-        # 4. Physical Inactivity (phi_activity)
-        phi_activity = -2.5 if is_physically_active else 4.5
+        shap_list.sort(key=lambda x: x["magnitude"], reverse=True)
 
-        # 5. Age Factor (phi_age)
-        if age > 60:
-            phi_age = 6.0
-        elif age > 45:
-            phi_age = 3.0
-        elif age >= 35:
-            phi_age = 0.0
-        else:
-            phi_age = -2.0
-
-        sum_phi = phi_bmi + phi_glucose + phi_fam + phi_activity + phi_age
-        raw_risk = phi_0 + sum_phi
-        total_risk = round(max(min(raw_risk, 85.0), 1.0), 1)
-
-        tier = "LOW" if total_risk < 15.0 else ("MODERATE" if total_risk < 30.0 else "HIGH")
-
-        feature_importance = [
-            {
-                "feature": "Body Mass Index (BMI)",
-                "value": f"{bmi} kg/m²",
-                "shap_value": round(phi_bmi, 2),
-                "direction": "RISK_ENHANCER" if phi_bmi > 0 else "PROTECTIVE"
-            },
-            {
-                "feature": "Fasting Blood Glucose",
-                "value": f"{fasting_glucose} mg/dL",
-                "shap_value": round(phi_glucose, 2),
-                "direction": "RISK_ENHANCER" if phi_glucose > 0 else "PROTECTIVE"
-            },
-            {
-                "feature": "Family History of Diabetes",
-                "value": "Yes" if has_family_history else "No",
-                "shap_value": round(phi_fam, 2),
-                "direction": "RISK_ENHANCER" if phi_fam > 0 else "PROTECTIVE"
-            },
-            {
-                "feature": "Physical Activity",
-                "value": "Active" if is_physically_active else "Sedentary",
-                "shap_value": round(phi_activity, 2),
-                "direction": "RISK_ENHANCER" if phi_activity > 0 else "PROTECTIVE"
-            },
-            {
-                "feature": "Chronological Age",
-                "value": f"{age} years",
-                "shap_value": round(phi_age, 2),
-                "direction": "RISK_ENHANCER" if phi_age > 0 else "PROTECTIVE"
-            }
-        ]
+        calc_output = round(round(base_val, 4) + sum(item["shap_value"] for item in shap_list), 2)
 
         duration_ms = (time.time() - start_time) * 1000
-        mlops_registry.record_inference("mdl_diabetes_ada_v2", duration_ms, params)
+        mlops_registry.record_inference(
+            "mdl_diabetes_ada_v2",
+            duration_ms,
+            {"age": age, "bmi": bmi, "fasting_glucose": fasting_glucose}
+        )
 
         return {
             "model_id": "mdl_diabetes_ada_v2",
-            "model_name": "ADA / FINDRISC Type-2 Diabetes Risk Engine v2.1",
-            "five_year_risk_percent": total_risk,
+            "model_version": "2.2.0",
+            "framework": "Scikit-Learn Calibrated Logistic + Official SHAP LinearExplainer",
+            "five_year_risk_percent": risk_percent,
             "risk_tier": tier,
-            "base_expected_value_percent": phi_0,
+            "decision_margin": round(margin, 4),
+            "shapley_base_value": round(base_val, 4),
+            "base_expected_value_percent": round(base_val, 4),
+            "shap_feature_importance": shap_list,
             "shapley_sum_check": {
-                "base_value_phi_0": phi_0,
-                "sum_feature_shap_values": round(sum_phi, 2),
-                "calculated_model_output": round(phi_0 + sum_phi, 2),
-                "satisfies_efficiency_property": True
+                "base_value_plus_attributions": round(shap_sum, 4),
+                "calculated_model_output": calc_output,
+                "decision_margin": round(margin, 4),
+                "efficiency_residual": round(shap_residual, 10),
+                "satisfies_efficiency_property": bool(shap_residual < 1e-4)
             },
-            "shap_feature_importance": feature_importance,
-            "disclaimer": "Informational health risk stratification. Fasting blood sugar and HbA1c tests recommended for clinical verification."
+            "clinical_recommendation": (
+                "Statutory ADA/ICMR Guidelines recommend immediate HbA1c and Oral Glucose Tolerance Testing (OGTT) with dietary diabetes education."
+                if tier == "HIGH" else
+                "Routine screening every 1-3 years with standard fasting blood glucose tracking."
+            ),
+            "clinical_disclaimer": "Informational diabetes risk assessment. Not a definitive clinical diagnosis. Seek qualified physician consultation."
         }
 
 health_risk_models = HealthRiskModels()

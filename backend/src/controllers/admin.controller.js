@@ -145,6 +145,28 @@ class AdminController {
     }
   }
 
+  async rollbackModel(req, res, next) {
+    try {
+      const { modelId, targetVersion } = req.body;
+      if (!modelId || !targetVersion) {
+        return errorResponse(res, 'modelId and targetVersion are required.', 400, 'PARAM_MISSING');
+      }
+      const result = await aiGateway.rollbackMLOpsModel(modelId, targetVersion);
+      await auditService.recordEvent({
+        actorId: req.user.id,
+        actorRole: 'ADMINISTRATION',
+        action: 'ROLLBACK_AI_MODEL',
+        targetResource: { resourceType: 'AI_MODEL', resourceId: modelId },
+        metadata: { targetVersion },
+        ipAddress: req.ip,
+        statusCode: 200,
+      });
+      return successResponse(res, result, 'Model version rollback processed.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'ROLLBACK_ERROR');
+    }
+  }
+
   async getDatasets(req, res, next) {
     try {
       const datasets = await monitoringService.getDatasets();

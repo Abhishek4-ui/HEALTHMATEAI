@@ -90,12 +90,18 @@ class AIGatewayService {
       });
       if (res.ok) {
         const data = await res.json();
+        const recList = Array.isArray(data.clinical_recommendations)
+          ? data.clinical_recommendations
+          : data.clinical_recommendation
+            ? [data.clinical_recommendation]
+            : ['Maintain regular cardiovascular screening and consult a physician.'];
         return {
           ...data,
           risk_score_percent: data.ten_year_risk_percent,
           risk_category: data.risk_tier,
           shap_feature_attributions: data.shap_feature_importance,
-          lifestyle_recommendations: data.clinical_recommendations,
+          lifestyle_recommendations: recList,
+          clinical_recommendations: recList,
         };
       }
     } catch (e) {
@@ -253,6 +259,9 @@ class AIGatewayService {
 
     return {
       soap_summary: `SUBJECTIVE: Patient presents with reported symptoms for evaluation.\nOBJECTIVE: Clinical consultation recorded.\nASSESSMENT: Clinical evaluation indicated.\nPLAN: Diagnostic review and follow-up.`,
+      approval_status: 'DRAFT_REQUIRES_DOCTOR_AUTHORIZATION',
+      is_finalized: false,
+      doctor_signoff_required: true,
       provider: 'rule_based_fallback',
       is_synthesized: true,
     };
@@ -397,6 +406,23 @@ class AIGatewayService {
       retrieved_evidence: [],
       hallucination_safeguard: 'UNREACHABLE_FALLBACK',
     };
+  }
+
+  /**
+   * Phase 8.1: Model Rollback
+   */
+  async rollbackMLOpsModel(modelId, targetVersion) {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/ai/mlops/rollback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_id: modelId, target_version: targetVersion }),
+      });
+      if (res.ok) return await res.json();
+    } catch (e) {
+      logger.warn('AI microservice unreachable for model rollback:', { error: e.message });
+    }
+    return { success: false, error: 'AI microservice unreachable' };
   }
 }
 

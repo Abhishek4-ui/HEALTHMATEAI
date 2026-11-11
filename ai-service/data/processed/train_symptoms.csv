@@ -1,0 +1,113 @@
+text,disease,icd10,specialty,is_emergency,urgency
+Severe crushing chest pain radiating to left arm with cold sweats and shortness of breath,Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+Burning center chest ache unrelieved by antacids with spreading pain to left wrist,Cardiovascular Emergency,I20.9,Cardiology,True,EMERGENCY
+Episodes of angina lasting more than twenty minutes with radiating neck pain,Cardiovascular Emergency,I20.0,Cardiology,True,EMERGENCY
+Pain in right knee when squatting or standing up from chair with crunchy grating sensation,Osteoarthritis / Degenerative Joint Disease,M17.1,Orthopedics,False,ROUTINE
+"Severe unilateral head pain, extreme sensitivity to room light and sounds with nausea",Migraine with Aura,G43.0,Neurology,False,ROUTINE
+Blurry vision that comes and goes throughout day accompanied by chronic severe fatigue,Type 2 Diabetes Mellitus Presentation,E11.3,Endocrinology,False,URGENT
+"Acute tonsillar infection with swallowing difficulty, high pyrexia and systemic fatigue",Acute Bacterial Pharyngitis / Tonsillitis,J03.9,ENT / General Medicine,False,ROUTINE
+Pins and needles numbness in soles of feet with high thirst and frequent night urination,Type 2 Diabetes Mellitus Presentation,E11.4,Endocrinology,False,URGENT
+Inability to swallow saliva due to severe throat irritation and enlarged tonsillar tissue,Acute Bacterial Pharyngitis / Tonsillitis,J03.9,ENT / General Medicine,False,ROUTINE
+Burning epigastric ache radiating to mid chest worsened by coffee and chocolate,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Nasal congestion, roof of mouth itching, itchy conjunctiva and watery nasal discharge",Allergic Rhinitis / Atopic Dermatitis,J30.9,Dermatology / Allergy,False,ROUTINE
+"Extreme dry tongue, craving iced water nonstop and getting up multiple times to void",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Persistent hacking cough for five days with thick yellowish mucus and slight wheeze,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Eczematous dry itchy skin behind knees that bleeds upon repetitive scratching,Allergic Rhinitis / Atopic Dermatitis,L20.8,Dermatology / Allergy,False,ROUTINE
+"Throat feels like razor blades, fever, headache and visible yellowish patches on tonsils",Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+"Tiredness after meals, burning sensation in feet at night and polyuria",Type 2 Diabetes Mellitus Presentation,E11.4,Endocrinology,False,URGENT
+Severe pain in weight bearing hip joint when descending stairs requiring handrail support,Osteoarthritis / Degenerative Joint Disease,M16.1,Orthopedics,False,ROUTINE
+Bilateral tonsil enlargement touching in midline with purulent crypts and high fever,Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+"Nasal blockage, mouth breathing and itchy tickle in ears and pharynx from cat dander",Allergic Rhinitis / Atopic Dermatitis,J30.8,Dermatology / Allergy,False,ROUTINE
+"Polyphagia with weight loss, lethargy and dark velvety skin patches on back of neck",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Severe pyrosis thirty minutes after eating with bitter fluid backing up into mouth,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Throbbing unilateral headache with neck stiffness and acute nausea for two days,Migraine with Aura,G43.0,Neurology,False,ROUTINE
+"Allergic conjunctivitis with injected sclera, severe itching and swollen lower eyelids",Allergic Rhinitis / Atopic Dermatitis,H10.1,Dermatology / Allergy,False,ROUTINE
+Pounding throbbing headache on right side with zigzag flashing lights in vision,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+"Persistent dryness of throat, sweet smelling breath and excessive daily fluid intake",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+"Persistent indigestion, fullness in stomach and burning pain behind breastbone",Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Chronic bilateral knee pain requiring occasional knee braces and oral paracetamol,Osteoarthritis / Degenerative Joint Disease,M17.0,Orthopedics,False,ROUTINE
+Recurrent acid regurgitation causing erosion sensation in throat and upper chest,Gastroesophageal Reflux Disease (GERD),K21.0,Gastroenterology,False,ROUTINE
+Spasmodic cough episodes causing rib cage tenderness with thick tenacious mucus,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Transient itchy red plaques appearing on chest and stomach lasting several hours,Allergic Rhinitis / Atopic Dermatitis,L50.9,Dermatology / Allergy,False,ROUTINE
+Crushing sensation under breastbone with radiation to both shoulders and nausea,Cardiovascular Emergency,I21.2,Cardiology,True,EMERGENCY
+Paroxysms of sneezing ten times in a row with itchy nasal mucosa and watery rhinorrhea,Allergic Rhinitis / Atopic Dermatitis,J30.1,Dermatology / Allergy,False,ROUTINE
+Heavy pressure in chest like an elephant sitting on me with nausea and dizziness,Cardiovascular Emergency,I20.0,Cardiology,True,EMERGENCY
+Progressive severe angina upon minimal walking with profound cold diaphoresis,Cardiovascular Emergency,I20.0,Cardiology,True,EMERGENCY
+White exudate streaks on palatine tonsils with sudden sore throat and no cough,Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+Hard bony swellings on distal joints of fingers with mild tenderness and stiffness,Osteoarthritis / Degenerative Joint Disease,M19.0,Orthopedics,False,ROUTINE
+Tightness across upper chest with audible rhonchi and frequent coughing spasms,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Swollen tonsils with follicular exudates and tender submandibular lymph nodes,Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+"Enlarged tender lymph nodes in neck, raspy throat, inability to swallow solids and fever 102 F",Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+"Chest feels congested, low grade fever 100 F, coughing up phlegm and rattling airways",Respiratory Infection / Bronchitis,J20.8,Pulmonology,False,ROUTINE
+Post viral bronchial hyperresponsiveness with lingering productive phlegm cough,Respiratory Infection / Bronchitis,J20.8,Pulmonology,False,ROUTINE
+Acid reflux symptoms with non cardiac chest burning after eating spicy foods,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Sudden urticaria outbreak with intensely pruritic raised welts after eating shellfish,Allergic Rhinitis / Atopic Dermatitis,L50.0,Dermatology / Allergy,False,ROUTINE
+Chronic joint stiffness and dull ache in degenerative spinal joints and lumbar area,Osteoarthritis / Degenerative Joint Disease,M47.8,Orthopedics,False,ROUTINE
+Postprandial heartburn after fatty meals with persistent belching and sour burps,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Constant eye rubbing, allergic shiners, watery rhinitis and sneezing when dusting",Allergic Rhinitis / Atopic Dermatitis,J30.8,Dermatology / Allergy,False,ROUTINE
+Productive cough for one week with mild subjective feverishness and throat tickle,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Tearing chest pain radiating to back between shoulder blades with sudden sweating,Cardiovascular Emergency,I71.0,Cardiology,True,EMERGENCY
+"Hip pain on weight bearing, joint crepitus and gradual reduction in walking distance",Osteoarthritis / Degenerative Joint Disease,M16.9,Orthopedics,False,ROUTINE
+Rapid unexplained weight loss despite eating large meals with profound muscle weakness,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Recurrent skin boils and fungal infections with persistent intense thirst,Type 2 Diabetes Mellitus Presentation,E11.6,Endocrinology,False,URGENT
+Deep bronchial cough getting worse at night with mild fatigue and white sputum,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Epigastric burn traveling up into neck with feeling of food stuck in esophagus,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Visual sparkles and tunnel vision preceding profound throbbing frontotemporal pain,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+Pulsating headache localized to right temple accompanied by anorexia and photophobia,Migraine with Aura,G43.0,Neurology,False,ROUTINE
+"Subacute eczema on hands with erythema, skin fissures and intense nighttime itching",Allergic Rhinitis / Atopic Dermatitis,L20.9,Dermatology / Allergy,False,ROUTINE
+"Chronic acid reflux causing hoarse morning voice, sore throat and throat clearing",Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Geometric visual patterns in eyesight followed by pounding parietal headache and nausea,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+Exertional breathlessness accompanied by continuous airway rattling and wet cough,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Waking up choking on sour acid taste with persistent burning in esophagus,Gastroesophageal Reflux Disease (GERD),K21.0,Gastroenterology,False,ROUTINE
+Crepitus in cervical spine with neck stiffness and shoulder ache when turning head,Osteoarthritis / Degenerative Joint Disease,M47.8,Orthopedics,False,ROUTINE
+"Pharyngeal erythema with petechiae on soft palate, fever and swollen neck glands",Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+Severe chest tightness woke me from sleep with profound air hunger and sweating,Cardiovascular Emergency,I20.0,Cardiology,True,EMERGENCY
+Severe pounding in temples triggered by bright sunlight and lack of sleep,Migraine with Aura,G43.9,Neurology,False,ROUTINE
+"Severe odynophagia, bright red inflamed pharynx, tonsillar enlargement and body chills",Acute Bacterial Pharyngitis / Tonsillitis,J03.9,ENT / General Medicine,False,ROUTINE
+Severe piercing headache behind left orbit with intolerance to daylight and noise,Migraine with Aura,G43.9,Neurology,False,ROUTINE
+Visual blind spots followed by intense pulsating headache behind my eye and vomiting,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+Morning stiffness in knees that loosens up after walking around for twenty minutes,Osteoarthritis / Degenerative Joint Disease,M17.0,Orthopedics,False,ROUTINE
+Nighttime acid reflux requiring three pillows to elevate head with chest burning,Gastroesophageal Reflux Disease (GERD),K21.0,Gastroenterology,False,ROUTINE
+Weight reduction of five kg in three weeks without exercise accompanied by polydipsia,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+"Dry sticky mouth, constantly parched and passing large volumes of pale urine",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Raised erythematous wheals that itch severely and migrate across torso and thighs,Allergic Rhinitis / Atopic Dermatitis,L50.9,Dermatology / Allergy,False,ROUTINE
+Raw burning feeling behind sternum when coughing repeatedly with sore throat,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Sour waterbrash in mouth with stinging burning retrosternal ache after lying down,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Acute severe chest discomfort, breathlessness, vomiting and left shoulder numbness",Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+Chronic dull lower back ache radiating into buttocks worsened by sitting for long hours,Osteoarthritis / Degenerative Joint Disease,M47.8,Orthopedics,False,ROUTINE
+Throat pain lasting four days unresponsive to lozenges with visible pus pockets on tonsils,Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+Wheezing on exhalation with chest tightness and persistent productive morning cough,Respiratory Infection / Bronchitis,J45.9,Pulmonology,False,ROUTINE
+Morning stiffness in finger joints lasting fifteen minutes with bony enlargement and limited grip,Osteoarthritis / Degenerative Joint Disease,M19.0,Orthopedics,False,ROUTINE
+Scintillating scotoma in left eye preceding a one sided intense throbbing headache,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+"Sore throat with no rhinitis or cough, sudden onset fever and tonsillar inflammation",Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+"Knee joint stiffness for 10 minutes upon waking, clicking sensation and tenderness along joint line",Osteoarthritis / Degenerative Joint Disease,M17.9,Orthopedics,False,ROUTINE
+"Lost seven kilograms without dieting, constantly hungry, blurred eyesight and extreme fatigue",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Generalized hives and dermatographism with skin flaring red wherever scratched,Allergic Rhinitis / Atopic Dermatitis,L50.3,Dermatology / Allergy,False,ROUTINE
+"Very painful throat when swallowing, swollen tonsils with white pus exudates and high fever",Acute Bacterial Pharyngitis / Tonsillitis,J03.0,ENT / General Medicine,False,ROUTINE
+Coughing up discolored mucus with mild retrosternal burning during inhalation,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Groin pain extending to front of thigh during walking due to degenerative hip arthritis,Osteoarthritis / Degenerative Joint Disease,M16.9,Orthopedics,False,ROUTINE
+Audible musical wheezing during breathing out with mild air hunger on walking,Respiratory Infection / Bronchitis,J45.9,Pulmonology,False,ROUTINE
+Tight band sensation around chest with cold clammy hands and difficulty breathing,Cardiovascular Emergency,I20.0,Cardiology,True,EMERGENCY
+Joint fatigue and aching pain in both patellofemoral joints after walking one mile,Osteoarthritis / Degenerative Joint Disease,M17.0,Orthopedics,False,ROUTINE
+Severe heartburn waking me up at 3 am with coughing and acidic taste in throat,Gastroesophageal Reflux Disease (GERD),K21.0,Gastroenterology,False,ROUTINE
+"Coughing fits with green mucus production, mild breathlessness on stairs and fatigue",Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Excessive hunger and constant eating accompanied by paradoxical loss of body weight,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Acute fever of 101.5 F with bright erythema of posterior pharynx and painful cervical adenopathy,Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+Pulsating pain in temporal region lasting 24 hours accompanied by phonophobia,Migraine with Aura,G43.9,Neurology,False,ROUTINE
+Intense pulsating cephalea following shimmering visual disturbances and scalp tenderness,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+Discomfort behind lower sternum radiating upward with sensation of lump in throat,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Pounding irregular heartbeat accompanied by severe chest pressure and lightheaded feeling,Cardiovascular Emergency,I47.2,Cardiology,True,EMERGENCY
+Aura of tingling in fingers then excruciating half head pain with photophobia,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+"Seasonal itchy nose, ocular burning and clear nasal drip during springtime pollen bloom",Allergic Rhinitis / Atopic Dermatitis,J30.2,Dermatology / Allergy,False,ROUTINE
+Nocturnal coughing paroxysms with audible wheezing and clear mucoid discharge,Respiratory Infection / Bronchitis,J45.9,Pulmonology,False,ROUTINE
+Migraine attacks recurring twice a week with visual wavy lines and nausea,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+"Bilateral knee joint swelling after standing, stiffness eases with gentle warmth and rest",Osteoarthritis / Degenerative Joint Disease,M17.0,Orthopedics,False,ROUTINE
+"Sudden substernal tightness, rapid palpitations, sweating profusely and pain in jaw",Cardiovascular Emergency,I21.0,Cardiology,True,EMERGENCY
+Scratchy throat turning into severe swallowing pain with chills and high body temperature,Acute Bacterial Pharyngitis / Tonsillitis,J02.9,ENT / General Medicine,False,ROUTINE
+Severe sudden breathlessness with retrosternal constricting discomfort and gray pallor,Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+Left sided chest ache radiating down inner aspect of arm with anxiety and diaphoresis,Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+Burning sensation rising from stomach to throat after dinner with sour acidic fluid,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Urticarial eruptions with burning itch triggered by heat and physical exercise,Allergic Rhinitis / Atopic Dermatitis,L50.2,Dermatology / Allergy,False,ROUTINE
+Constant craving for sweet beverages with excessive urination every hour,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Polydipsia and polyuria with foggy vision and feeling exhausted after light daily tasks,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+"Pruritic skin flare ups, allergic hives across arms and morning sneezing attacks",Allergic Rhinitis / Atopic Dermatitis,L50.0,Dermatology / Allergy,False,ROUTINE

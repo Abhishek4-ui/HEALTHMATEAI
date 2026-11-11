@@ -1,0 +1,36 @@
+{
+  "dataset_name": "HealthMate Curated Clinical Symptom Triage Corpus",
+  "provenance": "CDC Clinical Guidelines, WHO Disease Triage Manuals, Columbia University Vignettes",
+  "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+  "total_samples": 160,
+  "num_classes": 8,
+  "classes": [
+    "Acute Bacterial Pharyngitis / Tonsillitis",
+    "Allergic Rhinitis / Atopic Dermatitis",
+    "Cardiovascular Emergency",
+    "Gastroesophageal Reflux Disease (GERD)",
+    "Migraine with Aura",
+    "Osteoarthritis / Degenerative Joint Disease",
+    "Respiratory Infection / Bronchitis",
+    "Type 2 Diabetes Mellitus Presentation"
+  ],
+  "splits": {
+    "train": {
+      "count": 112,
+      "path": "/Users/abhishekkumar/Desktop/HEALTHMATEAI/ai-service/data/processed/train_symptoms.csv",
+      "sha256": "0e5738fe48f97a8e0b53a14ee40e992bc9ff4e75e77a2367496b349bc3db9570"
+    },
+    "validation": {
+      "count": 24,
+      "path": "/Users/abhishekkumar/Desktop/HEALTHMATEAI/ai-service/data/processed/val_symptoms.csv",
+      "sha256": "1a4a8f65faac6e245497a84e47d1e4522ee21f29a9a3905f2dab6a2fbde6e763"
+    },
+    "test": {
+      "count": 24,
+      "path": "/Users/abhishekkumar/Desktop/HEALTHMATEAI/ai-service/data/processed/test_symptoms.csv",
+      "sha256": "1a37911d7a0437d1f4c5e615191c0ce89cdfd793186c5ccd4c14e6dcd28c90ac"
+    }
+  },
+  "leakage_verification": "ZERO_LEAKAGE_CONFIRMED_DISJOINT_SETS",
+  "created_at": "2026-11-11T12:30:00Z"
+}

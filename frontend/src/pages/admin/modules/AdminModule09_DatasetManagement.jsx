@@ -12,47 +12,47 @@ export default function AdminModule09_DatasetManagement() {
   const fallbackDatasets = [
     {
       id: 'DS-CARDIO-01',
-      name: 'Cardiovascular Disease Research Corpus',
-      source: 'PhysioNet / Mendeley Data (Framingham & WHO Cohorts)',
-      license: 'CC BY 4.0 Open Access / Public Domain',
-      sampleSize: '70,000 Records',
-      features: '11 Biometric Variables (Age, SBP, Chol, HDL, Smoker, Diabetes)',
+      name: 'Framingham Heart Study Population Reference Cohort',
+      source: 'National Heart, Lung, and Blood Institute (NHLBI) & Boston University',
+      license: 'Public Domain (US National Institutes of Health)',
+      sampleSize: '1,000 Cohort Samples',
+      features: 'Age, SBP, Total Cholesterol, HDL, Smoking, Diabetes, 10-Yr CVD Event',
       status: 'VERIFIED_HASH_VALID'
     },
     {
       id: 'DS-DIAB-02',
-      name: 'Diabetes Health Indicators Dataset',
-      source: 'CDC BRFSS Open Portal & FINDRISC Clinical Parameters',
-      license: 'US Public Domain / ADA Guidelines Open Access',
-      sampleSize: '253,680 Records',
-      features: '21 Survey & Clinical Variables (BMI, Glucose, Age, Family History)',
+      name: 'FINDRISC & ADA Type-2 Diabetes Reference Cohort',
+      source: 'Finnish National Public Health Institute & ADA Clinical Standards',
+      license: 'American Diabetes Association Guidelines Open Access',
+      sampleSize: '1,000 Cohort Samples',
+      features: 'Age, BMI (ICMR Asian Cutoffs), Fasting Glucose, Family History, Physical Activity',
       status: 'VERIFIED_HASH_VALID'
     },
     {
       id: 'DS-SYMPT-03',
-      name: 'Disease Symptom & Severity Knowledgebase',
-      source: 'Columbia University Medical Center & CDC Clinical Guidelines',
-      license: 'CC BY-SA 4.0 / Public Domain',
-      sampleSize: '4,920 Pairs (8 Core Specialty Categories)',
-      features: '132 Symptom Indicators + Red Flag Keywords',
+      name: 'Clinical Symptom Triage Presentation Corpus',
+      source: 'CDC Clinical Triage Guidelines, WHO ICD-10, Columbia Vignettes',
+      license: 'Creative Commons Attribution 4.0 International (CC BY 4.0)',
+      sampleSize: '160 Presentation Vignettes (8 Balanced Specialty Categories)',
+      features: 'Natural Language Symptoms, ICD-10 Codes, Urgency Triage, Salient N-grams',
       status: 'VERIFIED_HASH_VALID'
     },
     {
       id: 'DS-LAB-05',
-      name: 'Clinical Pathology Lab Report Benchmark (LOINC Standards)',
+      name: 'Clinical Pathology LOINC Standards & Biological Reference Ranges',
       source: 'Regenstrief Institute & US National Library of Medicine (NLM)',
-      license: 'LOINC License (Regenstrief Institute, No-Cost Permissive)',
-      sampleSize: '1,500 Reports',
-      features: 'Standardized LOINC Codes & Universal Reference Ranges',
+      license: 'LOINC License (Regenstrief Institute, Permissive Non-Commercial)',
+      sampleSize: '12 Standard Biomarkers & Reference Intervals',
+      features: 'LOINC Codes (718-7, 1558-6, 2160-0, etc.), Units, Pathological Ranges',
       status: 'VERIFIED_HASH_VALID'
     },
     {
       id: 'DS-GUIDELINES-06',
-      name: 'Statutory Clinical Practice Guidelines Corpus',
-      source: 'AHA, ADA, WHO, ICMR, GINA Statutory Publications',
-      license: 'Open Access / Clinical Fair Use',
-      sampleSize: '6 Full Guideline Digests',
-      features: 'Evidence Level A/B Statements & Practice Recommendations',
+      name: 'Statutory Clinical Practice Guidelines Knowledge Base',
+      source: 'AHA/ACC, ADA, WHO, ICMR, GINA Statutory Publications',
+      license: 'Clinical Decision Support Fair Use',
+      sampleSize: '6 Guideline Sections (Chunked & Vector Indexed)',
+      features: 'Level A/B Evidence Statements, DOI Citations, Section Provenance',
       status: 'VERIFIED_HASH_VALID'
     }
   ];

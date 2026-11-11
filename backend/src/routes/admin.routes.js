@@ -37,6 +37,7 @@ router.get('/ai-models', adminController.getAIModels);
 router.get('/mlops/models', adminController.getAIModels);
 router.get('/mlops/telemetry', adminController.getMLOpsTelemetry);
 router.get('/mlops/drift', adminController.getMLOpsDrift);
+router.post('/mlops/rollback', adminController.rollbackModel);
 router.post('/clinical/rag-query', adminController.queryRAGGuidelines);
 router.get('/datasets', adminController.getDatasets);
 router.get('/audit-logs', adminController.getAuditLogs);

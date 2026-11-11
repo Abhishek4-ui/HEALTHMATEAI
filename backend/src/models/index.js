@@ -19,6 +19,7 @@ const RefreshToken = require('./RefreshToken');
 const EmergencyContact = require('./EmergencyContact');
 const DoctorAvailability = require('./DoctorAvailability');
 const SyncLog = require('./SyncLog');
+const MLOpsTelemetry = require('./MLOpsTelemetry');
 
 // Idempotent controlled index initialization without modifying data
 const initIndexes = async () => {
@@ -28,7 +29,7 @@ const initIndexes = async () => {
       Appointment, Consultation, Prescription, Notification, Consent,
       PaymentTransaction, AuditLog, DataSource, AIModelMetadata,
       DatasetMetadata, IntegrationStatus, UserSession, RefreshToken,
-      EmergencyContact, DoctorAvailability, SyncLog
+      EmergencyContact, DoctorAvailability, SyncLog, MLOpsTelemetry
     ];
 
     for (const model of models) {
@@ -64,5 +65,6 @@ module.exports = {
   EmergencyContact,
   DoctorAvailability,
   SyncLog,
+  MLOpsTelemetry,
   initIndexes,
 };

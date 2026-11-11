@@ -63,32 +63,27 @@ async def extract_report_ocr(
     text_content = raw_text or ""
     filename = "Uploaded Document"
 
+    ocr_confidence = 0.95
+    engine_name = "Direct_Text_Stream"
+    transforms = []
+
     if file:
         filename = file.filename or "Uploaded Document"
         content_bytes = await file.read()
+        extracted_text, ocr_confidence, engine_name, transforms = report_ocr_extractor.extract_from_bytes(
+            content_bytes=content_bytes,
+            content_type=file.content_type or "application/octet-stream",
+            filename=filename
+        )
+        text_content += " " + extracted_text
 
-        # Handle PDF extraction
-        if filename.lower().endswith(".pdf") or (file.content_type and "pdf" in file.content_type.lower()):
-            try:
-                import io
-                from pypdf import PdfReader
-                reader = PdfReader(io.BytesIO(content_bytes))
-                pdf_text = ""
-                for page in reader.pages:
-                    extracted = page.extract_text()
-                    if extracted:
-                        pdf_text += " " + extracted
-                text_content += " " + pdf_text
-            except Exception as e:
-                pass
-        else:
-            try:
-                # Text or plain format decoding
-                text_content += " " + content_bytes.decode("utf-8", errors="ignore")
-            except Exception:
-                pass
-
-    return report_ocr_extractor.parse_report_text(text_content, filename=filename)
+    return report_ocr_extractor.parse_report_text(
+        raw_text=text_content,
+        filename=filename,
+        ocr_confidence=ocr_confidence,
+        engine_name=engine_name,
+        transforms=transforms
+    )
 
 @router.post("/copilot-chat")
 async def copilot_chat(payload: CopilotQueryRequest):
@@ -144,6 +139,16 @@ async def get_mlops_model(model_id: str):
 async def get_mlops_telemetry():
     return mlops_registry.get_telemetry()
 
+class RollbackRequest(BaseModel):
+    model_id: str
+    target_version: str
+
 @router.get("/mlops/drift")
 async def get_mlops_drift():
+    if hasattr(mlops_registry, "evaluate_feature_drift"):
+        return mlops_registry.evaluate_feature_drift()
     return mlops_registry.detect_data_drift()
+
+@router.post("/mlops/rollback")
+async def rollback_mlops_model(payload: RollbackRequest):
+    return mlops_registry.rollback_model(payload.model_id, payload.target_version)

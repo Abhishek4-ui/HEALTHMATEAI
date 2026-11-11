@@ -61,6 +61,10 @@ export const adminService = {
     return apiClient.post('/admin/clinical/rag-query', { query, top_k });
   },
 
+  rollbackModel: async (modelId, targetVersion) => {
+    return apiClient.post('/admin/mlops/rollback', { modelId, targetVersion });
+  },
+
   getDatasets: async () => {
     return apiClient.get('/admin/datasets');
   },

@@ -1,0 +1,25 @@
+text,disease,icd10,specialty,is_emergency,urgency
+"Severe pharyngeal pain accompanied by halitosis, anterior cervical lymphadenitis and fever",Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+"Chest congestion, hoarse voice and hacking cough producing yellow phlegm",Respiratory Infection / Bronchitis,J20.8,Pulmonology,False,ROUTINE
+"Frequent urination during work meetings, unquenchable thirst and blurry computer screen vision",Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+Chest fullness and constriction with aching in left jaw and sudden profound weakness,Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+"Bronchial rattling, difficulty clearing phlegm from airways and mild exertional fatigue",Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Constant unilateral pounding head ache with nausea that worsens when bending forward,Migraine with Aura,G43.0,Neurology,False,ROUTINE
+Intensely itchy red rash on inner elbows with dry cracked skin patches and hives,Allergic Rhinitis / Atopic Dermatitis,L20.9,Dermatology / Allergy,False,ROUTINE
+Epigastric discomfort and burning under breastbone relieved temporarily by antacids,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Frequent coughing fits interrupting conversation with yellowish gray sputum,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Esophageal burning pain with mild nausea and constant urge to swallow,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Persistent thirst, frequent trips to bathroom all night and tingling sensation in toes",Type 2 Diabetes Mellitus Presentation,E11.4,Endocrinology,False,URGENT
+Continuous clear nasal discharge with itchy palate and bouts of sternutatory sneezing,Allergic Rhinitis / Atopic Dermatitis,J30.9,Dermatology / Allergy,False,ROUTINE
+Stiff swollen finger knuckles with Heberden nodes and difficulty opening jars in morning,Osteoarthritis / Degenerative Joint Disease,M19.0,Orthopedics,False,ROUTINE
+Aching pain in both knees aggravated by rainy damp weather and prolonged standing,Osteoarthritis / Degenerative Joint Disease,M17.0,Orthopedics,False,ROUTINE
+"Numbness in toes, slow healing scrapes on legs and overwhelming afternoon tiredness",Type 2 Diabetes Mellitus Presentation,E11.4,Endocrinology,False,URGENT
+"Swollen glands under jaw, intense throat soreness and loss of appetite due to painful swallowing",Acute Bacterial Pharyngitis / Tonsillitis,J02.9,ENT / General Medicine,False,ROUTINE
+Lichenified thickened itchy skin on wrists and flexural folds from chronic scratching,Allergic Rhinitis / Atopic Dermatitis,L20.9,Dermatology / Allergy,False,ROUTINE
+Knee giving way sensation during walking with localized medial joint tenderness,Osteoarthritis / Degenerative Joint Disease,M17.9,Orthopedics,False,ROUTINE
+Numbness on cheek followed by high intensity throbbing head pain and vomiting,Migraine with Aura,G43.1,Neurology,False,ROUTINE
+Sharp throat pain on swallowing with red uvula and fever of 102 degrees,Acute Bacterial Pharyngitis / Tonsillitis,J02.0,ENT / General Medicine,False,ROUTINE
+Moderate to severe throbbing headache requiring bed rest in a quiet dark room,Migraine with Aura,G43.9,Neurology,False,ROUTINE
+Sudden collapse after acute crushing central chest pain and shortness of breath,Cardiovascular Emergency,I21.9,Cardiology,True,EMERGENCY
+Acid regurgitation into back of mouth when bending over with retrosternal burning,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Severe hypertensive pressure, chest pain, pounding headache and blurred vision",Cardiovascular Emergency,I10,Cardiology,True,EMERGENCY

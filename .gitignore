@@ -44,5 +44,6 @@ mlruns/
 .coverage
 htmlcov/
 *.pt
+!ai-service/models/*.pt
 *.onnx
 models_cache/

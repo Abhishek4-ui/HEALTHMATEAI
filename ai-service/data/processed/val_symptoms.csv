@@ -1,0 +1,25 @@
+text,disease,icd10,specialty,is_emergency,urgency
+Difficulty swallowing even liquids because of severe throat burning and enlarged red tonsils,Acute Bacterial Pharyngitis / Tonsillitis,J03.9,ENT / General Medicine,False,ROUTINE
+Dry flaky intensely pruritic patches on face and neck worse during winter months,Allergic Rhinitis / Atopic Dermatitis,L20.9,Dermatology / Allergy,False,ROUTINE
+Inflamed tracheobronchial tree symptoms with heavy sputum production and low energy,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Limited range of motion in right shoulder joint with dull nighttime ache when lying on it,Osteoarthritis / Degenerative Joint Disease,M19.0,Orthopedics,False,ROUTINE
+"Episodic severe right sided headache with nausea, aggravated by normal physical activity",Migraine with Aura,G43.0,Neurology,False,ROUTINE
+Intense substernal heaviness accompanied by marked exhaustion and faintness,Cardiovascular Emergency,I20.8,Cardiology,True,EMERGENCY
+Drinking gallons of water daily due to unquenchable thirst and waking up five times to pee,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+"Severe heartburn worse when lying flat, painful swallowing and chronic dry cough",Gastroesophageal Reflux Disease (GERD),K21.0,Gastroenterology,False,ROUTINE
+Hemicranial throbbing pain aggravated by movement needing to lie in dark silent room,Migraine with Aura,G43.0,Neurology,False,ROUTINE
+Frequent heartburn episodes throughout the week partially eased by drinking cold milk,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+"Excessive urination and extreme dry mouth, cuts on feet taking weeks to heal",Type 2 Diabetes Mellitus Presentation,E11.6,Endocrinology,False,URGENT
+Waking up dehydrated with parched throat and bladder fullness three to four times nightly,Type 2 Diabetes Mellitus Presentation,E11.9,Endocrinology,False,URGENT
+"Deep aching knee pain that worsens after climbing stairs, cracking popping sound when walking",Osteoarthritis / Degenerative Joint Disease,M17.9,Orthopedics,False,ROUTINE
+"Nonstop bouts of sneezing, clear runny nose and itchy red watery eyes after pollen exposure",Allergic Rhinitis / Atopic Dermatitis,J30.1,Dermatology / Allergy,False,ROUTINE
+"Throat constriction and soreness with swollen neck nodes, headache and malaise",Acute Bacterial Pharyngitis / Tonsillitis,J02.9,ENT / General Medicine,False,ROUTINE
+Restricted knee flexion with grinding noise during movement and mild joint effusion,Osteoarthritis / Degenerative Joint Disease,M17.9,Orthopedics,False,ROUTINE
+Retrosternal squeezing pain during exertion with lightheadedness and presyncope,Cardiovascular Emergency,I20.9,Cardiology,True,EMERGENCY
+Sudden onset dyspnea and crushing chest ache while resting at home,Cardiovascular Emergency,I21.1,Cardiology,True,EMERGENCY
+Atopic flare up on antecubital fossae with excoriations and dry rough skin,Allergic Rhinitis / Atopic Dermatitis,L20.8,Dermatology / Allergy,False,ROUTINE
+Acute pain radiating to ears when swallowing with hot potato voice and feverishness,Acute Bacterial Pharyngitis / Tonsillitis,J03.9,ENT / General Medicine,False,ROUTINE
+Subacute cough lasting two weeks following viral cold with mucopurulent expectoration,Respiratory Infection / Bronchitis,J20.8,Pulmonology,False,ROUTINE
+Substernal burning pain aggravated by tight clothing and bending at the waist,Gastroesophageal Reflux Disease (GERD),K21.9,Gastroenterology,False,ROUTINE
+Dry persistent irritating cough progressing to productive sputum with chest wall soreness,Respiratory Infection / Bronchitis,J20.9,Pulmonology,False,ROUTINE
+Severe recurrent hemicranial headache triggered by stress and cheese with photophobia,Migraine with Aura,G43.9,Neurology,False,ROUTINE
