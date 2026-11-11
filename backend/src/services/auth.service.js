@@ -242,7 +242,9 @@ class AuthService {
    * Idempotent check: Creates initial admin only if no administration user exists
    */
   async provisionInitialAdmin(adminEmail = 'admin@healthmate.ai', adminPassword = 'AdminPassword123!', adminName = 'System Administrator') {
-    const existingAdmin = await User.findOne({ role: 'ADMINISTRATION' });
+    const existingAdmin = await User.findOne({
+      $or: [{ role: 'ADMINISTRATION' }, { email: adminEmail.toLowerCase() }]
+    });
     if (existingAdmin) {
       return { created: false, message: 'Administrator account already exists.' };
     }
