@@ -36,17 +36,18 @@ export function AuthProvider({ children }) {
   }, [guestSession]);
 
   const login = (role, email, name = '') => {
-    if (!['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(role)) {
+    const normalizedRole = (role || 'PATIENT').toUpperCase();
+    if (!['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(normalizedRole)) {
       throw new Error(`Unauthorized role: ${role}. Exactly three roles permitted.`);
     }
 
     const userData = {
       id: 'usr_' + Math.random().toString(36).substring(2, 9),
       email,
-      name: name || (role === 'DOCTOR' ? 'Dr. Medical Practitioner' : role === 'ADMINISTRATION' ? 'System Administrator' : 'Verified Patient'),
-      role,
+      name: name || (normalizedRole === 'DOCTOR' ? 'Dr. Medical Practitioner' : normalizedRole === 'ADMINISTRATION' ? 'System Administrator' : 'Verified Patient'),
+      role: normalizedRole,
       authenticatedAt: new Date().toISOString(),
-      isVerified: role === 'DOCTOR' ? true : true,
+      isVerified: true,
     };
     setUser(userData);
     return userData;
