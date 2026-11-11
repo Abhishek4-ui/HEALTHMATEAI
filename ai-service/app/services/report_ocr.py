@@ -75,13 +75,25 @@ class ReportOCRExtractor:
 
         # Clinical Summary Synthesis
         if not extracted_biomarkers:
-            summary = "No standard laboratory blood biomarkers were detected in this document. Please ensure you upload a laboratory pathology report."
-        elif abnormal_count > 0:
+            return {
+                "success": False,
+                "extraction_status": "EXTRACTION_FAILED_UNREADABLE",
+                "report_name": filename,
+                "biomarkers_extracted_count": 0,
+                "biomarkers": [],
+                "abnormal_findings_count": 0,
+                "clinical_summary": "Optical character recognition could not detect standard clinical laboratory biomarkers in this document. Please ensure you upload an authentic, legible pathology report with standard units.",
+                "disclaimer": "Automated OCR extraction for research and informational awareness only. Missing values are never fabricated."
+            }
+
+        if abnormal_count > 0:
             summary = f"Detected {abnormal_count} parameter(s) outside standard reference intervals. Please review with your treating physician."
         else:
             summary = "All extracted parameters are within standard clinical laboratory reference intervals."
 
         return {
+            "success": True,
+            "extraction_status": "SUCCESS",
             "report_name": filename,
             "biomarkers_extracted_count": len(extracted_biomarkers),
             "biomarkers": extracted_biomarkers,

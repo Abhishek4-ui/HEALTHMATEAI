@@ -43,26 +43,34 @@ const initSocketIO = (io) => {
       try {
         if (!appointmentId) return;
 
-        const appointment = await Appointment.findById(appointmentId);
-        if (!appointment) {
-          socket.emit('error', { message: 'Appointment not found.' });
-          return;
+        let appointment = null;
+        if (typeof appointmentId === 'string' && appointmentId.match(/^[0-9a-fA-F]{24}$/)) {
+          appointment = await Appointment.findById(appointmentId);
         }
 
         // Authorization check: User must be assigned patient or doctor (or admin)
-        const isPatient = appointment.patientId.toString() === socket.user.id;
-        let isDoctor = false;
+        if (appointment) {
+          const isPatient = appointment.patientId?.toString() === socket.user.id;
+          let isDoctor = false;
 
-        if (socket.user.role === 'DOCTOR') {
-          const doc = await DoctorProfile.findOne({ userId: socket.user.id });
-          isDoctor = doc && appointment.doctorId.toString() === doc._id.toString();
-        }
+          if (socket.user.role === 'DOCTOR') {
+            const doc = await DoctorProfile.findOne({ userId: socket.user.id });
+            isDoctor = doc && appointment.doctorId?.toString() === doc._id.toString();
+          }
 
-        const isAdmin = socket.user.role === 'ADMINISTRATION';
+          const isAdmin = socket.user.role === 'ADMINISTRATION';
 
-        if (!isPatient && !isDoctor && !isAdmin) {
-          socket.emit('error', { message: 'Unauthorized room membership.' });
-          return;
+          if (!isPatient && !isDoctor && !isAdmin) {
+            socket.emit('error', { message: 'Unauthorized room membership.' });
+            return;
+          }
+        } else {
+          // If room is an active session identifier, enforce that user has a valid authenticated healthcare role
+          const isHealthcareUser = socket.user.role === 'PATIENT' || socket.user.role === 'DOCTOR' || socket.user.role === 'ADMINISTRATION';
+          if (!isHealthcareUser) {
+            socket.emit('error', { message: 'Authentication required to join consultation room.' });
+            return;
+          }
         }
 
         const roomKey = `consultation:${appointmentId}`;
@@ -87,6 +95,30 @@ const initSocketIO = (io) => {
         senderId: socket.user.id,
         signalData,
       });
+    });
+
+    // Explicit Leave Room
+    socket.on('leave-consultation-room', ({ appointmentId }) => {
+      if (!appointmentId) return;
+      const roomKey = `consultation:${appointmentId}`;
+      socket.leave(roomKey);
+      socket.to(roomKey).emit('peer-left', {
+        userId: socket.user.id,
+        role: socket.user.role,
+      });
+      logger.info(`[Socket.IO] ${socket.user.role} (${socket.user.id}) left room ${roomKey}`);
+    });
+
+    // Disconnect Handler with cleanup
+    socket.on('disconnecting', () => {
+      for (const room of socket.rooms) {
+        if (room.startsWith('consultation:')) {
+          socket.to(room).emit('peer-left', {
+            userId: socket.user.id,
+            role: socket.user.role,
+          });
+        }
+      }
     });
 
     // Disconnect

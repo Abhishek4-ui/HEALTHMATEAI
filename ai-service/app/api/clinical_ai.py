@@ -62,13 +62,29 @@ async def extract_report_ocr(
     filename = "Uploaded Document"
 
     if file:
-        filename = file.filename
+        filename = file.filename or "Uploaded Document"
         content_bytes = await file.read()
-        try:
-            # Decode text if text or simple format
-            text_content += " " + content_bytes.decode("utf-8", errors="ignore")
-        except Exception:
-            pass
+
+        # Handle PDF extraction
+        if filename.lower().endswith(".pdf") or (file.content_type and "pdf" in file.content_type.lower()):
+            try:
+                import io
+                from pypdf import PdfReader
+                reader = PdfReader(io.BytesIO(content_bytes))
+                pdf_text = ""
+                for page in reader.pages:
+                    extracted = page.extract_text()
+                    if extracted:
+                        pdf_text += " " + extracted
+                text_content += " " + pdf_text
+            except Exception as e:
+                pass
+        else:
+            try:
+                # Text or plain format decoding
+                text_content += " " + content_bytes.decode("utf-8", errors="ignore")
+            except Exception:
+                pass
 
     return report_ocr_extractor.parse_report_text(text_content, filename=filename)
 

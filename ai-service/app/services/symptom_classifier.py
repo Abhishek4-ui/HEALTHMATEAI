@@ -86,7 +86,7 @@ class SymptomClassifier:
 
         # Check for emergency red flags directly using clinical triage keywords and equivalents
         emergency_keywords = [
-            "chest pain", "arm pain", "shortness of breath", "breathlessness", "chest tightness",
+            "chest pain", "chest discomfort", "arm pain", "shortness of breath", "breathlessness", "chest tightness",
             "retrosternal", "substernal", "crushing pain", "pressure in chest", "unconscious", "unresponsive",
             "hemoptysis", "coughing blood", "bright red blood", "stroke", "paralysis", "facial droop",
             "slurred speech", "slurred words", "thunderclap", "worst headache", "cannot breathe",

@@ -15,6 +15,7 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useToast } from '../../../context/ToastContext';
 import apiClient from '../../../services/api';
+import { TelehealthSession } from '../../../services/telehealth.service';
 
 export default function Module09_OnlineConsultation() {
   const [videoEnabled, setVideoEnabled] = useState(true);
@@ -23,7 +24,11 @@ export default function Module09_OnlineConsultation() {
   const [connecting, setConnecting] = useState(false);
   const [roomToken, setRoomToken] = useState(null);
   const [mediaStream, setMediaStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
+  const [peerConnected, setPeerConnected] = useState(false);
   const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const sessionRef = useRef(null);
 
   const [messages, setMessages] = useState([
     { sender: 'doctor', text: 'Hello, I have reviewed your clinical notes and lab reports. Ready for our consultation.', time: '10:02 AM' }
@@ -33,30 +38,30 @@ export default function Module09_OnlineConsultation() {
 
   useEffect(() => {
     return () => {
+      if (sessionRef.current) {
+        sessionRef.current.stop();
+        sessionRef.current = null;
+      }
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
     };
   }, [mediaStream]);
 
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
   const handleToggleCall = async () => {
     if (!inCall) {
       setConnecting(true);
       try {
-        // 1. Fetch Twilio / WebRTC consultation room token from backend
-        let token = 'mock_token';
-        try {
-          const res = await apiClient.post('/consultations/apt_active_session/token');
-          token = res?.data?.token || res?.token || 'active_token';
-          setRoomToken(token);
-        } catch (e) {
-          // Token generated in session fallback
-        }
-
-        // 2. Request local media permissions
+        let stream = null;
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
+            stream = await navigator.mediaDevices.getUserMedia({
               video: true,
               audio: true
             });
@@ -68,16 +73,56 @@ export default function Module09_OnlineConsultation() {
             addToast({
               type: 'warning',
               title: 'Media Device Notice',
-              message: 'Camera/mic stream simulated for this browser session.',
+              message: 'Camera/mic stream not detected or permission denied.',
             });
           }
         }
 
+        const session = new TelehealthSession({
+          appointmentId: 'apt_active_session',
+          token: localStorage.getItem('token'),
+          onRemoteStream: (remStream) => {
+            setRemoteStream(remStream);
+            setPeerConnected(true);
+            addToast({
+              type: 'success',
+              title: 'Doctor Connected',
+              message: 'Live two-way WebRTC peer audio/video established.',
+            });
+          },
+          onPeerJoined: () => {
+            addToast({
+              type: 'info',
+              title: 'Consultation Peer Joined',
+              message: 'Doctor joined the encrypted consultation room.',
+            });
+          },
+          onPeerLeft: () => {
+            setRemoteStream(null);
+            setPeerConnected(false);
+            addToast({
+              type: 'warning',
+              title: 'Doctor Disconnected',
+              message: 'Doctor left the consultation room.',
+            });
+          },
+          onError: (err) => {
+            addToast({
+              type: 'error',
+              title: 'WebRTC Signaling Notice',
+              message: err?.message || 'Error in peer signaling.',
+            });
+          }
+        });
+
+        await session.start(stream);
+        sessionRef.current = session;
         setInCall(true);
+
         addToast({
           type: 'success',
           title: 'Consultation Room Connected',
-          message: 'Secure end-to-end encrypted telehealth room established.',
+          message: 'P2P WebRTC signaling active via Socket.IO.',
         });
       } catch (err) {
         addToast({
@@ -89,15 +134,21 @@ export default function Module09_OnlineConsultation() {
         setConnecting(false);
       }
     } else {
+      if (sessionRef.current) {
+        sessionRef.current.stop();
+        sessionRef.current = null;
+      }
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
         setMediaStream(null);
       }
+      setRemoteStream(null);
+      setPeerConnected(false);
       setInCall(false);
       addToast({
         type: 'info',
         title: 'Call Ended',
-        message: 'Consultation session concluded securely.',
+        message: 'Consultation session concluded cleanly.',
       });
     }
   };
@@ -153,22 +204,26 @@ export default function Module09_OnlineConsultation() {
         <div className="lg:col-span-2 space-y-3">
           <div className="relative aspect-video rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden flex flex-col items-center justify-center text-white">
             {inCall ? (
-              <div className="w-full h-full relative flex items-center justify-center">
-                {/* Doctor stream placeholder */}
-                <div className="text-center p-6 space-y-2">
-                  <div className="w-16 h-16 rounded-full bg-aurora-teal/20 text-aurora-teal flex items-center justify-center mx-auto">
-                    <UserCheck className="w-8 h-8" />
+              <div className="w-full h-full relative flex items-center justify-center bg-slate-900">
+                {/* Remote Doctor Video or Waiting State */}
+                {peerConnected && remoteStream ? (
+                  <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center p-6 space-y-3">
+                    <div className="w-16 h-16 rounded-full bg-aurora-teal/20 text-aurora-teal flex items-center justify-center mx-auto animate-pulse">
+                      <UserCheck className="w-8 h-8" />
+                    </div>
+                    <div className="font-bold text-sm">Consultation Room Active</div>
+                    <div className="text-xs text-slate-400">Waiting for doctor to connect... (P2P WebRTC Signaling Active)</div>
                   </div>
-                  <div className="font-bold text-sm">Dr. Specialist Consultation</div>
-                  <div className="text-xs text-slate-400">Encrypted Consultation Active</div>
-                </div>
+                )}
 
-                {/* Local user video preview */}
-                <div className="absolute bottom-3 right-3 w-32 h-20 rounded-xl bg-slate-900 border border-white/20 overflow-hidden flex items-center justify-center text-[10px] text-slate-400">
+                {/* Local Patient Video Preview */}
+                <div className="absolute bottom-3 right-3 w-36 h-24 rounded-xl bg-slate-950 border border-white/20 overflow-hidden flex items-center justify-center text-[10px] text-slate-400 shadow-lg">
                   {mediaStream && videoEnabled ? (
                     <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                   ) : (
-                    <span>{videoEnabled ? 'Camera Active' : 'Camera Muted'}</span>
+                    <span className="p-2 text-center">{videoEnabled ? 'Camera Active' : 'Camera Muted'}</span>
                   )}
                 </div>
               </div>

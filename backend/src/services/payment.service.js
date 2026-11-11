@@ -150,6 +150,12 @@ class PaymentService {
       const orderId = payment.order_id;
       const paymentId = payment.id;
 
+      const existing = await PaymentTransaction.findOne({ orderId });
+      if (existing && existing.status === 'PAID') {
+        logger.info('Duplicate payment.captured webhook processed idempotently.', { orderId, paymentId });
+        return { received: true, idempotent: true };
+      }
+
       const transaction = await PaymentTransaction.findOneAndUpdate(
         { orderId },
         { status: 'PAID', paymentId, method: payment.method },
@@ -162,6 +168,19 @@ class PaymentService {
           paymentReferenceId: paymentId,
         });
         logger.info('Appointment payment confirmed via verified Razorpay webhook.', { orderId, paymentId });
+      }
+    } else if (event === 'payment.failed' && payment) {
+      const orderId = payment.order_id;
+      const transaction = await PaymentTransaction.findOneAndUpdate(
+        { orderId },
+        { status: 'FAILED', paymentId: payment.id },
+        { new: true }
+      );
+      if (transaction) {
+        await Appointment.findByIdAndUpdate(transaction.appointmentId, {
+          paymentStatus: 'FAILED',
+        });
+        logger.info('Appointment payment marked failed via verified Razorpay webhook.', { orderId });
       }
     }
 

@@ -111,6 +111,12 @@ class PatientService {
     let purged = false;
     if (sessionId) {
       purged = await redisSessionService.purgeSession(sessionId);
+      try {
+        const reportService = require('./report.service');
+        await reportService.deleteReport(sessionId);
+      } catch (err) {
+        // Continue if no file with that token exists
+      }
     }
 
     const mongoose = require('mongoose');

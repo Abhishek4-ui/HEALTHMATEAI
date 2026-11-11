@@ -24,10 +24,12 @@ class ReportController {
       const combinedResult = {
         ...staged,
         reportName: file.originalname,
-        biomarkers: ocrResult.biomarkers || [],
-        abnormalFindingsCount: ocrResult.abnormal_findings_count || 0,
-        clinicalSummary: ocrResult.clinical_summary || 'Document staged and parsed.',
-        disclaimer: ocrResult.disclaimer || 'Automated OCR extraction for informational review.',
+        extractionSuccess: ocrResult?.success !== false,
+        extractionStatus: ocrResult?.extraction_status || (ocrResult?.biomarkers?.length > 0 ? 'SUCCESS' : 'FAILED_UNREADABLE'),
+        biomarkers: ocrResult?.biomarkers || [],
+        abnormalFindingsCount: ocrResult?.abnormal_findings_count || 0,
+        clinicalSummary: ocrResult?.clinical_summary || 'Document staged.',
+        disclaimer: ocrResult?.disclaimer || 'Automated OCR extraction for informational review only. Missing parameters are never invented.',
       };
 
       return successResponse(res, combinedResult, 'Report analyzed and staged securely.', 201);

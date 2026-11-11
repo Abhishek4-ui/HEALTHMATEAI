@@ -145,12 +145,12 @@ class OTPService {
         logger.warn('Email OTP provider dispatch error:', { error: e.message });
       }
 
-      console.log(`\n==================================================`);
-      console.log(`📩 [HealthMate AI Security] Verification Code Dispatched`);
-      console.log(`Target: ${target} (${type} - ${purpose})`);
-      console.log(`Code:   >>> ${rawOTP} <<<`);
-      console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
-      console.log(`==================================================\n`);
+      logger.info('Email OTP verification code dispatched', {
+        target: target.replace(/(?<=.{2}).(?=[^@]*?@)/g, '*'),
+        type,
+        purpose,
+        expiryMinutes: 5,
+      });
     } else if (type === 'MOBILE') {
       try {
         await communicationService.sendSMS({
@@ -161,12 +161,12 @@ class OTPService {
         logger.warn('SMS OTP provider dispatch error:', { error: e.message });
       }
 
-      console.log(`\n==================================================`);
-      console.log(`📱 [HealthMate AI Security] Mobile SMS Code Dispatched`);
-      console.log(`Target: ${target} (${type} - ${purpose})`);
-      console.log(`Code:   >>> ${rawOTP} <<<`);
-      console.log(`Expiry: 5 Minutes (Max 3 Attempts)`);
-      console.log(`==================================================\n`);
+      logger.info('Mobile OTP verification code dispatched', {
+        target: target.slice(0, 3) + '****' + target.slice(-2),
+        type,
+        purpose,
+        expiryMinutes: 5,
+      });
     }
   }
 }

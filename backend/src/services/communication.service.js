@@ -16,6 +16,9 @@ class CommunicationService {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: parseInt(process.env.SMTP_PORT || '587', 10),
           secure: process.env.SMTP_PORT === '465',
+          connectionTimeout: 2000,
+          greetingTimeout: 2000,
+          socketTimeout: 2000,
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -31,7 +34,9 @@ class CommunicationService {
     if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
       try {
         const twilio = require('twilio');
-        this.twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        this.twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN, {
+          timeout: 2000, // 2s timeout to prevent test hangs
+        });
         logger.info('Twilio SMS client initialized', { accountSid: process.env.TWILIO_ACCOUNT_SID });
       } catch (twErr) {
         logger.warn('Failed to initialize Twilio client:', { error: twErr.message });
@@ -50,6 +55,7 @@ class CommunicationService {
       try {
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
+          signal: AbortSignal.timeout(2000),
           headers: {
             Authorization: `Bearer ${process.env.EMAIL_API_KEY}`,
             'Content-Type': 'application/json',
@@ -89,9 +95,14 @@ class CommunicationService {
       }
     }
 
-    // Development log fallback
-    logger.info('Simulated email notification dispatched:', { to, subject });
-    return { success: true, provider: 'simulated_fallback' };
+    // If both real providers failed or are unconfigured, return honest provider failure status
+    logger.warn('Email delivery failed across all configured providers', { to });
+    return {
+      success: false,
+      provider: 'none',
+      error: 'EMAIL_DELIVERY_FAILED',
+      message: 'Email could not be delivered. In development, Resend requires verified recipient (abhishekgga140@gmail.com) and Gmail SMTP requires a 16-character App Password.'
+    };
   }
 
   /**
@@ -121,12 +132,24 @@ class CommunicationService {
         logger.info('SMS message dispatched via Twilio', { sid: message.sid, to: formattedPhone });
         return { success: true, provider: 'twilio', sid: message.sid };
       } catch (twErr) {
-        logger.warn('Twilio SMS dispatch failed, falling back to secure audit log:', { error: twErr.message, to: formattedPhone });
+        logger.warn('Twilio SMS dispatch rejected by provider:', { error: twErr.message, to: formattedPhone });
+        return {
+          success: false,
+          provider: 'twilio',
+          error: 'TWILIO_PROVIDER_ERROR',
+          details: twErr.message,
+          message: 'SMS delivery rejected by Twilio. Trial accounts require provisioned Twilio phone numbers and verified recipient numbers.'
+        };
       }
     }
 
-    logger.info('Simulated SMS dispatched:', { to: formattedPhone, body });
-    return { success: true, provider: 'simulated_fallback' };
+    logger.warn('Twilio client or sender phone number not configured for SMS', { to: formattedPhone });
+    return {
+      success: false,
+      provider: 'twilio',
+      error: 'TWILIO_NOT_CONFIGURED',
+      message: 'Twilio SMS is not fully configured with a provisioned sender phone number.'
+    };
   }
 
   /**

@@ -3,6 +3,7 @@ const aiGateway = require('../../src/services/aiGateway.service');
 const paymentService = require('../../src/services/payment.service');
 
 describe('Phase 5: Hybrid AI/ML Pipeline, Clinical Intelligence & Razorpay Verification Suite', () => {
+  jest.setTimeout(15000);
 
   describe('1. Symptom Assessment & Differential Diagnosis (Calibrated Classifier)', () => {
     it('classifies cardiovascular red flags and suggests Cardiology specialty', async () => {
