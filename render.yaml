@@ -12,10 +12,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
       - key: CLIENT_URL
-        sync: false
+        value: https://healthmate-ai-nine-mocha.vercel.app
       - key: MONGODB_URI
         sync: false
       - key: REDIS_URL

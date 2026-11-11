@@ -16,7 +16,7 @@ const server = http.createServer(app);
 // Setup Socket.IO for real-time signaling & consultation events
 const io = new Server(server, {
   cors: {
-    origin: [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => callback(null, true),
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -28,21 +28,8 @@ initSocketIO(io);
 // Start server function
 const startServer = async () => {
   try {
-    // 1. Initialize Database
-    await connectDB();
-    await initIndexes();
-
-    // 2. Initialize Redis Cache
-    initRedis();
-
-    // 3. Idempotently ensure initial Administrator exists
-    await authService.provisionInitialAdmin();
-
-    // 4. Initialize Phase 7 Scheduled Healthcare Synchronization Worker
-    syncService.startScheduledWorker();
-
-    // 5. Start HTTP & WebSocket listener
-    server.listen(config.port, () => {
+    // 1. Start HTTP & WebSocket listener immediately so cloud health checks pass
+    server.listen(config.port, '0.0.0.0', () => {
       console.log(`==================================================`);
       console.log(`🚀 HealthMate AI Backend listening on port ${config.port}`);
       console.log(`🌐 Environment: ${config.env}`);
@@ -52,9 +39,21 @@ const startServer = async () => {
       console.log(`📚 Swagger Docs: http://localhost:${config.port}/api-docs`);
       console.log(`==================================================`);
     });
+
+    // 2. Initialize Database
+    await connectDB();
+    await initIndexes();
+
+    // 3. Initialize Redis Cache
+    initRedis();
+
+    // 4. Idempotently ensure initial Administrator exists
+    await authService.provisionInitialAdmin();
+
+    // 5. Initialize Phase 7 Scheduled Healthcare Synchronization Worker
+    syncService.startScheduledWorker();
   } catch (err) {
-    logger.error('Fatal error starting HealthMate AI backend server:', { error: err.message });
-    process.exit(1);
+    logger.error('Fatal error during HealthMate AI backend startup:', { error: err.message });
   }
 };
 

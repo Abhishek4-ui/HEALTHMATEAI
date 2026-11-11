@@ -22,8 +22,20 @@ app.use(helmet({
 }));
 
 // 2. Strict CORS Configuration
+const allowedOrigins = [
+  config.clientUrl,
+  'https://healthmate-ai-nine-mocha.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
 app.use(cors({
-  origin: [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-ID', 'X-User-Role'],
