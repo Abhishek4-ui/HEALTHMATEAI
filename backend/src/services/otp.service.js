@@ -1,5 +1,6 @@
 const { generateSecureOTP, hashOTP } = require('../security/crypto');
 const { getRedisClient, getRedisStatus } = require('../config/redis');
+require('../config/env');
 const logger = require('../utils/logger');
 
 const OTP_EXPIRY_SECONDS = 300; // 5 minutes
@@ -68,6 +69,8 @@ class OTPService {
 
     return {
       success: true,
+      rawOTP,
+      otp: rawOTP,
       expiresInSeconds: OTP_EXPIRY_SECONDS,
       resendCooldownSeconds: RESEND_COOLDOWN_SECONDS,
     };

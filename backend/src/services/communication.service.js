@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+require('../config/env');
 const logger = require('../utils/logger');
 
 class CommunicationService {

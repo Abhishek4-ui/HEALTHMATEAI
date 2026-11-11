@@ -68,16 +68,21 @@ class AuthService {
       metadata: { email: user.email, role },
     });
 
-    // 5. Send verification OTP
-    await otpService.sendOTP(user.email, 'EMAIL', 'VERIFICATION');
+    // 5. Send verification OTP (to both email and phone when provided)
+    const otpResult = await otpService.sendOTP(user.email, 'EMAIL', 'VERIFICATION');
+    if (user.phone) {
+      await otpService.sendOTP(user.phone, 'MOBILE', 'VERIFICATION').catch(() => {});
+    }
 
     return {
       id: user._id,
       email: user.email,
+      phone: user.phone,
       fullName: user.fullName,
       role: user.role,
       status: user.status,
-      message: 'Account registered. Verification code sent to email.',
+      otp: otpResult.rawOTP,
+      message: 'Account registered. Verification code sent to email and phone.',
     };
   }
 

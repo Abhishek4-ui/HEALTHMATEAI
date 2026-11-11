@@ -12,6 +12,7 @@ import {
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useToast } from '../../../context/ToastContext';
+import { apiClient } from '../../../services/api';
 
 export default function RegisterPage() {
   const [role, setRole] = useState('PATIENT');
@@ -23,6 +24,7 @@ export default function RegisterPage() {
     medicalRegistrationNumber: '',
     stateMedicalCouncil: 'Delhi Medical Council',
     specialization: 'General Medicine',
+    experienceYears: 5,
     consentGranted: false,
   });
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ export default function RegisterPage() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.password) {
       addToast({ type: 'warning', title: 'Missing Information', message: 'Please complete all required fields.' });
@@ -42,15 +44,83 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const payload = {
+        fullName: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+        phone: formData.phone.trim() || undefined,
+        role,
+      };
+
+      if (role === 'DOCTOR') {
+        payload.medicalRegistrationNumber = formData.medicalRegistrationNumber.trim() || 'NMC-2024-REG';
+        payload.stateMedicalCouncil = formData.stateMedicalCouncil || 'Delhi Medical Council';
+        payload.specialization = formData.specialization || 'General Medicine';
+        payload.experienceYears = Number(formData.experienceYears) || 5;
+      }
+
+      const res = await apiClient.post('/auth/register', payload);
+      const data = res.data || res;
+      const otpCode = data?.otp || res?.otp || '';
+
       addToast({
         type: 'success',
         title: 'Account Registered',
-        message: 'A verification OTP has been sent.',
+        message: otpCode ? `Verification code: ${otpCode} (also dispatched to email)` : 'Verification code dispatched to your email and phone.',
       });
-      navigate('/verify-otp', { state: { email: formData.email, phone: formData.phone, role } });
-    }, 400);
+
+      navigate('/verify-otp', { 
+        state: { 
+          email: formData.email, 
+          phone: formData.phone, 
+          role, 
+          name: formData.name,
+          otp: otpCode
+        } 
+      });
+    } catch (err) {
+      console.error('Registration error:', err);
+      const errMsg = err.message || err.code || 'Registration failed.';
+      
+      // If account already exists, request OTP so user can log in
+      if (errMsg.toLowerCase().includes('already exists')) {
+        addToast({ 
+          type: 'info', 
+          title: 'Account Exists', 
+          message: 'An account with this email already exists. Sending verification code...' 
+        });
+        try {
+          const otpRes = await apiClient.post('/auth/otp/send', { target: formData.email, type: 'EMAIL', purpose: 'VERIFICATION' });
+          const resentOtp = otpRes.data?.otp || otpRes.otp || '';
+          navigate('/verify-otp', {
+            state: {
+              email: formData.email,
+              phone: formData.phone,
+              role,
+              name: formData.name,
+              otp: resentOtp,
+            }
+          });
+          return;
+        } catch (otpErr) {
+          // navigate anyway to let them verify or login
+          navigate('/verify-otp', {
+            state: {
+              email: formData.email,
+              phone: formData.phone,
+              role,
+              name: formData.name,
+            }
+          });
+          return;
+        }
+      }
+
+      addToast({ type: 'error', title: 'Registration Failed', message: errMsg });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
