@@ -1,6 +1,7 @@
 const monitoringService = require('../services/monitoring.service');
 const auditService = require('../services/audit.service');
 const syncService = require('../services/sync.service');
+const aiGateway = require('../services/aiGateway.service');
 const { DoctorVerification, DoctorProfile, User, Hospital } = require('../models');
 const { successResponse, errorResponse } = require('../utils/response');
 
@@ -102,10 +103,45 @@ class AdminController {
 
   async getAIModels(req, res, next) {
     try {
+      const mlopsRes = await aiGateway.getMLOpsModels();
+      if (mlopsRes && mlopsRes.models && mlopsRes.models.length > 0) {
+        return successResponse(res, mlopsRes.models, 'AI model registry retrieved from MLOps service.');
+      }
       const models = await monitoringService.getAIModels();
       return successResponse(res, models, 'AI model metadata retrieved.');
     } catch (err) {
       return errorResponse(res, err.message, 500, 'AI_MODELS_ERROR');
+    }
+  }
+
+  async getMLOpsTelemetry(req, res, next) {
+    try {
+      const telemetry = await aiGateway.getMLOpsTelemetry();
+      return successResponse(res, telemetry, 'MLOps inference telemetry retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'MLOPS_TELEMETRY_ERROR');
+    }
+  }
+
+  async getMLOpsDrift(req, res, next) {
+    try {
+      const drift = await aiGateway.getMLOpsDrift();
+      return successResponse(res, drift, 'MLOps feature drift analysis retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'MLOPS_DRIFT_ERROR');
+    }
+  }
+
+  async queryRAGGuidelines(req, res, next) {
+    try {
+      const { query, top_k = 2 } = req.body;
+      if (!query) {
+        return errorResponse(res, 'Query string is required.', 400, 'QUERY_REQUIRED');
+      }
+      const result = await aiGateway.retrieveRAGGuidelines(query, top_k);
+      return successResponse(res, result, 'Clinical guidelines grounding retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 500, 'RAG_QUERY_ERROR');
     }
   }
 

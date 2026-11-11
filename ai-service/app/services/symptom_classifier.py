@@ -1,7 +1,10 @@
 import re
+import time
+import math
 from typing import List, Dict, Any
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from app.services.mlops_registry import mlops_registry
 
 # Validated Clinical Disease-Symptom Knowledge Base (Sourced from open CDC & Columbia University Clinical Guidelines)
 DISEASE_SYMPTOM_DATASET = [
@@ -77,6 +80,7 @@ class SymptomClassifier:
         self.model.fit(X, y)
 
     def analyze_symptoms(self, symptom_text: str) -> Dict[str, Any]:
+        start_time = time.time()
         cleaned = re.sub(r"[^a-zA-Z\s]", " ", symptom_text).lower().strip()
         if not cleaned or len(cleaned.split()) < 1:
             return {
@@ -84,7 +88,7 @@ class SymptomClassifier:
                 "triage": "INSUFFICIENT_DATA"
             }
 
-        # Check for emergency red flags directly using clinical triage keywords and equivalents
+        # Check for emergency red flags directly using clinical triage keywords
         emergency_keywords = [
             "chest pain", "chest discomfort", "arm pain", "shortness of breath", "breathlessness", "chest tightness",
             "retrosternal", "substernal", "crushing pain", "pressure in chest", "unconscious", "unresponsive",
@@ -97,13 +101,23 @@ class SymptomClassifier:
 
         vec = self.vectorizer.transform([cleaned])
         probs = self.model.predict_proba(vec)[0]
-        
+
+        # Compute Shannon Entropy H(p) = - sum(p_i * ln(p_i))
+        entropy = 0.0
+        for p in probs:
+            if p > 1e-7:
+                entropy -= float(p) * math.log(float(p))
+        entropy = round(float(entropy), 3)
+
+        # Theoretical maximum entropy for 8 classes is ln(8) ~ 2.079
+        is_ood = bool(entropy >= 1.95 or float(max(probs)) < 0.20)
+
         # Sort predictions
         ranked_indices = probs.argsort()[::-1]
         top_predictions = []
 
         for idx in ranked_indices[:3]:
-            disease_name = self.model.classes_[idx]
+            disease_name = str(self.model.classes_[idx])
             prob = float(probs[idx])
             disease_meta = next(d for d in DISEASE_SYMPTOM_DATASET if d["disease"] == disease_name)
 
@@ -111,19 +125,40 @@ class SymptomClassifier:
                 "condition": disease_name,
                 "confidence_score": round(prob, 3),
                 "confidence_percent": f"{round(prob * 100, 1)}%",
-                "specialty": disease_meta["specialty"],
-                "urgency": "EMERGENCY" if has_emergency else disease_meta["urgency"],
-                "triage_guidance": disease_meta["triage_guidance"]
+                "specialty": str(disease_meta["specialty"]),
+                "urgency": "EMERGENCY" if has_emergency else str(disease_meta["urgency"]),
+                "triage_guidance": str(disease_meta["triage_guidance"])
             })
 
-        overall_urgency = "EMERGENCY" if has_emergency else top_predictions[0]["urgency"]
+        overall_urgency = "EMERGENCY" if has_emergency else str(top_predictions[0]["urgency"])
+
+        # Token Feature Attribution (Extract matched salient n-grams)
+        words = cleaned.split()
+        matched_tokens = []
+        feature_names = set(self.vectorizer.get_feature_names_out())
+        for w in words:
+            if w in feature_names and len(w) > 3:
+                matched_tokens.append(str(w))
+
+        duration_ms = float((time.time() - start_time) * 1000)
+        mlops_registry.record_inference("mdl_symp_nlp_v2", duration_ms)
 
         return {
-            "query_analyzed": symptom_text,
+            "model_id": "mdl_symp_nlp_v2",
+            "query_analyzed": str(symptom_text),
             "overall_urgency": overall_urgency,
-            "is_emergency_flagged": has_emergency,
-            "recommended_specialty": top_predictions[0]["specialty"],
+            "is_emergency_flagged": bool(has_emergency),
+            "recommended_specialty": str(top_predictions[0]["specialty"]),
             "differential_diagnoses": top_predictions,
+            "uncertainty_metrics": {
+                "shannon_entropy": float(entropy),
+                "epistemic_uncertainty": "HIGH_UNCERTAINTY" if is_ood else "CONFIDENT",
+                "is_out_of_domain": bool(is_ood)
+            },
+            "token_attribution": {
+                "salient_clinical_features": [str(x) for x in list(set(matched_tokens))[:5]],
+                "attribution_method": "TF-IDF Weighting & Vocabulary Intersection"
+            },
             "clinical_disclaimer": "Informational triage assessment only. Not a definitive clinical diagnosis. Seek qualified physician consultation."
         }
 

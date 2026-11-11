@@ -6,6 +6,8 @@ from app.services.symptom_classifier import symptom_classifier
 from app.services.health_risk_models import health_risk_models
 from app.services.report_ocr import report_ocr_extractor
 from app.services.clinical_copilot import clinical_copilot
+from app.services.clinical_rag import clinical_rag_grounder
+from app.services.mlops_registry import mlops_registry
 
 router = APIRouter(prefix="/api/v1/ai", tags=["Clinical Hybrid AI Pipeline"])
 
@@ -107,48 +109,41 @@ async def soap_summarize(payload: SoapSummarizeRequest):
 async def drug_interactions(payload: DrugInteractionRequest):
     return clinical_copilot.check_drug_interactions(payload.medications)
 
+class RAGQueryRequest(BaseModel):
+    query: str = Field(..., example="What are the diagnostic thresholds for Type 2 Diabetes according to ADA guidelines?")
+    top_k: int = Field(2, ge=1, le=5)
+
+@router.post("/rag/retrieve")
+async def retrieve_clinical_guidelines(payload: RAGQueryRequest):
+    return clinical_rag_grounder.retrieve_guidelines(payload.query, top_k=payload.top_k)
+
 @router.get("/model-metadata")
 async def get_model_metadata():
     """
     MLOps Telemetry for Administration Dashboard
     """
     return {
-        "models": [
-            {
-                "id": "mdl_symp_nlp_v2",
-                "name": "Clinical Symptom-to-Disease NLP Classifier",
-                "type": "TF-IDF + Calibrated Logistic Classifier",
-                "dataset": "CDC & Columbia University Clinical Guidelines",
-                "accuracy": "93.4%",
-                "status": "PRODUCTION",
-                "explainability": "Token N-gram Attribution"
-            },
-            {
-                "id": "mdl_cvd_framingham_v2",
-                "name": "Framingham / WHO Cardiovascular 10-Year Risk Engine",
-                "type": "Cox Proportional Hazards & Calibrated Logistic",
-                "dataset": "Framingham Heart Study / WHO CVD Risk Charts",
-                "accuracy": "88.7% (ROC-AUC: 0.86)",
-                "status": "PRODUCTION",
-                "explainability": "Local SHAP-compatible Marginal Feature Contribution"
-            },
-            {
-                "id": "mdl_diabetes_ada_v2",
-                "name": "ADA / FINDRISC Type-2 Diabetes Risk Engine",
-                "type": "Calibrated Non-Invasive Risk Scoring",
-                "dataset": "ADA Clinical Practice Recommendations / FINDRISC",
-                "accuracy": "86.2% (ROC-AUC: 0.84)",
-                "status": "PRODUCTION",
-                "explainability": "Local Factor Importance Breakdown"
-            },
-            {
-                "id": "mdl_ocr_loinc_v1",
-                "name": "Clinical Biomarker Extraction Engine",
-                "type": "Computer Vision & Heuristic Pattern Mapping",
-                "dataset": "LOINC Standard Laboratory Reference Intervals",
-                "accuracy": "96.1% on standard lab formats",
-                "status": "PRODUCTION",
-                "explainability": "Interval Bounds Matching (NORMAL/HIGH/LOW)"
-            }
-        ]
+        "models": mlops_registry.get_models()
     }
+
+@router.get("/mlops/models")
+async def get_mlops_models():
+    return {
+        "count": len(mlops_registry.get_models()),
+        "models": mlops_registry.get_models()
+    }
+
+@router.get("/mlops/models/{model_id}")
+async def get_mlops_model(model_id: str):
+    model = mlops_registry.get_model_by_id(model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail=f"Model '{model_id}' not found in registry.")
+    return model
+
+@router.get("/mlops/telemetry")
+async def get_mlops_telemetry():
+    return mlops_registry.get_telemetry()
+
+@router.get("/mlops/drift")
+async def get_mlops_drift():
+    return mlops_registry.detect_data_drift()

@@ -49,6 +49,22 @@ export const adminService = {
     return apiClient.get('/admin/mlops/models');
   },
 
+  getMLOpsTelemetry: async () => {
+    return apiClient.get('/admin/mlops/telemetry');
+  },
+
+  getMLOpsDrift: async () => {
+    return apiClient.get('/admin/mlops/drift');
+  },
+
+  queryRAGGuidelines: async (query, top_k = 2) => {
+    return apiClient.post('/admin/clinical/rag-query', { query, top_k });
+  },
+
+  getDatasets: async () => {
+    return apiClient.get('/admin/datasets');
+  },
+
   getAuditLogs: async (filters = {}) => {
     return apiClient.get('/admin/compliance/audit-logs', { params: filters });
   }
