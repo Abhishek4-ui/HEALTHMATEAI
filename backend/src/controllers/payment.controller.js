@@ -18,6 +18,24 @@ class PaymentController {
     }
   }
 
+  async verifySignature(req, res, next) {
+    try {
+      const { orderId, paymentId, signature, appointmentId } = req.body;
+      if (!orderId || !paymentId || !signature) {
+        return errorResponse(res, 'orderId, paymentId, and signature are required.', 400, 'VALIDATION_ERROR');
+      }
+      const result = await paymentService.verifyPaymentSignature({
+        orderId,
+        paymentId,
+        signature,
+        appointmentId,
+      });
+      return successResponse(res, result, 'Payment signature verified successfully.');
+    } catch (err) {
+      return errorResponse(res, err.message, 400, 'SIGNATURE_VERIFICATION_FAILED');
+    }
+  }
+
   async handleWebhook(req, res, next) {
     try {
       const signature = req.headers['x-razorpay-signature'];

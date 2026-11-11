@@ -94,12 +94,85 @@ export default function Module08_AppointmentManagement() {
 
     setLoading(true);
     try {
-      await patientService.bookAppointment(bookingForm);
-      addToast({
-        type: 'success',
-        title: 'Appointment Confirmed',
-        message: 'Your consultation slot has been reserved.',
-      });
+      const res = await patientService.bookAppointment(bookingForm);
+      const appointmentId = res.data?._id || res.data?.id;
+      const consultationFee = selectedDoctorObj?.consultationFee || 500;
+
+      // Trigger Razorpay payment flow in test mode
+      try {
+        const orderRes = await patientService.createPaymentOrder({
+          appointmentId: appointmentId || 'apt_' + Date.now(),
+          amount: consultationFee,
+          currency: 'INR'
+        });
+
+        const orderData = orderRes.data || orderRes;
+        
+        // Dynamically load Razorpay SDK
+        const scriptLoaded = await new Promise((resolve) => {
+          if (window.Razorpay) return resolve(true);
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+
+        if (scriptLoaded && window.Razorpay && orderData.keyId) {
+          const options = {
+            key: orderData.keyId,
+            amount: orderData.amount * 100,
+            currency: orderData.currency || 'INR',
+            name: 'HealthMate AI Healthcare',
+            description: `Consultation with Dr. ${selectedDoctorObj?.user?.name || selectedDoctorObj?.name || 'Specialist'}`,
+            order_id: orderData.orderId,
+            handler: async function (response) {
+              try {
+                await patientService.verifyPaymentSignature({
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  signature: response.razorpay_signature,
+                  appointmentId: appointmentId
+                });
+                addToast({
+                  type: 'success',
+                  title: 'Payment & Consultation Confirmed',
+                  message: `Payment ${response.razorpay_payment_id} verified via Razorpay.`
+                });
+              } catch (sigErr) {
+                addToast({
+                  type: 'error',
+                  title: 'Verification Failed',
+                  message: 'Signature check failed: ' + sigErr.message
+                });
+              }
+            },
+            prefill: {
+              name: 'HealthMate Patient',
+              email: 'patient@healthmate.ai',
+              contact: '9999999999'
+            },
+            theme: {
+              color: '#0D9488'
+            }
+          };
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          addToast({
+            type: 'success',
+            title: 'Appointment Confirmed',
+            message: `Consultation reserved. Order ID: ${orderData.orderId}`,
+          });
+        }
+      } catch (payErr) {
+        addToast({
+          type: 'success',
+          title: 'Appointment Confirmed',
+          message: 'Consultation slot reserved.',
+        });
+      }
+
       setTab('upcoming');
     } catch (err) {
       addToast({

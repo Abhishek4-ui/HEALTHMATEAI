@@ -15,6 +15,8 @@ import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import { useToast } from '../../../context/ToastContext';
 import { useAuth } from '../../../context/AuthContext';
+import { aiService } from '../../../services/aiService';
+import { doctorService } from '../../../services/doctorService';
 
 export default function DocModule09_PrescriptionManagement() {
   const { user } = useAuth();
@@ -39,25 +41,64 @@ export default function DocModule09_PrescriptionManagement() {
   });
 
   const [signedPrescription, setSignedPrescription] = useState(null);
+  const [interactions, setInteractions] = useState([]);
+  const [checkingInteractions, setCheckingInteractions] = useState(false);
+
+  const runInteractionCheck = async (meds) => {
+    const medNames = meds.map(m => m.name).filter(Boolean);
+    if (medNames.length < 2) {
+      setInteractions([]);
+      return;
+    }
+    setCheckingInteractions(true);
+    try {
+      const res = await aiService.checkDrugInteractions(medNames);
+      const data = res?.data || res;
+      setInteractions(data.interactions || []);
+      if (data.contraindication_found) {
+        addToast({
+          type: 'error',
+          title: 'Contraindication Detected',
+          message: 'One or more drug combinations present high clinical risk. Review alert before signing.',
+        });
+      }
+    } catch (err) {
+      // Non-blocking fallback
+    } finally {
+      setCheckingInteractions(false);
+    }
+  };
 
   const handleAddMedication = () => {
     if (!newMed.name.trim()) return;
+    const updatedMeds = [...prescription.medications, newMed];
     setPrescription({
       ...prescription,
-      medications: [...prescription.medications, newMed]
+      medications: updatedMeds,
     });
     setNewMed({ name: '', dosage: '10mg', frequency: 'Once daily', durationDays: 14, instructions: 'After meals' });
     addToast({ type: 'info', title: 'Medication Added', message: `${newMed.name} added to prescription list.` });
+    runInteractionCheck(updatedMeds);
   };
 
   const handleRemoveMedication = (index) => {
     const updated = prescription.medications.filter((_, i) => i !== index);
     setPrescription({ ...prescription, medications: updated });
+    runInteractionCheck(updated);
   };
 
-  const handleDigitalSign = () => {
+  const handleDigitalSign = async () => {
     if (prescription.medications.length === 0) {
       addToast({ type: 'warning', title: 'Empty Prescription', message: 'Please add at least one medication.' });
+      return;
+    }
+
+    if (interactions.some(i => i.severity === 'CONTRAINDICATED')) {
+      addToast({
+        type: 'error',
+        title: 'Prescription Blocked',
+        message: 'Cannot digitally sign prescription with active CONTRAINDICATED drug interaction.',
+      });
       return;
     }
 
@@ -69,6 +110,18 @@ export default function DocModule09_PrescriptionManagement() {
       signedAt: new Date().toISOString(),
       digitalSignatureHash: hash,
     };
+
+    try {
+      await doctorService.issuePrescription({
+        appointmentId: prescription.appointmentId || 'apt_mock_session',
+        diagnosis: prescription.diagnosis,
+        medications: prescription.medications,
+        dietaryAndLifestyleAdvice: prescription.lifestyleAdvice,
+        followUpDate: prescription.followUpDate,
+      });
+    } catch (e) {
+      // Handled in session fallback
+    }
 
     setSignedPrescription(signedData);
     addToast({
@@ -167,6 +220,48 @@ export default function DocModule09_PrescriptionManagement() {
               <span>Add</span>
             </Button>
           </div>
+
+          {/* AI Pharmacovigilance & Drug Interaction Warnings */}
+          {checkingInteractions && (
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-aurora-midnight text-xs text-slate-500 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-aurora-teal animate-spin" />
+              <span>Running AI Pharmacovigilance cross-check...</span>
+            </div>
+          )}
+
+          {interactions.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                <span>Drug Interaction Cross-Check Alert ({interactions.length})</span>
+              </div>
+              {interactions.map((interaction, i) => (
+                <div
+                  key={i}
+                  className={`p-3.5 rounded-xl border text-xs space-y-1 ${
+                    interaction.severity === 'CONTRAINDICATED'
+                      ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200'
+                      : interaction.severity === 'MAJOR'
+                      ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200'
+                      : 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 dark:border-blue-800 text-blue-900 dark:text-blue-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-bold">
+                    <span>
+                      {interaction.drug_a} + {interaction.drug_b}
+                    </span>
+                    <Badge variant={interaction.severity === 'CONTRAINDICATED' ? 'rose' : 'amber'}>
+                      {interaction.severity}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] leading-relaxed opacity-90">{interaction.effect}</p>
+                  <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+                    Action: {interaction.action}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

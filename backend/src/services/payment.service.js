@@ -1,7 +1,21 @@
 const crypto = require('crypto');
+const Razorpay = require('razorpay');
 const { PaymentTransaction, Appointment } = require('../models');
 const { verifyHmacSignature } = require('../security/crypto');
 const logger = require('../utils/logger');
+
+let razorpayClient = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  try {
+    razorpayClient = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+    logger.info('Razorpay client initialized with credentials.');
+  } catch (err) {
+    logger.error('Failed to initialize Razorpay client:', err.message);
+  }
+}
 
 class PaymentService {
   /**
@@ -14,16 +28,46 @@ class PaymentService {
     // Check for existing order with same idempotencyKey
     if (idempotencyKey) {
       const existing = await PaymentTransaction.findOne({ idempotencyKey });
-      if (existing) return existing;
+      if (existing) {
+        return {
+          orderId: existing.orderId,
+          amount: existing.amount,
+          currency: existing.currency,
+          status: existing.status,
+          keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tyml08EyeVHKJY',
+        };
+      }
     }
 
-    const orderId = 'order_' + crypto.randomBytes(12).toString('hex');
+    const payableAmount = amount || appointment.paymentAmount || 500;
+    let orderId;
+
+    if (razorpayClient) {
+      try {
+        const rzpOrder = await razorpayClient.orders.create({
+          amount: Math.round(payableAmount * 100), // in paise
+          currency,
+          receipt: `rcpt_${String(appointmentId).slice(-12)}`,
+          notes: {
+            appointmentId: String(appointmentId),
+            patientId: String(patientId),
+          },
+        });
+        orderId = rzpOrder.id;
+        logger.info('Live Razorpay test order created successfully', { orderId, amount: payableAmount });
+      } catch (rzpErr) {
+        logger.warn('Razorpay API order creation failed, falling back to simulated order:', rzpErr.message);
+        orderId = 'order_' + crypto.randomBytes(12).toString('hex');
+      }
+    } else {
+      orderId = 'order_' + crypto.randomBytes(12).toString('hex');
+    }
 
     const transaction = await PaymentTransaction.create({
       orderId,
       appointmentId,
       patientId,
-      amount: amount || appointment.paymentAmount,
+      amount: payableAmount,
       currency,
       status: 'CREATED',
       idempotencyKey: idempotencyKey || null,
@@ -34,8 +78,51 @@ class PaymentService {
       amount: transaction.amount,
       currency: transaction.currency,
       status: transaction.status,
-      // If RAZORPAY_KEY_ID configured, return key
-      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_pending_credentials',
+      keyId: process.env.RAZORPAY_KEY_ID || 'rzp_test_Tyml08EyeVHKJY',
+    };
+  }
+
+  /**
+   * Verify Razorpay payment signature returned from client checkout modal
+   */
+  async verifyPaymentSignature({ orderId, paymentId, signature, appointmentId }) {
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error('Razorpay secret not configured on server.');
+    }
+
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${orderId}|${paymentId}`)
+      .digest('hex');
+
+    if (generatedSignature !== signature) {
+      logger.error('Payment signature mismatch', { orderId, paymentId });
+      throw new Error('Invalid Razorpay payment signature. Tampering detected.');
+    }
+
+    const mongoose = require('mongoose');
+    if (mongoose.connection && mongoose.connection.readyState === 1) {
+      const transaction = await PaymentTransaction.findOneAndUpdate(
+        { orderId },
+        { status: 'PAID', paymentId, method: 'razorpay' },
+        { new: true }
+      );
+
+      const targetAppointmentId = appointmentId || (transaction ? transaction.appointmentId : null);
+      if (targetAppointmentId) {
+        await Appointment.findByIdAndUpdate(targetAppointmentId, {
+          paymentStatus: 'PAID',
+          paymentReferenceId: paymentId,
+        });
+        logger.info('Appointment payment confirmed via verified client signature.', { orderId, paymentId, targetAppointmentId });
+      }
+    }
+
+    return {
+      verified: true,
+      orderId,
+      paymentId,
+      status: 'PAID',
     };
   }
 

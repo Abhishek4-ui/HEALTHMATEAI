@@ -27,6 +27,14 @@ export const patientService = {
 
   exportPatientConsentData: async () => {
     return apiClient.get('/patient/data-export');
+  },
+
+  createPaymentOrder: async (orderData) => {
+    return apiClient.post('/payments/order', orderData);
+  },
+
+  verifyPaymentSignature: async (paymentData) => {
+    return apiClient.post('/payments/verify-signature', paymentData);
   }
 };
 

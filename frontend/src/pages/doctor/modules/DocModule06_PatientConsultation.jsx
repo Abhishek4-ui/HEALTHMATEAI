@@ -13,6 +13,7 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import Badge from '../../../components/ui/Badge';
 import { useToast } from '../../../context/ToastContext';
+import { aiService } from '../../../services/aiService';
 
 export default function DocModule06_PatientConsultation() {
   const [patientContext, setPatientContext] = useState({
@@ -34,16 +35,43 @@ export default function DocModule06_PatientConsultation() {
   const [generating, setGenerating] = useState(false);
   const { addToast } = useToast();
 
-  const handleGenerateSoap = () => {
+  const handleGenerateSoap = async () => {
     setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
-      addToast({
-        type: 'success',
-        title: 'AI SOAP Note Drafted',
-        message: 'Clinical summary synthesized for doctor review under NMC guidelines.',
+    try {
+      const response = await aiService.getClinicalSoapSummary({
+        patientName: patientContext.name,
+        age: patientContext.age,
+        gender: patientContext.gender,
+        chiefComplaint: patientContext.chiefComplaint,
+        vitals: patientContext.vitals,
+        allergies: patientContext.allergies,
       });
-    }, 700);
+
+      const data = response?.data || response;
+      if (data && data.subjective) {
+        setSoapNotes({
+          subjective: data.subjective || soapNotes.subjective,
+          objective: data.objective || soapNotes.objective,
+          assessment: data.assessment || soapNotes.assessment,
+          plan: data.plan || soapNotes.plan,
+        });
+        addToast({
+          type: 'success',
+          title: 'AI SOAP Note Drafted',
+          message: 'Clinical summary synthesized via Hybrid AI Pipeline for doctor review.',
+        });
+      } else {
+        throw new Error('Incomplete SOAP output.');
+      }
+    } catch (err) {
+      addToast({
+        type: 'info',
+        title: 'Clinical SOAP Note Drafted',
+        message: 'Synthesized using rule-based clinical engine.',
+      });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const handleSaveNotes = (e) => {

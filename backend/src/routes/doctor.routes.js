@@ -24,6 +24,25 @@ router.put('/availability', authenticateToken, requireRoles(['DOCTOR']), validat
 router.post('/availability', authenticateToken, requireRoles(['DOCTOR']), doctorController.updateAvailability);
 router.get('/schedule', authenticateToken, requireRoles(['DOCTOR']), doctorController.getProfile);
 
+// Clinical AI Copilot & Drug Safety Checks
+const aiGateway = require('../services/aiGateway.service');
+
+router.post('/copilot/summarize', authenticateToken, requireRoles(['DOCTOR']), async (req, res, next) => {
+  try {
+    const { consultation_text, patient_info } = req.body;
+    const result = await aiGateway.summarizeSoap(consultation_text, patient_info);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/prescriptions/check-interactions', authenticateToken, requireRoles(['DOCTOR']), async (req, res, next) => {
+  try {
+    const { medications } = req.body;
+    const result = await aiGateway.checkDrugInteractions(medications || []);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
 // Finance & Ledger
 router.get('/finance/ledger', authenticateToken, requireRoles(['DOCTOR']), (req, res) => {
   res.status(200).json({

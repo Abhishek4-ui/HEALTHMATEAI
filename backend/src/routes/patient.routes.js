@@ -24,6 +24,7 @@ router.delete('/session/:sessionId', optionalAuth, patientController.forgetMe); 
 
 const multer = require('multer');
 const reportController = require('../controllers/report.controller');
+const aiGateway = require('../services/aiGateway.service');
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -32,6 +33,30 @@ const upload = multer({
 
 // Ephemeral Diagnostic Report Upload & AI OCR Staging
 router.post('/reports/ocr-extract', optionalAuth, upload.single('report'), reportController.uploadReport);
+
+// AI Copilot, Symptom Checker, and Health Risk Assessment
+router.post('/copilot/message', optionalAuth, async (req, res, next) => {
+  try {
+    const { query, language, history } = req.body;
+    const result = await aiGateway.sendHealthQuery(query, language, history);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/symptom-check', optionalAuth, async (req, res, next) => {
+  try {
+    const text = req.body.symptom_text || req.body.symptoms || req.body.query || '';
+    const result = await aiGateway.checkSymptoms(text);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/risk-assessment', optionalAuth, async (req, res, next) => {
+  try {
+    const result = await aiGateway.assessCardioRisk(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
 
 // Data Export
 router.get('/data-export', authenticateToken, requireRoles(['PATIENT']), patientController.getConsents);

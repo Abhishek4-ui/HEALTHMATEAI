@@ -5,6 +5,7 @@ import logging
 
 from app.core.config import settings
 from app.api.health import router as health_router
+from app.api.clinical_ai import router as clinical_ai_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("healthmate.ai_service")
@@ -36,6 +37,7 @@ app.add_middleware(
 # Mount health routes
 app.include_router(health_router, prefix="", tags=["System Health"])
 app.include_router(health_router, prefix="/internal/v1", tags=["Internal Health"])
+app.include_router(clinical_ai_router)
 
 @app.get("/")
 async def root():
