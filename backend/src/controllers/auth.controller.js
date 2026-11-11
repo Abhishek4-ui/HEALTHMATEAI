@@ -43,8 +43,11 @@ class AuthController {
 
   async sendOTP(req, res, next) {
     try {
-      const { target, type, purpose } = req.body;
+      const { target, type, purpose, phone } = req.body;
       const result = await otpService.sendOTP(target, type, purpose);
+      if (phone) {
+        await otpService.sendOTP(phone, 'MOBILE', purpose || 'VERIFICATION', result.rawOTP).catch(() => {});
+      }
       return successResponse(res, result, 'Verification code dispatched.');
     } catch (err) {
       return errorResponse(res, err.message, 429, 'OTP_DISPATCH_LIMIT');
@@ -53,8 +56,22 @@ class AuthController {
 
   async verifyOTP(req, res, next) {
     try {
-      const { target, type, otp, purpose } = req.body;
-      const verified = await otpService.verifyOTP(target, type, otp, purpose);
+      const { target, type, otp, purpose, phone } = req.body;
+      let verified = false;
+      try {
+        verified = await otpService.verifyOTP(target, type, otp, purpose);
+      } catch (primaryErr) {
+        // If verification fails against target, try verifying against phone if provided
+        if (phone && phone !== target) {
+          try {
+            verified = await otpService.verifyOTP(phone, 'MOBILE', otp, purpose);
+          } catch (phoneErr) {
+            throw primaryErr;
+          }
+        } else {
+          throw primaryErr;
+        }
+      }
       return successResponse(res, { verified }, 'Code verified successfully.');
     } catch (err) {
       return errorResponse(res, err.message, 400, 'OTP_VERIFICATION_FAILED');

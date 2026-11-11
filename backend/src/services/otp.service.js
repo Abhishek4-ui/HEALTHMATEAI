@@ -24,28 +24,31 @@ class OTPService {
    * @param {string} target - Email address or phone number
    * @param {'EMAIL'|'MOBILE'} type 
    * @param {'VERIFICATION'|'LOGIN'|'PASSWORD_RESET'} purpose 
+   * @param {string|null} customOTP - Optional unified OTP code to synchronize email and SMS
    */
-  async sendOTP(target, type, purpose = 'VERIFICATION') {
+  async sendOTP(target, type, purpose = 'VERIFICATION', customOTP = null) {
     const normalizedTarget = target.trim().toLowerCase();
     const key = `otp:${type.toLowerCase()}:${normalizedTarget}:${purpose.toLowerCase()}`;
     const cooldownKey = `cooldown:${key}`;
 
-    // 1. Check cooldown
-    if (this.isRedisConnected()) {
-      const client = getRedisClient();
-      const onCooldown = await client.get(cooldownKey);
-      if (onCooldown) {
-        throw new Error('Please wait 60 seconds before requesting another verification code.');
-      }
-    } else {
-      const existing = this.memoryStore.get(cooldownKey);
-      if (existing && existing > Date.now()) {
-        throw new Error('Please wait 60 seconds before requesting another verification code.');
+    // 1. Check cooldown (skip if customOTP is provided to allow dual dispatch to email + mobile)
+    if (!customOTP) {
+      if (this.isRedisConnected()) {
+        const client = getRedisClient();
+        const onCooldown = await client.get(cooldownKey);
+        if (onCooldown) {
+          throw new Error('Please wait 60 seconds before requesting another verification code.');
+        }
+      } else {
+        const existing = this.memoryStore.get(cooldownKey);
+        if (existing && existing > Date.now()) {
+          throw new Error('Please wait 60 seconds before requesting another verification code.');
+        }
       }
     }
 
-    // 2. Generate secure 6-digit OTP
-    const rawOTP = generateSecureOTP();
+    // 2. Generate or use unified 6-digit OTP
+    const rawOTP = customOTP || generateSecureOTP();
     const hashed = hashOTP(rawOTP);
 
     const record = {

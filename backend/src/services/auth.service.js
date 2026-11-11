@@ -68,10 +68,10 @@ class AuthService {
       metadata: { email: user.email, role },
     });
 
-    // 5. Send verification OTP (to both email and phone when provided)
+    // 5. Send unified verification OTP (exact same code to both email and phone)
     const otpResult = await otpService.sendOTP(user.email, 'EMAIL', 'VERIFICATION');
     if (user.phone) {
-      await otpService.sendOTP(user.phone, 'MOBILE', 'VERIFICATION').catch(() => {});
+      await otpService.sendOTP(user.phone, 'MOBILE', 'VERIFICATION', otpResult.rawOTP).catch(() => {});
     }
 
     return {
