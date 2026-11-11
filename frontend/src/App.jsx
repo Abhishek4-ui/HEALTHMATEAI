@@ -28,6 +28,7 @@ import MobileOTPPage from './pages/public/auth/MobileOTPPage';
 import EmailVerificationPage from './pages/public/auth/EmailVerificationPage';
 import SessionExpiredPage from './pages/public/auth/SessionExpiredPage';
 import LogoutConfirmPage from './pages/public/auth/LogoutConfirmPage';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Patient Portal Layout & Modules
 import PatientLayout from './pages/patient/PatientLayout';
@@ -50,6 +51,8 @@ import Module16_EmergencySOS from './pages/patient/modules/Module16_EmergencySOS
 import Module17_FamilyHealthcare from './pages/patient/modules/Module17_FamilyHealthcare';
 import Module18_Notifications from './pages/patient/modules/Module18_Notifications';
 import Module19_PrivacySettings from './pages/patient/modules/Module19_PrivacySettings';
+import Module20_MedicalImagingCenter from './pages/patient/modules/Module20_MedicalImagingCenter';
+import Module21_ECGCardiacCenter from './pages/patient/modules/Module21_ECGCardiacCenter';
 
 // Doctor Portal Layout & Modules
 import DoctorLayout from './pages/doctor/DoctorLayout';
@@ -115,13 +118,19 @@ export default function App() {
               </Route>
 
               {/* Patient Portal Routes */}
-              <Route path="/patient" element={<PatientLayout />}>
+              <Route path="/patient" element={
+                <ProtectedRoute allowedRole="PATIENT">
+                  <PatientLayout />
+                </ProtectedRoute>
+              }>
                 <Route index element={<Navigate to="/patient/dashboard" replace />} />
                 <Route path="dashboard" element={<Module01_Dashboard />} />
                 <Route path="ai-assistant" element={<Module02_AIAssistant />} />
                 <Route path="symptom-checker" element={<Module03_SymptomChecker />} />
                 <Route path="risk-assessment" element={<Module04_HealthRiskAssessment />} />
                 <Route path="reports" element={<Module05_ReportAnalyzer />} />
+                <Route path="medical-imaging" element={<Module20_MedicalImagingCenter />} />
+                <Route path="cardiac-ecg" element={<Module21_ECGCardiacCenter />} />
                 <Route path="doctors" element={<Module06_DoctorDiscovery />} />
                 <Route path="hospitals" element={<Module07_HospitalDiscovery />} />
                 <Route path="appointments" element={<Module08_AppointmentManagement />} />
@@ -139,7 +148,11 @@ export default function App() {
               </Route>
 
               {/* Doctor Portal Routes */}
-              <Route path="/doctor" element={<DoctorLayout />}>
+              <Route path="/doctor" element={
+                <ProtectedRoute allowedRole="DOCTOR">
+                  <DoctorLayout />
+                </ProtectedRoute>
+              }>
                 <Route index element={<Navigate to="/doctor/dashboard" replace />} />
                 <Route path="dashboard" element={<DocModule01_Dashboard />} />
                 <Route path="profile" element={<DocModule02_Profile />} />
@@ -157,7 +170,11 @@ export default function App() {
               </Route>
 
               {/* Administration Portal Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
+              <Route path="/admin" element={
+                <ProtectedRoute allowedRole="ADMINISTRATION">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminModule01_Dashboard />} />
                 <Route path="doctors" element={<AdminModule02_DoctorManagement />} />
@@ -174,6 +191,7 @@ export default function App() {
                 <Route path="reports" element={<AdminModule13_ReportsAnalytics />} />
                 <Route path="settings" element={<AdminModule14_SystemSettings />} />
               </Route>
+              <Route path="/administration/*" element={<Navigate to="/admin" replace />} />
 
               {/* 404 Catch-All */}
               <Route path="*" element={<NotFoundPage />} />

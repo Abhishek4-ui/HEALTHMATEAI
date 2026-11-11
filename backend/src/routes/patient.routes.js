@@ -58,6 +58,46 @@ router.post('/risk-assessment', optionalAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Phase 9: Medical Imaging AI Analysis (X-Ray, CT, MRI, Ultrasound, Pathology)
+router.post('/imaging/analyze', optionalAuth, upload.single('image'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Medical scan image file is required.' });
+    }
+    const modality = (req.body.modality || 'XRAY').toUpperCase();
+    const patientConsent = req.body.patient_consent === undefined ? true : String(req.body.patient_consent) === 'true';
+
+    const result = await aiGateway.analyzeMedicalImaging({
+      fileBuffer: req.file.buffer,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      modality,
+      patientConsent,
+    });
+    res.status(200).json(result);
+  } catch (err) { next(err); }
+});
+
+// Phase 9: ECG & Cardiac Waveform Intelligence
+router.post('/cardiac/ecg-analyze', optionalAuth, upload.single('ecg'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'ECG file (PDF or Image) is required.' });
+    }
+    const patientAge = parseInt(req.body.patient_age, 10) || 50;
+    const patientConsent = req.body.patient_consent === undefined ? true : String(req.body.patient_consent) === 'true';
+
+    const result = await aiGateway.analyzeECG({
+      fileBuffer: req.file.buffer,
+      filename: req.file.originalname,
+      mimetype: req.file.mimetype,
+      patientAge,
+      patientConsent,
+    });
+    res.status(200).json(result);
+  } catch (err) { next(err); }
+});
+
 // Data Export
 router.get('/data-export', authenticateToken, requireRoles(['PATIENT']), patientController.getConsents);
 

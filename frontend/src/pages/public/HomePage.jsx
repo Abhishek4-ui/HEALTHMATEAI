@@ -36,7 +36,7 @@ export default function HomePage() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/patient">
+            <Link to="/login?role=PATIENT">
               <Button size="lg" variant="primary">
                 <Activity className="w-4 h-4 text-aurora-midnight" />
                 <span>Patient Portal</span>
@@ -44,14 +44,14 @@ export default function HomePage() {
               </Button>
             </Link>
 
-            <Link to="/doctor">
+            <Link to="/login?role=DOCTOR">
               <Button size="lg" variant="secondary" className="border border-slate-300 dark:border-slate-700">
                 <Stethoscope className="w-4 h-4 text-aurora-blue" />
                 <span>Doctor Portal</span>
               </Button>
             </Link>
 
-            <Link to="/admin">
+            <Link to="/login?role=ADMINISTRATION">
               <Button size="lg" variant="outline">
                 <Shield className="w-4 h-4 text-aurora-violet" />
                 <span>Administration</span>
@@ -87,9 +87,9 @@ export default function HomePage() {
                 <li>• Instant session deletion with Forget Me</li>
               </ul>
             </div>
-            <Link to="/patient">
+            <Link to="/login?role=PATIENT">
               <Button variant="primary" className="w-full">
-                Open Patient Portal
+                Enter Patient Portal
               </Button>
             </Link>
           </div>
@@ -111,9 +111,9 @@ export default function HomePage() {
                 <li>• Digital prescriptions & earnings ledger</li>
               </ul>
             </div>
-            <Link to="/doctor">
+            <Link to="/login?role=DOCTOR">
               <Button variant="blue" className="w-full">
-                Open Doctor Portal
+                Enter Doctor Portal
               </Button>
             </Link>
           </div>
@@ -135,9 +135,9 @@ export default function HomePage() {
                 <li>• Security logs & DPDP compliance audits</li>
               </ul>
             </div>
-            <Link to="/admin">
+            <Link to="/login?role=ADMINISTRATION">
               <Button variant="violet" className="w-full">
-                Open Admin Portal
+                Enter Admin Portal
               </Button>
             </Link>
           </div>

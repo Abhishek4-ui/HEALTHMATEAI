@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Lock, 
   Mail, 
@@ -14,10 +14,21 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 
 export default function LoginPage() {
-  const [role, setRole] = useState('PATIENT');
+  const [searchParams] = useSearchParams();
+  const initialRole = (searchParams.get('role') || 'PATIENT').toUpperCase();
+  const validRole = ['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(initialRole) ? initialRole : 'PATIENT';
+
+  const [role, setRole] = useState(validRole);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const paramRole = searchParams.get('role');
+    if (paramRole && ['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(paramRole.toUpperCase())) {
+      setRole(paramRole.toUpperCase());
+    }
+  }, [searchParams]);
 
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -162,18 +173,20 @@ export default function LoginPage() {
         </form>
 
         <div className="pt-3 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-500">
-          <span>New here? </span>
-          <Link to="/register" className="text-aurora-teal font-semibold hover:underline">
-            Create an account
-          </Link>
+          {role === 'ADMINISTRATION' ? (
+            <span className="text-[11px] text-slate-400">
+              No public admin signup. Administrative accounts are strictly provisioned via system security controls.
+            </span>
+          ) : (
+            <>
+              <span>New {role === 'DOCTOR' ? 'practitioner' : 'patient'}? </span>
+              <Link to={`/register?role=${role}`} className="text-aurora-teal font-semibold hover:underline">
+                Create an account
+              </Link>
+            </>
+          )}
         </div>
       </Card>
-
-      <div className="text-center">
-        <Link to="/patient/dashboard" className="text-xs text-slate-400 hover:text-aurora-teal transition-colors">
-          Continue as Guest Patient &rarr;
-        </Link>
-      </div>
     </div>
   );
 }

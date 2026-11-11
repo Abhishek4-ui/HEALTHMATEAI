@@ -20,7 +20,9 @@ import {
   ClipboardCheck, 
   Stethoscope, 
   Building2, 
-  Clock 
+  Clock,
+  Scan,
+  HeartPulse
 } from 'lucide-react';
 
 export const PATIENT_MODULES = [
@@ -29,6 +31,8 @@ export const PATIENT_MODULES = [
   { id: 'symptom-checker', name: 'Symptom Checker', path: '/patient/symptom-checker', icon: ClipboardCheck },
   { id: 'risk-assessment', name: 'Risk Assessment', path: '/patient/risk-assessment', icon: Heart },
   { id: 'reports', name: 'Report Analyzer', path: '/patient/reports', icon: FileText },
+  { id: 'medical-imaging', name: 'Medical Imaging AI', path: '/patient/medical-imaging', icon: Scan },
+  { id: 'cardiac-ecg', name: 'ECG & Cardiac AI', path: '/patient/cardiac-ecg', icon: HeartPulse },
   { id: 'doctors', name: 'Find Doctors', path: '/patient/doctors', icon: Stethoscope },
   { id: 'hospitals', name: 'Find Hospitals', path: '/patient/hospitals', icon: Building2 },
   { id: 'appointments', name: 'Appointments', path: '/patient/appointments', icon: Calendar },

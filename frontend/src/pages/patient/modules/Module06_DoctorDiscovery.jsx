@@ -20,11 +20,13 @@ import Badge from '../../../components/ui/Badge';
 import EmptyState from '../../../components/ui/EmptyState';
 import { useToast } from '../../../context/ToastContext';
 import { discoveryService } from '../../../services/discoveryService';
+import { INDIAN_STATES_AND_UTS } from '../../../data/indianStatesAndDistricts';
 
 export default function Module06_DoctorDiscovery() {
   const [searchQuery, setSearchQuery] = useState('');
   const [specialty, setSpecialty] = useState('ALL');
   const [stateFilter, setStateFilter] = useState('ALL');
+  const [districtFilter, setDistrictFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [pincodeFilter, setPincodeFilter] = useState('');
   const [qualificationFilter, setQualificationFilter] = useState('');
@@ -243,32 +245,58 @@ export default function Module06_DoctorDiscovery() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">State</label>
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">State / UT (36 All-India)</label>
               <select
                 value={stateFilter}
-                onChange={(e) => setStateFilter(e.target.value)}
+                onChange={(e) => {
+                  const newState = e.target.value;
+                  setStateFilter(newState);
+                  setDistrictFilter('');
+                  setCityFilter('');
+                }}
                 className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
               >
-                <option value="ALL">All States</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Karnataka">Karnataka</option>
-                <option value="Maharashtra">Maharashtra</option>
-                <option value="Tamil Nadu">Tamil Nadu</option>
-                <option value="Uttar Pradesh">Uttar Pradesh</option>
-                <option value="West Bengal">West Bengal</option>
-                <option value="Gujarat">Gujarat</option>
+                <option value="ALL">All India (36 States & UTs)</option>
+                <optgroup label="States (28)">
+                  {INDIAN_STATES_AND_UTS.filter(s => s.type === 'STATE').map(s => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Union Territories (8)">
+                  {INDIAN_STATES_AND_UTS.filter(s => s.type === 'UNION_TERRITORY').map(s => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </optgroup>
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">City</label>
-              <input
-                type="text"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                placeholder="City name"
-                className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
-              />
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                District / City {stateFilter !== 'ALL' ? `(${stateFilter})` : ''}
+              </label>
+              {stateFilter !== 'ALL' && INDIAN_STATES_AND_UTS.find(s => s.name === stateFilter)?.districts?.length > 0 ? (
+                <select
+                  value={districtFilter}
+                  onChange={(e) => {
+                    setDistrictFilter(e.target.value);
+                    setCityFilter(e.target.value);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                >
+                  <option value="">All Districts in {stateFilter}</option>
+                  {INDIAN_STATES_AND_UTS.find(s => s.name === stateFilter).districts.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={cityFilter}
+                  onChange={(e) => setCityFilter(e.target.value)}
+                  placeholder="District or city name"
+                  className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-aurora-midnight text-xs text-slate-900 dark:text-white"
+                />
+              )}
             </div>
 
             <div>

@@ -8,6 +8,8 @@ from app.services.report_ocr import report_ocr_extractor
 from app.services.clinical_copilot import clinical_copilot
 from app.services.clinical_rag import clinical_rag_grounder
 from app.services.mlops_registry import mlops_registry
+from app.services.medical_imaging import medical_imaging_analyzer
+from app.services.cardiac_ecg import cardiac_ecg_analyzer
 
 router = APIRouter(prefix="/api/v1/ai", tags=["Clinical Hybrid AI Pipeline"])
 
@@ -84,6 +86,40 @@ async def extract_report_ocr(
         engine_name=engine_name,
         transforms=transforms
     )
+
+@router.post("/imaging/analyze")
+async def analyze_imaging(
+    file: UploadFile = File(...),
+    modality: str = Form("XRAY"),
+    patient_consent: bool = Form(True)
+):
+    try:
+        content = await file.read()
+        return medical_imaging_analyzer.analyze_imaging(
+            file_bytes=content,
+            filename=file.filename or "scan.jpg",
+            modality=modality,
+            patient_consent=patient_consent
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/cardiac/ecg-analyze")
+async def analyze_ecg(
+    file: UploadFile = File(...),
+    patient_age: int = Form(50),
+    patient_consent: bool = Form(True)
+):
+    try:
+        content = await file.read()
+        return cardiac_ecg_analyzer.analyze_ecg(
+            file_bytes=content,
+            filename=file.filename or "ecg_trace.pdf",
+            patient_age=patient_age,
+            patient_consent=patient_consent
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/copilot-chat")
 async def copilot_chat(payload: CopilotQueryRequest):

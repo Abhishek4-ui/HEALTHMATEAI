@@ -425,6 +425,71 @@ class AIGatewayService {
     }
     return { success: false, error: 'AI microservice unreachable' };
   }
+
+  /**
+   * Phase 9: Medical Imaging AI Analysis (X-Ray, CT, MRI, Ultrasound, Pathology)
+   */
+  async analyzeMedicalImaging({ fileBuffer, filename = 'scan.jpg', mimetype = 'image/jpeg', modality = 'XRAY', patientConsent = true }) {
+    try {
+      const form = new FormData();
+      const blob = new Blob([fileBuffer || Buffer.from('placeholder')], { type: mimetype });
+      form.append('file', blob, filename);
+      form.append('modality', modality);
+      form.append('patient_consent', String(patientConsent));
+
+      const res = await fetch(`${this.baseUrl}/api/v1/ai/imaging/analyze`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const errData = await res.json().catch(() => ({}));
+      logger.warn('AI imaging endpoint returned non-200:', errData);
+    } catch (e) {
+      logger.warn('AI microservice unreachable for medical imaging analysis:', { error: e.message });
+    }
+
+    return {
+      success: false,
+      modality,
+      error: 'AI service temporarily unavailable for automated imaging review.',
+      clinical_disclaimer: 'CLINICAL SAFETY MANDATE: Automated imaging analysis requires online AI microservice. Clinical review by a licensed radiologist is mandatory.',
+    };
+  }
+
+  /**
+   * Phase 9: ECG & Cardiac Waveform Intelligence
+   */
+  async analyzeECG({ fileBuffer, filename = 'ecg_trace.pdf', mimetype = 'application/pdf', patientAge = 50, patientConsent = true }) {
+    try {
+      const form = new FormData();
+      const blob = new Blob([fileBuffer || Buffer.from('placeholder')], { type: mimetype });
+      form.append('file', blob, filename);
+      form.append('patient_age', String(patientAge));
+      form.append('patient_consent', String(patientConsent));
+
+      const res = await fetch(`${this.baseUrl}/api/v1/ai/cardiac/ecg-analyze`, {
+        method: 'POST',
+        body: form,
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const errData = await res.json().catch(() => ({}));
+      logger.warn('AI ECG endpoint returned non-200:', errData);
+    } catch (e) {
+      logger.warn('AI microservice unreachable for ECG analysis:', { error: e.message });
+    }
+
+    return {
+      success: false,
+      error: 'AI service temporarily unavailable for automated ECG analysis.',
+      clinical_disclaimer: 'CLINICAL SAFETY MANDATE: Automated ECG interpretation is unavailable. Seek urgent clinical care or consult a cardiologist for any acute symptoms.',
+    };
+  }
 }
 
 module.exports = new AIGatewayService();
