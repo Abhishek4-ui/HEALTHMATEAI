@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const config = require('./env');
 
+// Disable command buffering so operations fail fast when MongoDB is in standby
+mongoose.set('bufferCommands', false);
+
 let isConnected = false;
 
 const connectDB = async () => {

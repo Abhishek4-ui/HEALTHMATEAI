@@ -1,0 +1,189 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HealthMate AI Enterprise API",
+    "version": "1.0.0",
+    "description": "Production REST API for HealthMate AI Healthcare Management Ecosystem. Strictly enforces 3 application roles (PATIENT, DOCTOR, ADMINISTRATION) and zero-trust ephemeral patient privacy.",
+    "contact": {
+      "name": "HealthMate AI Engineering Team",
+      "url": "https://healthmate.ai"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "API Version 1 Core Gateway"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "SessionHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Session-ID"
+      }
+    },
+    "schemas": {
+      "StandardResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "data": { "type": "object" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": { "type": "string" },
+          "message": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check and system telemetry",
+        "responses": {
+          "200": { "description": "System operational" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new Patient or Doctor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "fullName", "role"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "fullName": { "type": "string" },
+                  "role": { "type": "string", "enum": ["PATIENT", "DOCTOR"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Account created and OTP dispatched" },
+          "400": { "description": "Validation error or existing user" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "role"],
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" },
+                  "role": { "type": "string", "enum": ["PATIENT", "DOCTOR", "ADMINISTRATION"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tokens issued" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/patient/profile": {
+      "get": {
+        "summary": "Get authenticated patient profile",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile data" }
+        }
+      }
+    },
+    "/patient/forget-me": {
+      "delete": {
+        "summary": "DPDP Act 2023: Instantly purge all temporary health data in Redis",
+        "security": [{ "SessionHeader": [] }],
+        "responses": {
+          "200": { "description": "Ephemeral data wiped" }
+        }
+      }
+    },
+    "/doctor/discovery": {
+      "get": {
+        "summary": "Search verified doctors across India",
+        "parameters": [
+          { "name": "city", "in": "query", "schema": { "type": "string" } },
+          { "name": "specialization", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of discovered doctors" }
+        }
+      }
+    },
+    "/hospitals": {
+      "get": {
+        "summary": "Search hospitals and clinics across India",
+        "parameters": [
+          { "name": "city", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of hospitals" }
+        }
+      }
+    },
+    "/appointments": {
+      "post": {
+        "summary": "Book an appointment with slot collision verification",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Appointment confirmed" },
+          "400": { "description": "Slot collision or doctor unavailable" }
+        }
+      },
+      "get": {
+        "summary": "List appointments for authenticated user",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of appointments" }
+        }
+      }
+    },
+    "/prescriptions": {
+      "post": {
+        "summary": "Issue digitally signed prescription (Doctor only)",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Prescription issued" }
+        }
+      }
+    },
+    "/admin/overview": {
+      "get": {
+        "summary": "Platform telemetry and governance metrics (Admin only)",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Metrics summary" }
+        }
+      }
+    }
+  }
+}

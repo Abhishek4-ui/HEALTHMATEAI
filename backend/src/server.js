@@ -1,80 +1,43 @@
-const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
 
+const app = require('./app');
 const config = require('./config/env');
 const { connectDB } = require('./config/db');
 const { initRedis } = require('./config/redis');
-const { apiLimiter } = require('./middlewares/rateLimiter');
-const errorHandler = require('./middlewares/errorHandler');
-const healthRoutes = require('./routes/health.routes');
+const { initIndexes } = require('./models');
+const { initSocketIO } = require('./sockets/socketHandler');
+const authService = require('./services/auth.service');
+const logger = require('./utils/logger');
 
-const app = express();
 const server = http.createServer(app);
 
-// Setup Socket.IO for real-time signaling & consultations
+// Setup Socket.IO for real-time signaling & consultation events
 const io = new Server(server, {
   cors: {
-    origin: config.clientUrl,
+    origin: [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: ['GET', 'POST'],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
-// Middleware pipeline
-app.use(helmet());
-app.use(cors({
-  origin: config.clientUrl,
-  credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(cookieParser());
-app.use(morgan(config.env === 'production' ? 'combined' : 'dev'));
-app.use('/api', apiLimiter);
-
-// Health check endpoint (Available at /health and /api/v1/health)
-app.use('/health', healthRoutes);
-app.use('/api/v1', healthRoutes);
-
-// Base route
-app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Welcome to HealthMate AI Core Backend API Gateway',
-    version: '1.0.0',
-    documentation: '/api/v1/health',
-    roles: ['PATIENT', 'DOCTOR', 'ADMINISTRATION']
-  });
-});
-
-// Real-time signaling socket connection handler
-io.on('connection', (socket) => {
-  console.log(`[Socket.IO] New real-time signaling connection: ${socket.id}`);
-
-  socket.on('join-room', (roomId) => {
-    socket.join(roomId);
-    console.log(`[Socket.IO] Socket ${socket.id} joined room ${roomId}`);
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`[Socket.IO] Socket ${socket.id} disconnected`);
-  });
-});
-
-// Error handling middleware
-app.use(errorHandler);
+// Attach socket event handlers
+initSocketIO(io);
 
 // Start server function
 const startServer = async () => {
   try {
-    // Initialize Database and Cache
+    // 1. Initialize Database
     await connectDB();
+    await initIndexes();
+
+    // 2. Initialize Redis Cache
     initRedis();
 
+    // 3. Idempotently ensure initial Administrator exists
+    await authService.provisionInitialAdmin();
+
+    // 4. Start HTTP & WebSocket listener
     server.listen(config.port, () => {
       console.log(`==================================================`);
       console.log(`🚀 HealthMate AI Backend listening on port ${config.port}`);
@@ -82,16 +45,35 @@ const startServer = async () => {
       console.log(`🔒 Allowed Roles: PATIENT, DOCTOR, ADMINISTRATION`);
       console.log(`🛡️  Zero-Trust Ephemeral Patient Privacy: Active (Redis TTL)`);
       console.log(`📡 Health Check: http://localhost:${config.port}/health`);
+      console.log(`📚 Swagger Docs: http://localhost:${config.port}/api-docs`);
       console.log(`==================================================`);
     });
   } catch (err) {
-    console.error('Fatal error starting HealthMate AI backend server:', err);
+    logger.error('Fatal error starting HealthMate AI backend server:', { error: err.message });
     process.exit(1);
   }
 };
+
+// Graceful shutdown handling
+const gracefulShutdown = (signal) => {
+  console.log(`\n[Server] Received ${signal}. Starting graceful shutdown...`);
+  server.close(() => {
+    console.log('[Server] HTTP and Socket.IO servers closed.');
+    process.exit(0);
+  });
+
+  // Force shutdown after 10s timeout
+  setTimeout(() => {
+    console.error('[Server] Could not close connections in time, forcefully shutting down.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 if (require.main === module) {
   startServer();
 }
 
-module.exports = { app, server, startServer };
+module.exports = { app, server, startServer, io };
