@@ -4,8 +4,8 @@ services:
     name: healthmate-backend
     env: node
     rootDir: backend
-    plan: standard
-    buildCommand: npm ci --only=production
+    plan: free
+    buildCommand: npm install --production
     startCommand: node src/server.js
     healthCheckPath: /health
     autoDeploy: false
@@ -44,7 +44,7 @@ services:
     env: docker
     rootDir: ai-service
     dockerfilePath: Dockerfile
-    plan: standard
+    plan: free
     healthCheckPath: /health
     autoDeploy: false
     envVars:
