@@ -316,10 +316,11 @@ class AIGatewayService {
           ]
         : [],
       has_critical_interaction: hasAspirinWarfarin,
-      safety_status: hasAspirinWarfarin ? 'CONTRAINDICATED' : 'SAFE',
+      safety_status: hasAspirinWarfarin ? 'CONTRAINDICATED' : 'NOT_ASSESSED',
+      pharmacovigilance_status: hasAspirinWarfarin ? 'CONTRAINDICATED' : 'NOT_ASSESSED',
       clinical_guidance: hasAspirinWarfarin
         ? 'Critical pharmacological contraindication detected.'
-        : 'No high-risk contraindications detected among evaluated medications.',
+        : 'No documented high-risk contraindications in active index. Unlisted combinations are NOT ASSESSED as proven safe.',
     };
   }
 

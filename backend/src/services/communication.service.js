@@ -109,6 +109,15 @@ class CommunicationService {
    * Send SMS Notification via Twilio
    */
   async sendSMS({ to, body }) {
+    if (process.env.SMS_ENABLED === 'false') {
+      return {
+        success: false,
+        provider: 'twilio',
+        error: 'SMS_DISABLED_BY_CONFIG',
+        message: 'SMS dispatch is administratively disabled or requires verified TRAI DLT registration and production sender ID in production.'
+      };
+    }
+
     if (!to) return { success: false, reason: 'NO_PHONE_NUMBER' };
 
     let formattedPhone = to.trim();

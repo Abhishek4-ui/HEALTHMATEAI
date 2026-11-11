@@ -1,0 +1,41 @@
+symptom_text,actual_class
+"Severe throat pain on swallowing, high fever 102F, swollen tonsils with white exudate, tender anterior cervical lymph nodes, no cough",Acute Bacterial Pharyngitis / Tonsillitis
+"Sudden onset severe sore throat, difficulty swallowing saliva, bilateral tonsillar enlargement with follicular purulent spots, chills and headache",Acute Bacterial Pharyngitis / Tonsillitis
+"Excruciating pharyngeal discomfort radiating to ears, strawberry tongue, uvular edema, high fever without rhinorrhea or nasal congestion",Acute Bacterial Pharyngitis / Tonsillitis
+"Throat raw and burning, anterior cervical adenopathy, tonsils bright red with exudative plaques, fever 39C, tonsillar erythema",Acute Bacterial Pharyngitis / Tonsillitis
+"Centor criteria high risk: tonsillar exudates, tender cervical adenopathy, fever 101.8F, absence of cough, extreme odynophagia",Acute Bacterial Pharyngitis / Tonsillitis
+"Paroxysmal sneezing fits, copious watery rhinorrhea, bilateral itchy conjunctival injection, seasonal tree pollen exposure",Allergic Rhinitis / Atopic Dermatitis
+"Pruritic erythematous flexural eczema on antecubital and popliteal fossae, xerosis, severe nocturnal itching, atopic flare",Allergic Rhinitis / Atopic Dermatitis
+"Continuous clear nasal discharge, nasal crease allergic salute, dark periorbital allergic shiners, palate itching",Allergic Rhinitis / Atopic Dermatitis
+"Lichenified excoriated plaques on wrists and neck, intense cutaneous pruritus, history of asthma and seasonal hay fever",Allergic Rhinitis / Atopic Dermatitis
+"Allergic rhinitis exacerbation with pale boggy nasal turbinates, profuse watery nasal drip, itchy soft palate and tearing eyes",Allergic Rhinitis / Atopic Dermatitis
+"Sudden onset retrosternal crushing chest heaviness, diaphoresis, radiation to left jaw and shoulder, dyspnea at rest",Cardiovascular Emergency
+"Severe pressure-like central chest constriction lasting 45 minutes, cold clammy sweat, presyncope, nausea, lightheadedness",Cardiovascular Emergency
+"Acute coronary syndrome presentation: substernal heaviness like an elephant on chest, radiating to left arm, profound shortness of breath",Cardiovascular Emergency
+"Crushing precordial tightness, sudden diaphoresis, impending sense of doom, radiation to neck, breathless while sitting",Cardiovascular Emergency
+"Intense retrosternal chest pain aggravated by exertion, radiates to epigastrium and jaw, profound diaphoresis, cyanosis, pale cool skin",Cardiovascular Emergency
+"Substernal burning sensation after heavy meals, worse when reclining, water brash and sour regurgitation in mouth",Gastroesophageal Reflux Disease (GERD)
+"Chronic retrosternal pyrosis, nocturnal acid regurgitation, globus sensation in throat, relieved temporarily by antacid suspension",Gastroesophageal Reflux Disease (GERD)
+"Epigastric and retrosternal burning pain occurring 30 minutes postprandially, exacerbated by bending over or lying flat",Gastroesophageal Reflux Disease (GERD)
+"Heartburn with sour belching, non-cardiac retrosternal burning, aggravated by coffee and citrus foods, chronic throat clearing",Gastroesophageal Reflux Disease (GERD)
+"Recurrent retrosternal burning distress, bitter taste in back of throat upon waking, epigastric fullness without dysphagia or weight loss",Gastroesophageal Reflux Disease (GERD)
+"Unilateral pulsating throbbing hemicranial headache, preceded by scintillating scotoma and zigzag visual aura, intense photophobia and nausea",Migraine with Aura
+"Severe throbbing right temporal headache lasting 14 hours, phonophobia, preceded by flashing lights in left visual field",Migraine with Aura
+"Hemicranial pulsatile headache aggravated by walking or climbing stairs, severe nausea, vomiting, preceding geometric visual aura",Migraine with Aura
+Classic migraine with visual aura: shimmering blind spot followed 30 minutes later by pounding unilateral frontotemporal cephalalgia,Migraine with Aura
+"Periodic severe pulsating headache on one side of head, hypersensitivity to light and sound, sensory tingling aura on cheek prior to onset",Migraine with Aura
+"Bilateral knee joint pain worsened by weight-bearing and prolonged walking, morning joint stiffness lasting under 20 minutes, crepitus on flexion",Osteoarthritis / Degenerative Joint Disease
+"Deep aching pain in right hip joint on walking, relieved by rest, bony enlargement and crepitation on movement without joint erythema",Osteoarthritis / Degenerative Joint Disease
+"Chronic progressive knee pain with palpable crepitus, difficulty descending stairs, minimal morning stiffness, Heberden nodes on DIP joints",Osteoarthritis / Degenerative Joint Disease
+"Degenerative knee arthritis symptoms: mechanical joint ache during ambulation, bony enlargement, joint line tenderness, no systemic fever",Osteoarthritis / Degenerative Joint Disease
+"Weight-bearing joint stiffness and mechanical ache in lumbar spine and hips, worsens toward end of day, crepitation and reduced range of motion",Osteoarthritis / Degenerative Joint Disease
+"Productive cough with mucopurulent yellow sputum for 6 days, low-grade fever 99.8F, retrosternal chest soreness with coughing, scattered rhonchi",Respiratory Infection / Bronchitis
+"Persistent barking cough following viral coryza, thick green bronchial phlegm, mild wheezing on forced expiration, chest tightness on coughing",Respiratory Infection / Bronchitis
+"Acute bronchitis presentation: non-stop coughing fits producing thick grayish sputum, fatigue, malaise, no sign of consolidation or hypoxia",Respiratory Infection / Bronchitis
+"Deep tracheobronchial burning upon coughing, productive of yellowish sputum, mild dyspnea on exertion, bilateral coarse breath sounds",Respiratory Infection / Bronchitis
+"Subacute productive cough following cold, tenacious mucous secretions, low grade fever, absence of pleuritic chest pain or tachypnea",Respiratory Infection / Bronchitis
+"Marked polyuria, polydipsia, unquenchable thirst drinking 5 liters daily, unintentional 4kg weight loss despite increased appetite",Type 2 Diabetes Mellitus Presentation
+"Frequent nocturnal urination waking 4 times per night, excessive dry mouth, persistent lethargy, blurred vision when reading",Type 2 Diabetes Mellitus Presentation
+"Classic triad of polydipsia, polyphagia and polyuria, slow-healing minor foot scratch, generalized fatigue, recurrent candidal intertrigo",Type 2 Diabetes Mellitus Presentation
+"Constant dehydration, excessive water consumption, passing large volumes of urine hourly, daytime fatigue and intermittent blurry vision",Type 2 Diabetes Mellitus Presentation
+"Persistent dry mouth, high frequency of micturition day and night, unexplained fatigue, numbness in distal toes, sweet urine odor",Type 2 Diabetes Mellitus Presentation

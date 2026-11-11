@@ -123,10 +123,12 @@ class TestPhase8MLOpsAndHybridAI:
         assert sild_res["has_critical_interaction"] is True
         assert sild_res["safety_status"] == "CONTRAINDICATED"
 
-        # Safe regimen
+        # Unassessed regimen (must NEVER be labeled SAFE)
         safe_res = clinical_copilot.check_drug_interactions(["Paracetamol 500mg", "Amoxicillin 500mg"])
         assert safe_res["has_critical_interaction"] is False
-        assert safe_res["safety_status"] == "SAFE"
+        assert safe_res["safety_status"] == "NOT_ASSESSED"
+        assert safe_res["safety_status"] != "SAFE"
+        assert safe_res["pharmacovigilance_status"] == "NOT_ASSESSED"
 
     def test_symptom_classifier_shannon_entropy_ood(self):
         """

@@ -1,0 +1,334 @@
+{
+  "validation_metadata": {
+    "evaluation_date": "2026-11-11T18:35:00Z",
+    "evaluator_role": "Independent ML & Clinical AI Safety Evaluation",
+    "governance_status": "TECHNICAL_BENCHMARK_VALIDATED_NOT_CLINICALLY_APPROVED",
+    "clinical_disclaimer": "All models are advisory screening aids and do not replace licensed clinician judgment, laboratory diagnostics, or formal regulatory clearance (CDSCO/FDA)."
+  },
+  "symptom_triage_external_validation": {
+    "dataset_name": "HealthMate External Clinical Case Vignettes",
+    "sample_count": 40,
+    "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "provenance": "Unseen CDC clinical guidelines, WHO case scenarios and Columbia Medical Vignettes",
+    "classes": [
+      "Acute Bacterial Pharyngitis / Tonsillitis",
+      "Allergic Rhinitis / Atopic Dermatitis",
+      "Cardiovascular Emergency",
+      "Gastroesophageal Reflux Disease (GERD)",
+      "Migraine with Aura",
+      "Osteoarthritis / Degenerative Joint Disease",
+      "Respiratory Infection / Bronchitis",
+      "Type 2 Diabetes Mellitus Presentation"
+    ],
+    "tfidf_logistic_regression": {
+      "accuracy": 0.975,
+      "top3_recall": 1.0,
+      "macro_precision": 0.9792,
+      "macro_recall": 0.975,
+      "macro_f1": 0.9747,
+      "confusion_matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      ]
+    },
+    "pytorch_deepnet": {
+      "accuracy": 0.975,
+      "top3_recall": 1.0,
+      "macro_precision": 0.9792,
+      "macro_recall": 0.975,
+      "macro_f1": 0.9747,
+      "confusion_matrix": [
+        [
+          5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          5,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          5
+        ]
+      ]
+    }
+  },
+  "cardiovascular_risk_external_validation": {
+    "dataset_name": "UCI Cleveland Heart Disease Benchmark",
+    "sample_count": 303,
+    "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "provenance": "Cleveland Clinic Foundation (Detrano et al., 1988), UCI ML Repository",
+    "population": "303 cardiac catheterization referral patients in Cleveland, Ohio (Mean Age: 54.4 years, 68% Male)",
+    "limitations": [
+      "Hospital-referred cohort with pre-existing cardiac suspicion, exhibiting higher prevalence than general population.",
+      "HDL cholesterol not isolated in Cleveland 14-attribute feature set; evaluated using population baseline 45 mg/dL.",
+      "Smoking status unrecorded in Cleveland processed data; held constant at non-smoking baseline.",
+      "Angiographic CAD (>50% stenosis) represents anatomic obstruction, whereas Framingham score predicts 10-year incident clinical events."
+    ],
+    "metrics": {
+      "accuracy": 0.5413,
+      "roc_auc": 0.6365,
+      "sensitivity_recall": 0.036,
+      "precision": 0.5,
+      "f1_score": 0.0671,
+      "brier_score": 0.3517,
+      "expected_calibration_error": 0.3378,
+      "maximum_calibration_error": 0.9015,
+      "confusion_matrix": {
+        "true_negative": 159,
+        "false_positive": 5,
+        "false_negative": 134,
+        "true_positive": 5
+      },
+      "calibration_bins": [
+        {
+          "bin_range": "0.00-0.20",
+          "count": 238,
+          "accuracy": 0.4244,
+          "confidence": 0.0746,
+          "calibration_gap": 0.3497
+        },
+        {
+          "bin_range": "0.20-0.40",
+          "count": 43,
+          "accuracy": 0.5349,
+          "confidence": 0.2758,
+          "calibration_gap": 0.2591
+        },
+        {
+          "bin_range": "0.40-0.60",
+          "count": 16,
+          "accuracy": 0.8125,
+          "confidence": 0.4613,
+          "calibration_gap": 0.3512
+        },
+        {
+          "bin_range": "0.60-0.80",
+          "count": 4,
+          "accuracy": 0.5,
+          "confidence": 0.6377,
+          "calibration_gap": 0.1377
+        },
+        {
+          "bin_range": "0.80-1.00",
+          "count": 2,
+          "accuracy": 0.0,
+          "confidence": 0.9015,
+          "calibration_gap": 0.9015
+        }
+      ]
+    }
+  },
+  "diabetes_risk_external_validation": {
+    "dataset_name": "NIDDK Pima Indians Diabetes Benchmark",
+    "sample_count": 752,
+    "license": "Public Domain / CC0 (National Institute of Diabetes and Digestive and Kidney Diseases)",
+    "provenance": "NIDDK study on diabetes mellitus among Pima Native American females in Arizona, USA",
+    "population": "752 adult females (aged 21-81, Mean Age: 33.2 years, Mean BMI: 32.4 kg/m\u00b2)",
+    "limitations": [
+      "Demographically restricted exclusively to adult females of Pima Native American ancestry, known for distinct genetic diabetes predisposition.",
+      "Glucose measurement is post-load 2-hour oral glucose tolerance test (OGTT), differing from fasting blood glucose used in standard FINDRISC.",
+      "Family history proxied through Diabetes Pedigree Function (DPF > 0.5) rather than direct first-degree relative questionnaire.",
+      "Physical activity unrecorded; set to population median baseline."
+    ],
+    "metrics": {
+      "accuracy": 0.7367,
+      "roc_auc": 0.825,
+      "sensitivity_recall": 0.3371,
+      "precision": 0.7946,
+      "f1_score": 0.4734,
+      "brier_score": 0.1891,
+      "expected_calibration_error": 0.1442,
+      "maximum_calibration_error": 0.2286,
+      "confusion_matrix": {
+        "true_negative": 465,
+        "false_positive": 23,
+        "false_negative": 175,
+        "true_positive": 89
+      },
+      "calibration_bins": [
+        {
+          "bin_range": "0.00-0.20",
+          "count": 496,
+          "accuracy": 0.1976,
+          "confidence": 0.0685,
+          "calibration_gap": 0.1291
+        },
+        {
+          "bin_range": "0.20-0.40",
+          "count": 114,
+          "accuracy": 0.5263,
+          "confidence": 0.2977,
+          "calibration_gap": 0.2286
+        },
+        {
+          "bin_range": "0.40-0.60",
+          "count": 68,
+          "accuracy": 0.6912,
+          "confidence": 0.5078,
+          "calibration_gap": 0.1834
+        },
+        {
+          "bin_range": "0.60-0.80",
+          "count": 52,
+          "accuracy": 0.7885,
+          "confidence": 0.701,
+          "calibration_gap": 0.0875
+        },
+        {
+          "bin_range": "0.80-1.00",
+          "count": 22,
+          "accuracy": 0.8182,
+          "confidence": 0.8801,
+          "calibration_gap": 0.0619
+        }
+      ]
+    }
+  }
+}

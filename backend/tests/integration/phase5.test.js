@@ -121,6 +121,8 @@ describe('Phase 5: Hybrid AI/ML Pipeline, Clinical Intelligence & Razorpay Verif
       const check = await aiGateway.checkDrugInteractions(['Paracetamol', 'Vitamin C']);
       expect(check.contraindication_found).toBe(false);
       expect(check.interactions.length).toBe(0);
+      expect(check.safety_status).not.toBe('SAFE');
+      expect(check.safety_status).toBe('NOT_ASSESSED');
     });
   });
 

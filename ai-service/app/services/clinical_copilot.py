@@ -306,10 +306,11 @@ class ClinicalCopilot:
             safety_status = "WARNING"
             guidance = "Moderate interaction warnings detected. Monitor clinical markers and adjust dosing if indicated."
         else:
-            safety_status = "SAFE"
+            safety_status = "NOT_ASSESSED"
             guidance = (
-                "No severe documented interactions found in HealthMate high-risk index. "
-                "Unlisted combinations may still interact. Always cross-reference with comprehensive clinical compendia "
+                "No documented high-risk contraindications found in the active formulary database. "
+                "Unlisted combinations have NOT been clinically assessed as proven safe. "
+                "Always cross-reference with comprehensive clinical pharmacology compendia "
                 "and require licensed physician authorization before dispensing."
             )
 
@@ -320,7 +321,7 @@ class ClinicalCopilot:
             "interactions": detected_interactions,
             "has_critical_interaction": has_critical,
             "safety_status": safety_status,
-            "pharmacovigilance_status": "NO_DOCUMENTED_CONTRAINDICATIONS_IN_DATABASE" if not detected_interactions else safety_status,
+            "pharmacovigilance_status": safety_status,
             "requires_doctor_authorization": True,
             "pharmacovigilance_authority": "FDA MedWatch / Lexicomp / CDSCO Reference Index v2024.1",
             "clinical_guidance": guidance

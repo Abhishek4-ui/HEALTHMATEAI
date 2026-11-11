@@ -164,6 +164,14 @@ describe('Phase 8: Advanced Hybrid AI/ML, Clinical Grounding & MLOps Suite', () 
       expect(result.interactions.length).toBeGreaterThanOrEqual(1);
     });
 
+    it('sets unlisted drug combination to NOT_ASSESSED and never claims SAFE', async () => {
+      const result = await aiGateway.checkDrugInteractions(['Paracetamol 500mg', 'Cetirizine 10mg']);
+      expect(result.has_critical_interaction).toBe(false);
+      expect(result.safety_status).toBe('NOT_ASSESSED');
+      expect(result.safety_status).not.toBe('SAFE');
+      expect(result.requires_doctor_authorization).toBe(true);
+    });
+
     it('enforces Doctor Approval Workflow on SOAP note synthesis', async () => {
       const result = await aiGateway.summarizeSoap(
         'Patient reports 3 days of productive cough, mild fever 100 F, lungs clear.',

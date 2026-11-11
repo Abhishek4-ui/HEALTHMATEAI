@@ -360,9 +360,11 @@ def run_drug_safety_validation():
     for meds in unassessed_pairs:
         res = clinical_copilot.check_drug_interactions(meds)
         print(f"Unassessed Pair: {meds} -> Status: {res['pharmacovigilance_status']} | Guidance: '{res['clinical_guidance'][:60]}...'")
-        assert res["pharmacovigilance_status"] == "NO_DOCUMENTED_CONTRAINDICATIONS_IN_DATABASE"
+        assert res["pharmacovigilance_status"] == "NOT_ASSESSED"
+        assert res["safety_status"] == "NOT_ASSESSED"
+        assert res["safety_status"] != "SAFE"
         assert res["requires_doctor_authorization"] is True
-        assert "Unlisted combinations may still interact" in res["clinical_guidance"]
+        assert "NOT been clinically assessed as proven safe" in res["clinical_guidance"]
 
     print("\n[PASS] Drug Safety Validation Complete.")
 
