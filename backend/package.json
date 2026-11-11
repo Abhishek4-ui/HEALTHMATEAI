@@ -9,9 +9,11 @@
     "test": "jest --runInBand --forceExit",
     "test:unit": "jest tests/unit --runInBand --forceExit",
     "test:integration": "jest tests/integration --runInBand --forceExit",
-    "verify:integrations": "node scripts/verify-integrations.js"
+    "verify:integrations": "node scripts/verify-integrations.js",
+    "sync:data": "node scripts/sync-healthcare-data.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1166.0",
     "argon2": "^0.45.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
@@ -27,9 +29,11 @@
     "mongoose": "^8.5.1",
     "morgan": "^1.10.0",
     "multer": "^2.5.0",
+    "nodemailer": "^10.5.0",
     "socket.io": "^4.7.5",
     "supertest": "^7.3.2",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "twilio": "^6.3.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

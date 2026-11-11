@@ -49,7 +49,10 @@ class DoctorController {
 
   async findNearby(req, res, next) {
     try {
-      const { longitude, latitude, maxDistance } = req.query;
+      const latitude = req.query.latitude || req.query.lat;
+      const longitude = req.query.longitude || req.query.lng;
+      const maxDistance = req.query.maxDistance || req.query.radius;
+
       if (!longitude || !latitude) {
         return errorResponse(res, 'Coordinates longitude and latitude are required.', 400, 'COORDINATES_REQUIRED');
       }
@@ -61,6 +64,17 @@ class DoctorController {
       return successResponse(res, doctors, 'Nearby doctors retrieved.');
     } catch (err) {
       return errorResponse(res, err.message, 500, 'GEOLOCATION_ERROR');
+    }
+  }
+
+  async getAvailability(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { date } = req.query;
+      const result = await doctorService.getDoctorAvailability(id, date || new Date().toISOString().split('T')[0]);
+      return successResponse(res, result, 'Doctor availability slots retrieved.');
+    } catch (err) {
+      return errorResponse(res, err.message, 400, 'AVAILABILITY_ERROR');
     }
   }
 }

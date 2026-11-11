@@ -9,6 +9,7 @@ const { updateDoctorProfileSchema, availabilityRuleSchema } = require('../valida
 // Public Doctor Discovery
 router.get('/discovery', doctorController.listDoctors);
 router.get('/discovery/nearby', doctorController.findNearby);
+router.get('/:id/availability', doctorController.getAvailability);
 
 // Authenticated Doctor Workspace
 router.get('/profile', authenticateToken, requireRoles(['DOCTOR']), doctorController.getProfile);

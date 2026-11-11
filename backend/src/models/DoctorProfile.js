@@ -8,6 +8,26 @@ const DoctorProfileSchema = new mongoose.Schema({
     unique: true,
     index: true,
   },
+  sourceType: {
+    type: String,
+    enum: ['NATIONAL_MEDICAL_COMMISSION', 'STATE_MEDICAL_COUNCIL', 'GOOGLE_PLACES', 'MANUAL_REGISTRATION'],
+    default: 'MANUAL_REGISTRATION',
+    index: true,
+  },
+  googlePlaceId: {
+    type: String,
+    sparse: true,
+    index: true,
+  },
+  directionsUrl: {
+    type: String,
+    default: null,
+  },
+  isClaimed: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   fullName: {
     type: String,
     required: true,

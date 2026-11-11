@@ -9,9 +9,18 @@ const HospitalSchema = new mongoose.Schema({
   },
   sourceType: {
     type: String,
-    enum: ['GOOGLE_PLACES', 'ABDM_HFR', 'OFFICIAL_REGISTRY', 'MANUAL_ENTRY'],
+    enum: ['GOOGLE_PLACES', 'ABDM_HFR', 'OFFICIAL_REGISTRY', 'OPEN_GOVERNMENT_DATA_INDIA', 'MANUAL_ENTRY'],
     default: 'MANUAL_ENTRY',
     index: true,
+  },
+  googlePlaceId: {
+    type: String,
+    sparse: true,
+    index: true,
+  },
+  directionsUrl: {
+    type: String,
+    default: null,
   },
   name: {
     type: String,

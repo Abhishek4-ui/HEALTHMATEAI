@@ -38,6 +38,10 @@ router.get('/discovery/hospitals', (req, res, next) => {
   hospitalController.searchHospitals(req, res, next);
 });
 router.get('/discovery/nearby', (req, res, next) => {
+  if (req.query.type === 'doctor') {
+    const doctorController = require('../controllers/doctor.controller');
+    return doctorController.findNearby(req, res, next);
+  }
   const hospitalController = require('../controllers/hospital.controller');
   hospitalController.findNearby(req, res, next);
 });

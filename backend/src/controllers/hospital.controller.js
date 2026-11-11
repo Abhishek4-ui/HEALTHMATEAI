@@ -13,7 +13,10 @@ class HospitalController {
 
   async findNearby(req, res, next) {
     try {
-      const { longitude, latitude, maxDistance } = req.query;
+      const latitude = req.query.latitude || req.query.lat;
+      const longitude = req.query.longitude || req.query.lng;
+      const maxDistance = req.query.maxDistance || req.query.radius;
+
       if (!longitude || !latitude) {
         return errorResponse(res, 'Coordinates longitude and latitude are required.', 400, 'COORDINATES_REQUIRED');
       }
