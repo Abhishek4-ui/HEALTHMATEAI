@@ -130,32 +130,46 @@ class ReportOCRExtractor:
     def preprocess_image(self, pil_image: Image.Image) -> (Image.Image, List[str]):
         """
         Applies computer vision preprocessing:
-        1. Grayscale conversion
-        2. Auto-contrast enhancement
-        3. OSD-based rotation/orientation correction
+        1. Resolution scaling (Upsample low-resolution reports for OCR accuracy)
+        2. Grayscale conversion
+        3. Auto-contrast enhancement
+        4. OSD-based rotation/orientation correction
         """
         applied_transforms = []
+
+        # 1. Resolution Scaling
+        if pil_image.width < 1200:
+            scale_factor = 2
+            working_img = pil_image.resize(
+                (pil_image.width * scale_factor, pil_image.height * scale_factor),
+                Image.Resampling.LANCZOS
+            )
+            applied_transforms.append(f"Resolution_Upscaling_{scale_factor}x_Lanczos")
+        else:
+            working_img = pil_image
         
-        # 1. Grayscale
-        if pil_image.mode != "L":
-            gray = pil_image.convert("L")
+        # 2. Grayscale
+        if working_img.mode != "L":
+            gray = working_img.convert("L")
             applied_transforms.append("Grayscale_Conversion")
         else:
-            gray = pil_image
+            gray = working_img
 
-        # 2. Contrast Enhancement
+        # 3. Contrast Enhancement
         enhanced = ImageOps.autocontrast(gray, cutoff=2)
         applied_transforms.append("AutoContrast_Cutoff_2pct")
 
-        # 3. Orientation correction
+        # 4. Orientation correction (Require high OSD confidence to avoid false inversion)
         try:
             osd = pytesseract.image_to_osd(enhanced)
             angle_match = re.search(r"Rotate:\s*(\d+)", osd)
+            conf_match = re.search(r"Orientation confidence:\s*([0-9.]+)", osd)
             if angle_match:
                 angle = int(angle_match.group(1))
-                if angle in (90, 180, 270):
+                osd_conf = float(conf_match.group(1)) if conf_match else 0.0
+                if angle in (90, 180, 270) and osd_conf >= 5.0:
                     enhanced = enhanced.rotate(360 - angle, expand=True)
-                    applied_transforms.append(f"Rotation_Correction_{angle}deg")
+                    applied_transforms.append(f"Rotation_Correction_{angle}deg_conf_{osd_conf}")
         except Exception:
             pass
 
@@ -294,10 +308,12 @@ class ReportOCRExtractor:
         mlops_registry.record_inference("mdl_ocr_loinc_v1", duration_ms)
 
         if not extracted_biomarkers:
+            status = "INSUFFICIENT_OCR_CONFIDENCE" if ocr_confidence < 0.30 else "EXTRACTION_FAILED_UNREADABLE"
             return {
                 "success": False,
                 "model_id": "mdl_ocr_loinc_v1",
-                "extraction_status": "EXTRACTION_FAILED_UNREADABLE",
+                "extraction_status": status,
+                "error": "OCR confidence insufficient or document degraded." if ocr_confidence < 0.30 else "No clinical biomarkers detected.",
                 "report_name": filename,
                 "ocr_engine": engine_name,
                 "ocr_confidence": ocr_confidence,
