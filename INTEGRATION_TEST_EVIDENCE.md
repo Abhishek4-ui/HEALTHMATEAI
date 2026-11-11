@@ -27,16 +27,24 @@
 
 ### 2. Google Gmail SMTP
 - **Actual Provider:** Google Gmail SMTP Server (`smtp.gmail.com:587`, STARTTLS)
-- **Configured User:** `abhiclg2580@gmail.com`
-- **Test Performed:** Attempted authentication and email dispatch with configured `SMTP_PASS`.
-- **Real Response / Error:**
+- **Configured User:** `abhishekgga140@gmail.com`
+- **Test Performed:** Verified TLS handshake, authenticated with dedicated 16-character Google App Password, and dispatched live test email to `abhishekgga140@gmail.com`.
+- **Real Response:**
+  ```json
+  {
+    "status": "AUTHENTICATED_AND_DELIVERED",
+    "transporterVerify": "SUCCESS",
+    "messageId": "<c44545b6-b91e-78b2-ae2f-046b67d21c4c@gmail.com>",
+    "accepted": ["abhishekgga140@gmail.com"],
+    "envelope": {
+      "from": "abhishekgga140@gmail.com",
+      "to": ["abhishekgga140@gmail.com"]
+    }
+  }
   ```
-  Invalid login: 535-5.7.8 Username and Password not accepted.
-  For more information, go to https://support.google.com/mail/?p=BadCredentials
-  ```
-- **Status:** **BLOCKED**
-- **Analysis:** Google discontinued basic password authentication for third-party apps. Gmail requires a dedicated 16-character "App Password" generated under Google Account Security with 2-Factor Authentication enabled. The current 10-character password string in `.env` is rejected by Google's SMTP auth gateway.
-- **Remaining Requirements:** User must generate a 16-character App Password at `myaccount.google.com/apppasswords` and update `SMTP_PASS`.
+- **Status:** **PASS**
+- **Analysis:** Google Gmail SMTP is fully authenticated and active. Verification code and clinical notifications dispatch cleanly through Google's mail transport servers with zero simulated fallbacks.
+- **Remaining Requirements:** None. Production Google SMTP verified.
 
 ---
 
