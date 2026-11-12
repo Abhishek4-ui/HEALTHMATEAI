@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, classification_report, precision_recall_fscore_support, brier_score_loss
 from sklearn.preprocessing import label_binarize
 
-from app.services.symptom_classifier import symptom_classifier, DISEASE_SYMPTOM_DATASET
+from app.services.symptom_classifier import symptom_classifier
 from app.services.health_risk_models import health_risk_models
 
 # 40 Independently authored clinical test vignettes across all 8 disease classes (5 diverse held-out cases per class)

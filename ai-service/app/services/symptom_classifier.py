@@ -94,6 +94,10 @@ class SymptomClassifier:
         ]
         self._load_or_initialize()
 
+    @property
+    def diseases(self):
+        return self.classes
+
     def _load_or_initialize(self):
         """Loads serialized model artifact from disk or initializes fallback pipeline."""
         if os.path.exists(ARTIFACT_PATH):
