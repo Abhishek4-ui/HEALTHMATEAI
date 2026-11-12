@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 const OTP_EXPIRY_SECONDS = 300; // 5 minutes
 const MAX_ATTEMPTS = 3;
-const RESEND_COOLDOWN_SECONDS = 60; // 1 minute cooldown
+const RESEND_COOLDOWN_SECONDS = 30; // 30 seconds cooldown
 
 class OTPService {
   /**

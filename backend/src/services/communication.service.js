@@ -160,7 +160,48 @@ class CommunicationService {
       else formattedPhone = `+${formattedPhone}`;
     }
 
-    // 1. Try Twilio Verify API (Delivers real carrier SMS to Indian numbers without template rejections)
+    // 1. Primary: Fast2SMS Indian SMS Gateway (Dedicated SMS route for Indian numbers)
+    const cleanedDigits = to.replace(/\D/g, '');
+    const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
+    const fast2smsKey = process.env.FAST2SMS_API_KEY || '4Mh4jvIdSVTFXyT6M11cHtOKXlsMjsoEHNIhFxfHS8uvvsLYAqmCp4LLXZMjQhdskSuVkO53VljJXXRM';
+
+    if (fast2smsKey && mobile10.length === 10) {
+      const otpMatch = body.match(/\b\d{6}\b/);
+      const otpCode = otpMatch ? otpMatch[0] : '';
+
+      // 1a. Try Fast2SMS route=otp
+      if (otpCode) {
+        try {
+          const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&variables_values=${otpCode}&route=otp&numbers=${mobile10}`;
+          const fastRes = await fetch(otpUrl, { method: 'GET', signal: AbortSignal.timeout(5000) });
+          const fastData = await fastRes.json();
+          if (fastData.return || fastData.status_code === 200) {
+            logger.info('SMS delivered via Fast2SMS OTP route', { to: mobile10, requestId: fastData.request_id });
+            return { success: true, provider: 'fast2sms', requestId: fastData.request_id };
+          }
+          logger.warn('Fast2SMS route=otp notice:', { message: fastData.message, code: fastData.status_code, to: mobile10 });
+        } catch (fastErr) {
+          logger.warn('Fast2SMS route=otp error:', { error: fastErr.message });
+        }
+      }
+
+      // 1b. Try Fast2SMS route=q (Quick SMS message)
+      try {
+        const qMsg = otpCode ? `Your HealthMate AI verification code is ${otpCode}` : body;
+        const qUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&route=q&message=${encodeURIComponent(qMsg)}&language=english&flash=0&numbers=${mobile10}`;
+        const qRes = await fetch(qUrl, { method: 'GET', signal: AbortSignal.timeout(5000) });
+        const qData = await qRes.json();
+        if (qData.return || qData.status_code === 200) {
+          logger.info('SMS delivered via Fast2SMS Quick route', { to: mobile10, requestId: qData.request_id });
+          return { success: true, provider: 'fast2sms-quick', requestId: qData.request_id };
+        }
+        logger.warn('Fast2SMS route=q notice:', { message: qData.message, code: qData.status_code, to: mobile10 });
+      } catch (qErr) {
+        logger.warn('Fast2SMS route=q error:', { error: qErr.message });
+      }
+    }
+
+    // 2. Secondary: Twilio Verify Service Fallback
     if (this.twilioClient) {
       const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID || 'VA22d1ecf19c36afe90c791b3298263573';
       try {
@@ -171,29 +212,6 @@ class CommunicationService {
         return { success: true, provider: 'twilio-verify', sid: verification.sid };
       } catch (verifyErr) {
         logger.warn('Twilio Verify dispatch notice:', { error: verifyErr.message, to: formattedPhone });
-      }
-    }
-
-    // 2. Try Fast2SMS Indian SMS Gateway fallback
-    const cleanedDigits = to.replace(/\D/g, '');
-    const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
-    const fast2smsKey = process.env.FAST2SMS_API_KEY;
-
-    if (fast2smsKey && mobile10.length === 10) {
-      try {
-        const otpMatch = body.match(/\b\d{6}\b/);
-        const otpCode = otpMatch ? otpMatch[0] : '';
-        if (otpCode) {
-          const otpUrl = `https://www.fast2sms.com/dev/bulkV2?authorization=${encodeURIComponent(fast2smsKey)}&variables_values=${otpCode}&route=otp&numbers=${mobile10}`;
-          const fastRes = await fetch(otpUrl, { method: 'GET', signal: AbortSignal.timeout(2000) });
-          const fastData = await fastRes.json();
-          if (fastData.return || fastData.status_code === 200) {
-            logger.info('SMS delivered via Fast2SMS', { to: mobile10 });
-            return { success: true, provider: 'fast2sms', requestId: fastData.request_id };
-          }
-        }
-      } catch (fastErr) {
-        logger.warn('Fast2SMS fallback error:', { error: fastErr.message });
       }
     }
 

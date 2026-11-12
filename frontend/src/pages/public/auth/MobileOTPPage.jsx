@@ -28,14 +28,15 @@ export default function MobileOTPPage() {
   const [showBackupAssistance, setShowBackupAssistance] = useState(false);
   const [firebaseActive, setFirebaseActive] = useState(false);
 
-  // Always trigger fresh carrier SMS & email dispatch upon landing on this page
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Dispatches real carrier SMS to phone and email via backend
-    handleResend(true);
+    // If no initial code was passed from registration, dispatch now
+    if (!initialBackupOtp && (email || phone)) {
+      handleResend(true);
+    }
 
-    // 2. Also initialize Firebase phone verification session in parallel
+    // Also initialize Firebase phone verification session in parallel if phone is present
     if (phone) {
       sendFirebasePhoneOtp(phone)
         .then(() => {
