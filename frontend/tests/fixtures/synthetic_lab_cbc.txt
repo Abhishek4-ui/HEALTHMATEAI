@@ -1,0 +1,16 @@
+COMPLETE BLOOD COUNT (CBC) REPORT
+Patient Name: Test Patient (Synthetic)
+Date: 2026-11-12
+Lab Ref: HM-LAB-SYNTH-9942
+
+TEST PARAMETERS                      RESULT       REFERENCE INTERVAL     UNITS
+Hemoglobin (Hb)                      14.2         13.0 - 17.0            g/dL
+Total Leucocyte Count (WBC)          7,200        4,000 - 11,000         /cumm
+Platelet Count                       265,000      150,000 - 450,000      /mcL
+RBC Count                            4.85         4.50 - 5.90            mil/uL
+Hematocrit (PCV)                     42.5         40.0 - 50.0            %
+Fasting Blood Glucose (FBG)          92           70 - 100               mg/dL
+Serum Creatinine                     0.95         0.70 - 1.20            mg/dL
+
+Clinical Note: Normal synthetic reference profile for automated quality validation.
+Medical Officer: Dr. Synthetic Verifier, MD

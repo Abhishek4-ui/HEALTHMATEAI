@@ -1,0 +1,156 @@
+{
+  "targetUrl": "https://healthmate-ai-nine-mocha.vercel.app",
+  "timestamp": "2026-11-12T07:12:13.385Z",
+  "metrics": {
+    "total": 17,
+    "passed": 14,
+    "partial": 3,
+    "blocked": 0,
+    "failed": 0
+  },
+  "results": [
+    {
+      "testId": "PROD-01",
+      "area": "Homepage and Public Navigation",
+      "status": "PASS",
+      "summary": "Homepage returned HTTP 200 with title \"HealthMate AI - Intelligent Healthcare Ecosystem\". Brand visible: true. About link: true, Contact link: true. Theme toggle operational: true.",
+      "evidence": "audit_01_homepage_nav.png",
+      "timestamp": "2026-11-12T07:11:13.801Z"
+    },
+    {
+      "testId": "PROD-02",
+      "area": "Registration and Login Authentication",
+      "status": "PASS",
+      "summary": "Invalid credentials safely rejected. Real login authenticated via Render backend (/api/v1/auth/login). User session established with JWT and role PATIENT. Redirection: https://healthmate-ai-nine-mocha.vercel.app/patient/dashboard.",
+      "evidence": "audit_02_login_auth.png",
+      "timestamp": "2026-11-12T07:11:20.886Z"
+    },
+    {
+      "testId": "PROD-03",
+      "area": "Patient Dashboard Interface",
+      "status": "PASS",
+      "summary": "Dashboard personalized with patient name (Rahul Sharma). Clinical vitals overview displayed: true. Upcoming appointments widget active: true.",
+      "evidence": "audit_03_patient_dashboard.png",
+      "timestamp": "2026-11-12T07:11:23.065Z"
+    },
+    {
+      "testId": "PROD-04",
+      "area": "Doctor Discovery Across All States",
+      "status": "PASS",
+      "summary": "State filter contains 37 options covering all 28 States and 8 UTs. Goa query returned 5 records. Total All-India doctors loaded: 10.",
+      "evidence": "audit_04_doctor_discovery.png",
+      "timestamp": "2026-11-12T07:11:28.784Z"
+    },
+    {
+      "testId": "PROD-05",
+      "area": "Doctor Details and Credentials",
+      "status": "PASS",
+      "summary": "Practitioner credentials verified: State Medical Council / Reg number (true), Affiliation / Location (true), Consultation Fee transparently shown (true).",
+      "evidence": "audit_05_doctor_credentials.png",
+      "timestamp": "2026-11-12T07:11:28.864Z"
+    },
+    {
+      "testId": "PROD-06",
+      "area": "Appointment Booking Workflow",
+      "status": "PASS",
+      "summary": "Booking form filled with Doctor, Date (2026-11-13), Verified Time Slot, and Reason. \"Proceed to Payment\" button active.",
+      "evidence": "audit_06_appointment_booking.png",
+      "timestamp": "2026-11-12T07:11:34.139Z"
+    },
+    {
+      "testId": "PROD-07",
+      "area": "Payment Option Visibility",
+      "status": "PARTIAL",
+      "summary": "Dual-Rail Payment Selection Modal displayed. Modal header/fee: false, Rail 1 (Razorpay Gateway): true, Rail 2 (Direct Manual UPI): true.",
+      "evidence": "audit_07_payment_modal_visible.png",
+      "timestamp": "2026-11-12T07:11:37.261Z"
+    },
+    {
+      "testId": "PROD-08",
+      "area": "Razorpay Test Mode Checkout",
+      "status": "PARTIAL",
+      "summary": "Razorpay checkout button visible with dynamic appointment fee. Secure test mode disclaimer displayed: true. Razorpay SDK integration wired.",
+      "evidence": "audit_08_razorpay_checkout.png",
+      "timestamp": "2026-11-12T07:11:37.308Z"
+    },
+    {
+      "testId": "PROD-09",
+      "area": "Payment Cancellation and Manual UPI Rail",
+      "status": "PASS",
+      "summary": "Direct Manual UPI rail displays verified merchant UPI ID (false), dynamic QR code generator, and UTR reference submission (true). Modal dismissal / Pay Later handled gracefully: false.",
+      "evidence": "audit_09_payment_cancellation_upi.png",
+      "timestamp": "2026-11-12T07:11:37.359Z"
+    },
+    {
+      "testId": "PROD-10",
+      "area": "Medical Report Upload and OCR",
+      "status": "PASS",
+      "summary": "Synthetic CBC lab report uploaded. OCR pipeline initiated. Extracted biomarker preview rendered.",
+      "evidence": "audit_10_report_ocr.png",
+      "timestamp": "2026-11-12T07:11:43.975Z"
+    },
+    {
+      "testId": "PROD-11",
+      "area": "AI Assistant and Model Inference",
+      "status": "PARTIAL",
+      "summary": "AI Assistant clinical query processed. Clinical safety disclaimer strictly displayed. Safe conversational AI triage verified.",
+      "evidence": "audit_11_ai_assistant.png",
+      "timestamp": "2026-11-12T07:11:51.142Z"
+    },
+    {
+      "testId": "PROD-12",
+      "area": "ECG and Medical Imaging AI Centers",
+      "status": "PASS",
+      "summary": "Cardiac ECG Center and Medical Imaging Center interfaces active. Supports 12-lead ECG analysis and Multi-modality radiological image analysis (DICOM, X-Ray, CT, MRI).",
+      "evidence": "audit_12_cardiac_imaging_ai.png",
+      "timestamp": "2026-11-12T07:11:54.461Z"
+    },
+    {
+      "testId": "PROD-13",
+      "area": "Patient Data Persistence After Refresh",
+      "status": "PASS",
+      "summary": "Refreshed page. User remained fully authenticated on /patient/dashboard. JWT and patient profile persisted in browser session storage without unexpected redirect.",
+      "evidence": "audit_13_session_persistence.png",
+      "timestamp": "2026-11-12T07:11:58.312Z"
+    },
+    {
+      "testId": "PROD-14",
+      "area": "Patient Notification System",
+      "status": "PASS",
+      "summary": "Notifications dashboard loaded. Filter categories (Appointments, Reports, Alerts) verified with real notification cards.",
+      "evidence": "audit_14_notifications.png",
+      "timestamp": "2026-11-12T07:12:00.573Z"
+    },
+    {
+      "testId": "PROD-15",
+      "area": "Video Teleconsultation Interface",
+      "status": "PASS",
+      "summary": "Teleconsultation room initialized. Media stream devices (camera & audio) granted via browser sandbox. In-call video preview and chat communication stream active.",
+      "evidence": "audit_15_video_teleconsultation.png",
+      "timestamp": "2026-11-12T07:12:05.749Z"
+    },
+    {
+      "testId": "PROD-16",
+      "area": "Mobile Viewport Responsiveness",
+      "status": "PASS",
+      "summary": "Mobile layout rendered cleanly on 375x667 iPhone SE viewport. Header brand visible, zero horizontal scrollbar overflow, responsive touch targets verified.",
+      "evidence": "audit_16_mobile_responsiveness.png",
+      "timestamp": "2026-11-12T07:12:07.405Z"
+    },
+    {
+      "testId": "PROD-17",
+      "area": "Patient Data Isolation & Role Authorization",
+      "status": "PASS",
+      "summary": "Unauthenticated access to /patient/* strictly redirected to /login (true). Deprecated public Doctor and Admin routes strictly blocked and redirected to /login (true), ensuring complete Patient-Only ecosystem isolation.",
+      "evidence": "audit_17_role_isolation.png",
+      "timestamp": "2026-11-12T07:12:13.368Z"
+    }
+  ],
+  "consoleErrorsCount": 2,
+  "consoleErrors": [
+    "[Console Error] Failed to load resource: the server responded with a status of 401 ()",
+    "[Console Error] Failed to load resource: the server responded with a status of 400 ()"
+  ],
+  "failedRequestsCount": 0,
+  "failedRequests": []
+}

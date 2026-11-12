@@ -1,0 +1,9 @@
+12-LEAD RESTING ELECTROCARDIOGRAM (ECG) REPORT
+Patient Name: Synthetic Patient
+Date of Recording: 2026-11-12
+Heart Rate: 72 bpm
+PR Interval: 156 ms
+QRS Duration: 88 ms
+QT/QTc: 382/418 ms
+P-R-T Axes: 48 54 42
+Interpretation: Normal sinus rhythm. No acute ST-elevation or ischemic changes.
