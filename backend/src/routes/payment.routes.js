@@ -4,13 +4,26 @@ const paymentController = require('../controllers/payment.controller');
 const { authenticateToken } = require('../middlewares/auth.middleware');
 const { requireRoles } = require('../middlewares/role.middleware');
 
-// Create payment order (Patient only)
-router.post('/order', authenticateToken, requireRoles(['PATIENT']), paymentController.createOrder);
+// Public / Patient configuration discovery
+router.get('/config', (req, res) => paymentController.getConfig(req, res));
 
-// Verify payment signature after Razorpay checkout (Patient only)
+// Razorpay Test Mode Workflow (Patient only)
+router.post('/order', authenticateToken, requireRoles(['PATIENT']), paymentController.createOrder);
 router.post('/verify-signature', authenticateToken, requireRoles(['PATIENT']), paymentController.verifySignature);
 
-// Webhook endpoint (Requires raw body for HMAC SHA256 signature verification)
+// Manual UPI Payment Workflow (Patient only)
+router.post('/upi/initiate', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.initiateUpi(req, res, next));
+router.post('/upi/submit-utr', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.submitUpiUtr(req, res, next));
+router.get('/my-transactions', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.getMyTransactions(req, res, next));
+router.post('/refund-request', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.requestRefund(req, res, next));
+
+// Admin Manual Payment Reconciliation & Refund Management (Administration only)
+router.get('/admin/pending', authenticateToken, requireRoles(['ADMINISTRATION']), (req, res, next) => paymentController.adminGetPending(req, res, next));
+router.post('/admin/verify', authenticateToken, requireRoles(['ADMINISTRATION']), (req, res, next) => paymentController.adminVerify(req, res, next));
+router.post('/admin/reject', authenticateToken, requireRoles(['ADMINISTRATION']), (req, res, next) => paymentController.adminReject(req, res, next));
+router.post('/admin/refund-process', authenticateToken, requireRoles(['ADMINISTRATION']), (req, res, next) => paymentController.adminRefundProcess(req, res, next));
+
+// Razorpay Webhook endpoint (Requires raw body for HMAC SHA256 signature verification)
 router.post('/webhook', express.raw({ type: 'application/json' }), paymentController.handleWebhook);
 
 module.exports = router;

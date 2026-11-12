@@ -35,6 +35,26 @@ export const patientService = {
 
   verifyPaymentSignature: async (paymentData) => {
     return apiClient.post('/payments/verify-signature', paymentData);
+  },
+
+  getPaymentConfig: async () => {
+    return apiClient.get('/payments/config');
+  },
+
+  initiateManualUpi: async (payload) => {
+    return apiClient.post('/payments/upi/initiate', payload);
+  },
+
+  submitUpiUtr: async (payload) => {
+    return apiClient.post('/payments/upi/submit-utr', payload);
+  },
+
+  getMyTransactions: async () => {
+    return apiClient.get('/payments/my-transactions');
+  },
+
+  requestRefund: async (payload) => {
+    return apiClient.post('/payments/refund-request', payload);
   }
 };
 

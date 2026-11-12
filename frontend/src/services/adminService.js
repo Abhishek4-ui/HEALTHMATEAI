@@ -71,6 +71,22 @@ export const adminService = {
 
   getAuditLogs: async (filters = {}) => {
     return apiClient.get('/admin/compliance/audit-logs', { params: filters });
+  },
+
+  getPendingPayments: async () => {
+    return apiClient.get('/payments/admin/pending');
+  },
+
+  verifyUpiPayment: async (transactionId, notes) => {
+    return apiClient.post('/payments/admin/verify', { transactionId, notes });
+  },
+
+  rejectUpiPayment: async (transactionId, reason) => {
+    return apiClient.post('/payments/admin/reject', { transactionId, reason });
+  },
+
+  processRefund: async (transactionId, refundNotes) => {
+    return apiClient.post('/payments/admin/refund-process', { transactionId, refundNotes });
   }
 };
 

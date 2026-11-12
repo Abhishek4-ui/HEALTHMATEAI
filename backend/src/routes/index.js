@@ -84,4 +84,41 @@ router.get('/discovery/districts', (req, res) => {
   });
 });
 
+// Free OpenStreetMap Geocoding & Reverse Geocoding Endpoints
+const osmDiscoveryService = require('../services/osmDiscovery.service');
+
+router.get('/discovery/geocode', async (req, res) => {
+  try {
+    const query = req.query.q || req.query.query || req.query.address || req.query.pincode;
+    if (!query) {
+      return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Query parameter q is required.' });
+    }
+    const result = await osmDiscoveryService.geocodeQuery(query);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Location could not be geocoded.' });
+    }
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: err.message });
+  }
+});
+
+router.get('/discovery/reverse-geocode', async (req, res) => {
+  try {
+    const { lat, lng, latitude, longitude } = req.query;
+    const targetLat = lat || latitude;
+    const targetLng = lng || longitude;
+    if (!targetLat || !targetLng) {
+      return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Latitude and longitude parameters are required.' });
+    }
+    const result = await osmDiscoveryService.reverseGeocode(targetLat, targetLng);
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Address could not be resolved from coordinates.' });
+    }
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'SERVER_ERROR', message: err.message });
+  }
+});
+
 module.exports = router;
