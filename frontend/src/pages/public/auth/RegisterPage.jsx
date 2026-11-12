@@ -60,9 +60,7 @@ export default function RegisterPage() {
         payload.experienceYears = Number(formData.experienceYears) || 5;
       }
 
-      const res = await apiClient.post('/auth/register', payload);
-      const data = res.data || res;
-      const otpCode = data?.otp || res?.otp || '';
+      await apiClient.post('/auth/register', payload);
 
       addToast({
         type: 'success',
@@ -75,8 +73,7 @@ export default function RegisterPage() {
           email: formData.email, 
           phone: formData.phone, 
           role, 
-          name: formData.name,
-          otp: otpCode
+          name: formData.name
         } 
       });
     } catch (err) {
@@ -91,15 +88,13 @@ export default function RegisterPage() {
           message: 'An account with this email already exists. Sending verification code...' 
         });
         try {
-          const otpRes = await apiClient.post('/auth/otp/send', { target: formData.email, type: 'EMAIL', purpose: 'VERIFICATION' });
-          const resentOtp = otpRes.data?.otp || otpRes.otp || '';
+          await apiClient.post('/auth/otp/send', { target: formData.email, type: 'EMAIL', purpose: 'VERIFICATION' });
           navigate('/verify-otp', {
             state: {
               email: formData.email,
               phone: formData.phone,
               role,
               name: formData.name,
-              otp: resentOtp,
             }
           });
           return;

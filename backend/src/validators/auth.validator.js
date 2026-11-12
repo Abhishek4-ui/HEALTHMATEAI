@@ -51,6 +51,7 @@ const sendOTPSchema = Joi.object({
   target: Joi.string().required(), // email or phone
   type: Joi.string().valid('EMAIL', 'MOBILE').required(),
   purpose: Joi.string().valid('VERIFICATION', 'LOGIN', 'PASSWORD_RESET').default('VERIFICATION'),
+  phone: Joi.string().optional(),
 });
 
 const verifyOTPSchema = Joi.object({
@@ -60,6 +61,7 @@ const verifyOTPSchema = Joi.object({
     'string.length': 'OTP must be exactly 6 digits',
   }),
   purpose: Joi.string().valid('VERIFICATION', 'LOGIN', 'PASSWORD_RESET').default('VERIFICATION'),
+  phone: Joi.string().optional(),
 });
 
 const forgotPasswordSchema = Joi.object({

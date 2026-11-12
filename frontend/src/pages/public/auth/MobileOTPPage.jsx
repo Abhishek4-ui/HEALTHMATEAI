@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Mail, Phone, ArrowRight, ShieldCheck, KeyRound, Sparkles, RefreshCw, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Mail, Phone, ArrowRight, ShieldCheck, KeyRound, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
@@ -18,25 +18,22 @@ export default function MobileOTPPage() {
   const role = location.state?.role || 'PATIENT';
   const email = location.state?.email || 'patient@healthmate.ai';
   const name = location.state?.name || '';
-  const initialBackupOtp = location.state?.otp || '';
 
-  // Inputs are strictly EMPTY by default (NO automatic autofill)
+  // Inputs are strictly EMPTY by default (NO automatic autofill, NO on-screen code leakage)
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [currentOtpCode, setCurrentOtpCode] = useState(initialBackupOtp);
-  const [showBackupAssistance, setShowBackupAssistance] = useState(false);
   const [firebaseActive, setFirebaseActive] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    // If no initial code was passed from registration, dispatch now
-    if (!initialBackupOtp && (email || phone)) {
+    // Dispatch OTP on initial mount if email or phone is present
+    if (email || phone) {
       handleResend(true);
     }
 
-    // Also initialize Firebase phone verification session in parallel if phone is present
+    // Initialize Firebase phone verification session in parallel if phone is present
     if (phone) {
       sendFirebasePhoneOtp(phone)
         .then(() => {
@@ -131,24 +128,20 @@ export default function MobileOTPPage() {
                 purpose: 'VERIFICATION',
               });
               isVerified = true;
-            } catch (phoneErr) {}
+            } catch (phoneErr) {
+              throw backendErr;
+            }
+          } else {
+            throw backendErr;
           }
         }
       }
 
-      // 3. Fallback check against backup code
-      if (!isVerified && currentOtpCode && enteredOtp === currentOtpCode) {
-        isVerified = true;
+      if (!isVerified) {
+        throw new Error('Verification failed. Invalid or expired code.');
       }
 
-      // 4. Resilient Carrier 6-digit validation:
-      // If the user entered the 6-digit code delivered to their mobile or inbox,
-      // guarantee access so they are never blocked by provider discrepancies.
-      if (!isVerified && /^\d{6}$/.test(enteredOtp)) {
-        isVerified = true;
-      }
-
-      // Login and redirect to portal dashboard
+      // Login and redirect to portal dashboard upon genuine cryptographic verification
       login(role, email, name);
       addToast({
         type: 'success',
@@ -160,26 +153,12 @@ export default function MobileOTPPage() {
       else if (role === 'ADMINISTRATION') navigate('/admin/dashboard');
       else navigate('/patient/dashboard');
     } catch (err) {
-      console.error('OTP verification notice:', err);
-      // Guarantee login for any user entering a 6-digit code
-      if (/^\d{6}$/.test(enteredOtp)) {
-        login(role, email, name);
-        addToast({
-          type: 'success',
-          title: 'Account Verified',
-          message: 'Welcome to your HealthMate AI portal.',
-        });
-
-        if (role === 'DOCTOR') navigate('/doctor/dashboard');
-        else if (role === 'ADMINISTRATION') navigate('/admin/dashboard');
-        else navigate('/patient/dashboard');
-      } else {
-        addToast({
-          type: 'error',
-          title: 'Verification Failed',
-          message: err.message || 'Incorrect verification code. Please check your SMS and try again.',
-        });
-      }
+      console.error('OTP verification failed:', err);
+      addToast({
+        type: 'error',
+        title: 'Verification Failed',
+        message: err.response?.data?.message || err.message || 'Incorrect or expired verification code. Please request a new code.',
+      });
     } finally {
       setLoading(false);
     }
@@ -195,18 +174,14 @@ export default function MobileOTPPage() {
           .catch(() => {});
       }
 
-      // 2. Also dispatch backend carrier SMS & Email
-      const res = await apiClient.post('/auth/otp/send', {
+      // 2. Dispatch backend carrier SMS & Email
+      await apiClient.post('/auth/otp/send', {
         target: email,
         phone,
         type: 'EMAIL',
         purpose: 'VERIFICATION',
       });
-      const data = res.data || res;
-      const newCode = data?.otp || data?.data?.otp || res?.otp || '';
-      if (newCode) {
-        setCurrentOtpCode(newCode);
-      }
+
       setOtp(['', '', '', '', '', '']);
       const firstInput = document.getElementById('otp-input-0');
       if (firstInput) firstInput.focus();
@@ -219,12 +194,12 @@ export default function MobileOTPPage() {
         });
       }
     } catch (err) {
-      console.error('OTP Resend error:', err);
+      console.warn('OTP resend notice:', err);
       if (!silent) {
         addToast({
-          type: 'info',
-          title: 'Code Sent',
-          message: 'Verification code sent. Please check your phone SMS.',
+          type: 'error',
+          title: 'Resend Limit',
+          message: err.response?.data?.message || 'Please wait before requesting another code.',
         });
       }
     } finally {
@@ -233,47 +208,27 @@ export default function MobileOTPPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto px-4 py-12 space-y-6">
-      {/* Invisible container for Google reCAPTCHA phone verification */}
-      <div id="recaptcha-container"></div>
-
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-3 shadow-sm border border-teal-100 dark:border-teal-900">
+    <div className="space-y-6 max-w-md mx-auto">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 mb-2 border border-teal-100 dark:border-teal-900/50 shadow-sm">
           <KeyRound className="w-6 h-6" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Verify Your Account
-        </h1>
-        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-xs mx-auto">
-          Please enter the 6-digit verification code sent to your mobile phone:
-        </p>
-        <p className="font-semibold text-xs text-teal-700 dark:text-teal-300 mt-1">
-          {phone ? phone : email} {phone && email && <span className="text-slate-400 font-normal">({email})</span>}
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Security Verification</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          We have dispatched a 6-digit verification code to
+          <span className="font-semibold text-slate-800 dark:text-slate-200 block mt-0.5">
+            {email} {phone ? `• ${phone}` : ''}
+          </span>
         </p>
       </div>
 
-      <Card className="p-6 space-y-6">
-        {/* Verification Status Notification Banner */}
-        <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-center space-y-1.5 shadow-sm">
-          <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-teal-800 dark:text-teal-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>SMS Verification Code Dispatched</span>
-          </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400">
-            A 6-digit one-time password has been sent to your phone {phone && <strong className="text-slate-800 dark:text-slate-200">({phone})</strong>} and email inbox.
-          </p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Please check your SMS messages and enter the code in the boxes below.
-          </p>
-        </div>
-
-        {/* 6-Digit Verification Input Boxes */}
+      <Card className="p-6 space-y-6 border border-slate-200 dark:border-slate-800 shadow-sm">
         <form onSubmit={handleVerify} className="space-y-6">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-3 text-center">
-              Enter 6-Digit SMS Code
+          <div className="space-y-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 text-center">
+              Enter 6-Digit Code
             </label>
-            <div className="flex justify-between gap-2">
+            <div className="flex justify-center gap-2 sm:gap-3">
               {otp.map((digit, idx) => (
                 <input
                   key={idx}
@@ -299,7 +254,7 @@ export default function MobileOTPPage() {
 
         <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-center gap-2">
-            <span>Didn't receive SMS?</span>
+            <span>Didn't receive the code?</span>
             <button
               type="button"
               disabled={resending}
@@ -310,26 +265,6 @@ export default function MobileOTPPage() {
               <span>{resending ? 'Sending...' : 'Resend Code'}</span>
             </button>
           </div>
-
-          {/* Discreet Help Link for Backup Assistance */}
-          {currentOtpCode && (
-            <div className="pt-1 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setShowBackupAssistance(!showBackupAssistance)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 inline-flex items-center gap-1 transition"
-              >
-                {showBackupAssistance ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{showBackupAssistance ? 'Hide backup code' : 'Carrier delayed your SMS? Click to view backup code'}</span>
-              </button>
-
-              {showBackupAssistance && (
-                <div className="mt-2 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300 font-mono text-center">
-                  Backup verification code: <strong className="text-teal-600 dark:text-teal-400 tracking-widest">{currentOtpCode}</strong>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </Card>
 

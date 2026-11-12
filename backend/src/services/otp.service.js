@@ -70,13 +70,19 @@ class OTPService {
     // 4. Dispatch via provider (Email SMTP / SMS API)
     await this.dispatchProvider(normalizedTarget, type, rawOTP, purpose);
 
-    return {
+    const response = {
       success: true,
-      rawOTP,
-      otp: rawOTP,
       expiresInSeconds: OTP_EXPIRY_SECONDS,
       resendCooldownSeconds: RESEND_COOLDOWN_SECONDS,
     };
+
+    // Strictly isolated to automated local testing runner (Jest / NODE_ENV === 'test')
+    // In production or development API responses, raw OTP values are NEVER returned.
+    if (process.env.NODE_ENV === 'test') {
+      response.rawOTP = rawOTP;
+    }
+
+    return response;
   }
 
   /**

@@ -52,7 +52,7 @@ class AuthController {
         result = await otpService.sendOTP(targetEmail, 'EMAIL', purpose || 'VERIFICATION');
       }
       if (targetPhone) {
-        const phoneResult = await otpService.sendOTP(targetPhone, 'MOBILE', purpose || 'VERIFICATION', result?.rawOTP || null).catch((e) => {
+        const phoneResult = await otpService.sendOTP(targetPhone, 'MOBILE', purpose || 'VERIFICATION', (process.env.NODE_ENV === 'test' ? result?.rawOTP : null)).catch((e) => {
           logger.warn('Mobile SMS dispatch error in sendOTP controller:', { error: e.message, phone: targetPhone });
           return null;
         });
@@ -61,7 +61,18 @@ class AuthController {
       if (!result) {
         result = await otpService.sendOTP(target, type || 'EMAIL', purpose || 'VERIFICATION');
       }
-      return successResponse(res, result, 'Verification code dispatched.');
+
+      // Strict Production Security: Never expose raw OTP in JSON response
+      const sanitizedResult = {
+        success: true,
+        expiresInSeconds: result.expiresInSeconds,
+        resendCooldownSeconds: result.resendCooldownSeconds,
+      };
+      if (process.env.NODE_ENV === 'test' && result.rawOTP) {
+        sanitizedResult.rawOTP = result.rawOTP;
+      }
+
+      return successResponse(res, sanitizedResult, 'Verification code dispatched.');
     } catch (err) {
       return errorResponse(res, err.message, 429, 'OTP_DISPATCH_LIMIT');
     }
@@ -72,44 +83,42 @@ class AuthController {
       const { target, type, otp, purpose, phone } = req.body;
       const communicationService = require('../services/communication.service');
 
+      if (!otp || typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
+        return errorResponse(res, 'A valid 6-digit numeric verification code is required.', 400, 'INVALID_OTP_FORMAT');
+      }
+
+      const cleanOtp = otp.trim();
+
       // 1. Direct Twilio Verify carrier check if phone is available
       const phoneCandidate = phone || (type === 'MOBILE' ? target : null);
       if (phoneCandidate) {
         try {
-          const twCheck = await communicationService.checkTwilioVerify({ to: phoneCandidate, code: otp });
+          const twCheck = await communicationService.checkTwilioVerify({ to: phoneCandidate, code: cleanOtp });
           if (twCheck && twCheck.success) {
-            return successResponse(res, { verified: true }, 'Code verified successfully via SMS.');
+            return successResponse(res, { verified: true }, 'Code verified successfully via carrier SMS.');
           }
         } catch (e) {}
       }
 
-      // 2. Standard internal store verification check with resilient carrier fallback
+      // 2. Standard cryptographic hash verification against Redis / secure store
       let verified = false;
       try {
-        verified = await otpService.verifyOTP(target, type, otp, purpose);
+        verified = await otpService.verifyOTP(target, type, cleanOtp, purpose);
       } catch (primaryErr) {
+        // If target was email but user also provided registered phone, verify against phone key
         if (phone && phone !== target) {
-          try {
-            verified = await otpService.verifyOTP(phone, 'MOBILE', otp, purpose);
-          } catch (phoneErr) {
-            // If user entered valid 6-digit format from carrier SMS or external provider
-            if (otp && /^\d{6}$/.test(String(otp).trim())) {
-              verified = true;
-            } else {
-              throw primaryErr;
-            }
-          }
-        } else if (otp && /^\d{6}$/.test(String(otp).trim())) {
-          verified = true;
+          verified = await otpService.verifyOTP(phone, 'MOBILE', cleanOtp, purpose);
         } else {
           throw primaryErr;
         }
       }
+
+      if (!verified) {
+        return errorResponse(res, 'Verification failed. Code is invalid or has expired.', 400, 'OTP_VERIFICATION_FAILED');
+      }
+
       return successResponse(res, { verified: true }, 'Code verified successfully.');
     } catch (err) {
-      if (req.body?.otp && /^\d{6}$/.test(String(req.body.otp).trim())) {
-        return successResponse(res, { verified: true }, 'Code verified successfully.');
-      }
       return errorResponse(res, err.message, 400, 'OTP_VERIFICATION_FAILED');
     }
   }

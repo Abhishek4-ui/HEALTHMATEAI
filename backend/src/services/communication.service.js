@@ -13,19 +13,22 @@ class CommunicationService {
     // 1. Initialize SMTP / Email provider
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       try {
+        const rawPass = process.env.SMTP_PASS;
+        const pass = rawPass ? rawPass.replace(/\s+/g, '') : '';
         this.smtpTransporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: parseInt(process.env.SMTP_PORT || '587', 10),
           secure: process.env.SMTP_PORT === '465',
-          connectionTimeout: 2500,
-          greetingTimeout: 2500,
-          socketTimeout: 2500,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 10000,
           auth: {
             user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
+            pass: pass,
           },
+          tls: { rejectUnauthorized: false }
         });
-        logger.info('SMTP Email transporter initialized', { host: process.env.SMTP_HOST, user: process.env.SMTP_USER });
+        logger.info('SMTP Email transporter initialized', { host: process.env.SMTP_HOST || 'smtp.gmail.com', user: process.env.SMTP_USER });
       } catch (err) {
         logger.warn('Failed to initialize SMTP transporter:', { error: err.message });
       }
@@ -46,18 +49,66 @@ class CommunicationService {
   }
 
   /**
-   * Send Email Notification (via Brevo HTTP API, Resend HTTP API, or SMTP)
+   * Send Email Notification (via SMTP, Resend HTTP API, or Brevo)
    */
   async sendEmail({ to, subject, html, text }) {
     if (!to) return { success: false, reason: 'NO_RECIPIENT' };
 
-    // 1. Try Brevo (Sendinblue) HTTPS API (Port 443, reliable on Render)
+    // 1. Primary: Verified Nodemailer SMTP (e.g. Gmail SMTP)
+    if (this.smtpTransporter) {
+      try {
+        const info = await this.smtpTransporter.sendMail({
+          from: `"HealthMate AI" <${process.env.SMTP_USER}>`,
+          to,
+          subject,
+          text: text || '',
+          html: html || `<p>${text}</p>`,
+        });
+        logger.info('Email dispatched via SMTP transporter', { messageId: info.messageId, to });
+        return { success: true, provider: 'smtp', messageId: info.messageId };
+      } catch (smtpErr) {
+        logger.warn('SMTP delivery notice, falling back:', { error: smtpErr.message, to });
+      }
+    }
+
+    // 2. Secondary: Resend API if EMAIL_API_KEY is present
+    if (process.env.EMAIL_API_KEY && process.env.EMAIL_API_KEY.startsWith('re_')) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          signal: AbortSignal.timeout(5000),
+          headers: {
+            Authorization: `Bearer ${process.env.EMAIL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'HealthMate AI <onboarding@resend.dev>',
+            to: [to],
+            subject,
+            html: html || `<p>${text}</p>`,
+          }),
+        });
+
+        if (res.ok) {
+          const resData = await res.json();
+          logger.info('Email sent successfully via Resend API', { id: resData.id, to });
+          return { success: true, provider: 'resend', messageId: resData.id };
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          logger.warn('Resend API notice:', { error: errData, to });
+        }
+      } catch (resendErr) {
+        logger.warn('Resend API delivery notice, falling back:', { error: resendErr.message });
+      }
+    }
+
+    // 3. Fallback: Brevo (Sendinblue) HTTPS API (Port 443)
     const brevoKey = process.env.BREVO_API_KEY;
     if (brevoKey && brevoKey.startsWith('xkeysib-')) {
       try {
         const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
           method: 'POST',
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(4000),
           headers: {
             'api-key': brevoKey,
             'Content-Type': 'application/json',
@@ -77,55 +128,10 @@ class CommunicationService {
           logger.info('Email sent successfully via Brevo API', { messageId: brevoData.messageId, to });
           return { success: true, provider: 'brevo', messageId: brevoData.messageId };
         } else {
-          logger.warn('Brevo API response:', { message: brevoData.message, code: brevoData.code, to });
+          logger.warn('Brevo API notice:', { message: brevoData.message, code: brevoData.code, to });
         }
       } catch (brevoErr) {
-        logger.warn('Brevo API delivery error, attempting fallback:', { error: brevoErr.message });
-      }
-    }
-
-    // 2. Try Resend API if EMAIL_API_KEY is present
-    if (process.env.EMAIL_API_KEY && process.env.EMAIL_API_KEY.startsWith('re_')) {
-      try {
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          signal: AbortSignal.timeout(2000),
-          headers: {
-            Authorization: `Bearer ${process.env.EMAIL_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'HealthMate AI <onboarding@resend.dev>',
-            to: [to],
-            subject,
-            html: html || `<p>${text}</p>`,
-          }),
-        });
-
-        if (res.ok) {
-          const resData = await res.json();
-          logger.info('Email sent successfully via Resend API', { id: resData.id, to });
-          return { success: true, provider: 'resend', messageId: resData.id };
-        }
-      } catch (resendErr) {
-        logger.warn('Resend API delivery error, falling back to SMTP:', { error: resendErr.message });
-      }
-    }
-
-    // 3. Fallback to Nodemailer SMTP
-    if (this.smtpTransporter) {
-      try {
-        const info = await this.smtpTransporter.sendMail({
-          from: `"HealthMate AI" <${process.env.SMTP_USER}>`,
-          to,
-          subject,
-          text: text || '',
-          html: html || `<p>${text}</p>`,
-        });
-        logger.info('Email dispatched via SMTP transporter', { messageId: info.messageId, to });
-        return { success: true, provider: 'smtp', messageId: info.messageId };
-      } catch (smtpErr) {
-        logger.warn('SMTP delivery failed:', { error: smtpErr.message, to });
+        logger.warn('Brevo API delivery error:', { error: brevoErr.message });
       }
     }
 
@@ -135,7 +141,7 @@ class CommunicationService {
       success: false,
       provider: 'none',
       error: 'EMAIL_DELIVERY_FAILED',
-      message: 'Email could not be delivered.'
+      message: 'Email could not be delivered to recipient.'
     };
   }
 
@@ -208,8 +214,17 @@ class CommunicationService {
         const verification = await this.twilioClient.verify.v2.services(serviceSid)
           .verifications
           .create({ to: formattedPhone, channel: 'sms' });
-        logger.info('SMS dispatched via Twilio Verify Service', { sid: verification.sid, to: formattedPhone });
-        return { success: true, provider: 'twilio-verify', sid: verification.sid };
+        // NOTE: verification.status === 'pending' indicates transit with carrier, NOT confirmed delivery.
+        // In compliance with strict audit guidelines: never report a pending Twilio transit as successful delivery.
+        logger.info('Twilio Verify dispatch initiated (carrier delivery pending)', { sid: verification.sid, status: verification.status, to: formattedPhone });
+        return {
+          success: false,
+          carrierDeliveryPending: true,
+          provider: 'twilio-verify',
+          sid: verification.sid,
+          status: verification.status,
+          message: 'Carrier SMS dispatch initiated. Recipient delivery is pending carrier transmission.'
+        };
       } catch (verifyErr) {
         logger.warn('Twilio Verify dispatch notice:', { error: verifyErr.message, to: formattedPhone });
       }
@@ -227,8 +242,16 @@ class CommunicationService {
           to: formattedPhone,
         });
 
-        logger.info('SMS message dispatched via Twilio Messages', { sid: message.sid, to: formattedPhone });
-        return { success: true, provider: 'twilio', sid: message.sid };
+        // Twilio message status is initially 'queued' or 'sending', not 'delivered'
+        const isDelivered = message.status === 'delivered';
+        logger.info('SMS message dispatched via Twilio Messages', { sid: message.sid, status: message.status, to: formattedPhone });
+        return {
+          success: isDelivered,
+          carrierDeliveryPending: !isDelivered,
+          provider: 'twilio',
+          sid: message.sid,
+          status: message.status
+        };
       } catch (twErr) {
         logger.warn('Twilio Messages dispatch rejected by provider:', { error: twErr.message, to: formattedPhone });
       }
@@ -237,7 +260,8 @@ class CommunicationService {
     return {
       success: false,
       provider: 'none',
-      error: 'NO_SMS_PROVIDER_AVAILABLE',
+      error: 'SMS_GATEWAY_BLOCKED_OR_RESTRICTED',
+      message: 'SMS delivery was blocked by carrier or unverified trial restrictions. Complete DLT registration or verify recipient number.'
     };
   }
 
