@@ -18,6 +18,7 @@ import {
   Microscope,
   Info
 } from 'lucide-react';
+import { aiService } from '../../../services/aiService';
 
 const MODALITIES = [
   { id: 'XRAY', name: 'Chest X-Ray (CXR)', icon: Scan, desc: 'Pneumonia, pleural effusion, cardiomegaly screening' },
@@ -81,15 +82,11 @@ export default function Module20_MedicalImagingCenter() {
       formData.append('modality', selectedModality);
       formData.append('patient_consent', 'true');
 
-      // Post to backend patient imaging endpoint
-      const response = await fetch('/api/v1/patient/imaging/analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!response.ok || data.success === false) {
-        throw new Error(data.message || data.error || 'Failed to analyze imaging scan.');
+      // Post to backend patient imaging endpoint via aiService
+      const res = await aiService.analyzeImagingScan(formData);
+      const data = res.data || res;
+      if (!data || data.success === false) {
+        throw new Error(data?.message || data?.error || 'Failed to analyze imaging scan.');
       }
 
       setAnalysisResult(data);

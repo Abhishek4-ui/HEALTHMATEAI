@@ -13,6 +13,7 @@ import {
   Info,
   Calendar
 } from 'lucide-react';
+import { aiService } from '../../../services/aiService';
 
 export default function Module21_ECGCardiacCenter() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -50,14 +51,10 @@ export default function Module21_ECGCardiacCenter() {
       formData.append('patient_age', String(patientAge));
       formData.append('patient_consent', 'true');
 
-      const response = await fetch('/api/v1/patient/cardiac/ecg-analyze', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!response.ok || data.success === false) {
-        throw new Error(data.message || data.error || 'Failed to analyze ECG recording.');
+      const res = await aiService.analyzeECG(formData);
+      const data = res.data || res;
+      if (!data || data.success === false) {
+        throw new Error(data?.message || data?.error || 'Failed to analyze ECG recording.');
       }
 
       setEcgResult(data);

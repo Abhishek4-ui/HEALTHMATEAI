@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/v1/(.*)",
+      "destination": "https://healthmate-backend-9nmm.onrender.com/api/v1/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

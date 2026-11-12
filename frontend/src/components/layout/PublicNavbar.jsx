@@ -72,8 +72,8 @@ export default function PublicNavbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu Button */}
-        <div className="flex sm:hidden items-center gap-2">
+        {/* Mobile & Tablet Menu Button */}
+        <div className="flex lg:hidden items-center gap-2">
           <ThemeToggle />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -85,9 +85,9 @@ export default function PublicNavbar() {
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile & Tablet Navigation Drawer */}
       {mobileOpen && (
-        <div className="sm:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-2">
+        <div className="lg:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-2">
           {navLinks.map((link) => (
             <Link
               key={link.name}

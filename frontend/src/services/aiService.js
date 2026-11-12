@@ -31,6 +31,18 @@ export const aiService = {
     return apiClient.post('/doctor/prescriptions/check-interactions', {
       medications: medicationsList,
     });
+  },
+
+  analyzeImagingScan: async (formData) => {
+    return apiClient.post('/patient/imaging/analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+
+  analyzeECG: async (formData) => {
+    return apiClient.post('/patient/cardiac/ecg-analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
   }
 };
 
