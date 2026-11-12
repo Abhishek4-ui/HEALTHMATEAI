@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/payment.controller');
-const { authenticateToken } = require('../middlewares/auth.middleware');
+const { authenticateToken, optionalAuth } = require('../middlewares/auth.middleware');
 const { requireRoles } = require('../middlewares/role.middleware');
 
 // Public / Patient configuration discovery
 router.get('/config', (req, res) => paymentController.getConfig(req, res));
 
-// Razorpay Test Mode Workflow (Patient only)
-router.post('/order', authenticateToken, requireRoles(['PATIENT']), paymentController.createOrder);
-router.post('/verify-signature', authenticateToken, requireRoles(['PATIENT']), paymentController.verifySignature);
+// Razorpay Test Mode Workflow (Patient & Guest)
+router.post('/order', optionalAuth, paymentController.createOrder);
+router.post('/verify-signature', optionalAuth, paymentController.verifySignature);
 
-// Manual UPI Payment Workflow (Patient only)
-router.post('/upi/initiate', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.initiateUpi(req, res, next));
-router.post('/upi/submit-utr', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.submitUpiUtr(req, res, next));
-router.get('/my-transactions', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.getMyTransactions(req, res, next));
-router.post('/refund-request', authenticateToken, requireRoles(['PATIENT']), (req, res, next) => paymentController.requestRefund(req, res, next));
+// Manual UPI Payment Workflow (Patient & Guest)
+router.post('/upi/initiate', optionalAuth, (req, res, next) => paymentController.initiateUpi(req, res, next));
+router.post('/upi/submit-utr', optionalAuth, (req, res, next) => paymentController.submitUpiUtr(req, res, next));
+router.get('/my-transactions', optionalAuth, (req, res, next) => paymentController.getMyTransactions(req, res, next));
+router.post('/refund-request', optionalAuth, (req, res, next) => paymentController.requestRefund(req, res, next));
 
 // Admin Manual Payment Reconciliation & Refund Management (Administration only)
 router.get('/admin/pending', authenticateToken, requireRoles(['ADMINISTRATION']), (req, res, next) => paymentController.adminGetPending(req, res, next));

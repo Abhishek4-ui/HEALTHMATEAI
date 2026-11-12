@@ -4,8 +4,8 @@ const createAppointmentSchema = Joi.object({
   doctorId: Joi.string().hex().length(24).required().messages({
     'any.required': 'Doctor ID is required',
   }),
-  scheduledDate: Joi.date().iso().greater('now').required().messages({
-    'date.greater': 'Appointment date must be in the future',
+  scheduledDate: Joi.date().iso().min(new Date(Date.now() - 24 * 60 * 60 * 1000)).required().messages({
+    'date.min': 'Appointment date cannot be in the past',
     'any.required': 'Scheduled date is required',
   }),
   timeSlot: Joi.string().pattern(/^([01]\d|2[0-3]):([0-5]\d)$/).required().messages({

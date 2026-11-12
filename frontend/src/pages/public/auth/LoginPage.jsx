@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   Lock, 
   Mail, 
   ArrowRight, 
   User,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { authService } from '../../../services/authService';
 
 export default function LoginPage() {
   const role = 'PATIENT';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const { login } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       addToast({
@@ -34,17 +37,39 @@ export default function LoginPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
-      login('PATIENT', email);
-      setLoading(false);
+    try {
+      const res = await authService.login({
+        email: email.trim(),
+        password,
+        role: 'PATIENT',
+      });
+      const data = res.data || res;
+      const accessToken = data.accessToken || data.token;
+      const userData = data.user || {};
+
+      login('PATIENT', email, userData.fullName || 'Verified Patient', accessToken, userData.id);
       addToast({
         type: 'success',
         title: 'Signed In',
-        message: 'Welcome to your HealthMate AI patient portal.',
+        message: `Welcome back, ${userData.fullName || 'Patient'}!`,
       });
 
-      navigate('/patient/dashboard');
-    }, 400);
+      const redirect = searchParams.get('redirect') || '/patient/dashboard';
+      navigate(redirect);
+    } catch (err) {
+      addToast({
+        type: 'error',
+        title: 'Authentication Failed',
+        message: err?.response?.data?.message || err?.message || 'Invalid email or password.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFillDemo = () => {
+    setEmail('patient@healthmate.ai');
+    setPassword('Password123!');
   };
 
   return (
@@ -103,11 +128,21 @@ export default function LoginPage() {
           <Button
             type="submit"
             loading={loading}
-            variant={role === 'PATIENT' ? 'primary' : role === 'DOCTOR' ? 'blue' : 'violet'}
+            variant="primary"
             className="w-full"
           >
             <span>Sign In</span>
             <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleFillDemo}
+            className="w-full text-xs flex items-center justify-center gap-1.5 border-dashed"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-aurora-teal" />
+            <span>Fill Demo Patient (patient@healthmate.ai)</span>
           </Button>
         </form>
 

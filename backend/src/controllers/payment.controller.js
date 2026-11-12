@@ -14,9 +14,12 @@ class PaymentController {
   async createOrder(req, res, next) {
     try {
       const { appointmentId, amount, currency, idempotencyKey } = req.body;
+      const { Appointment } = require('../models');
+      const appointment = await Appointment.findById(appointmentId);
+      const patientId = req.user?.id || (appointment ? appointment.patientId : null);
       const order = await paymentService.createPaymentOrder({
         appointmentId,
-        patientId: req.user.id,
+        patientId,
         amount,
         currency,
         idempotencyKey,
@@ -51,9 +54,12 @@ class PaymentController {
       if (!appointmentId) {
         return errorResponse(res, 'appointmentId is required to initiate payment.', 400, 'VALIDATION_ERROR');
       }
+      const { Appointment } = require('../models');
+      const appointment = await Appointment.findById(appointmentId);
+      const patientId = req.user?.id || (appointment ? appointment.patientId : null);
       const result = await paymentService.initiateManualUpi({
         appointmentId,
-        patientId: req.user.id,
+        patientId,
         paymentType,
         amount,
       });
@@ -69,9 +75,12 @@ class PaymentController {
       if (!transactionId || !utrNumber) {
         return errorResponse(res, 'transactionId and utrNumber are required.', 400, 'VALIDATION_ERROR');
       }
+      const { PaymentTransaction } = require('../models');
+      const transaction = await PaymentTransaction.findById(transactionId);
+      const patientId = req.user?.id || (transaction ? transaction.patientId : null);
       const result = await paymentService.submitUpiUtr({
         transactionId,
-        patientId: req.user.id,
+        patientId,
         utrNumber,
         receiptUrl,
       });

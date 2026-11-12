@@ -35,19 +35,21 @@ export function AuthProvider({ children }) {
     }
   }, [guestSession]);
 
-  const login = (role, email, name = '') => {
+  const login = (role, email, name = '', token = null, id = null) => {
     // Single Public Role Policy: Exactly ONE public user role: PATIENT
     const normalizedRole = 'PATIENT';
 
     const userData = {
-      id: 'pat_' + Date.now().toString(36),
+      id: id || 'pat_' + Date.now().toString(36),
       email,
       name: name || 'Verified Patient',
       role: normalizedRole,
+      token: token || null,
       authenticatedAt: new Date().toISOString(),
       isVerified: true,
     };
     setUser(userData);
+    sessionStorage.setItem('healthmate_active_user', JSON.stringify(userData));
     return userData;
   };
 
