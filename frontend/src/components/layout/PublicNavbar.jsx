@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Activity, Menu, X, Stethoscope, Building2, PhoneCall, ArrowRight, User } from 'lucide-react';
+import { Activity, Menu, X, Stethoscope, PhoneCall, ArrowRight, User } from 'lucide-react';
 import ThemeToggle from '../ui/ThemeToggle';
 
 export default function PublicNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
-  // Clean, professional healthcare navigation links (NO 'Features', 'How It Works', 'AI Technology')
+  // Clean, consolidated patient-first navigation links (No duplicate Hospitals link)
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Find Doctors', path: '/login?role=PATIENT' },
-    { name: 'Hospitals', path: '/login?role=PATIENT' },
+    { name: 'Find Doctors', path: '/patient/doctors' },
     { name: 'Emergency Care', path: '/emergency' },
     { name: 'About Us', path: '/about' },
     { name: 'Contact', path: '/contact' },
@@ -52,7 +51,7 @@ export default function PublicNavbar() {
           ))}
         </nav>
 
-        {/* Action Buttons: Sign In and Register (NO 'Forget Me', NO 'Get Started') */}
+        {/* Action Buttons: Sign In and Create Account */}
         <div className="hidden sm:flex items-center gap-3">
           <ThemeToggle />
 
@@ -98,18 +97,19 @@ export default function PublicNavbar() {
               {link.name}
             </Link>
           ))}
-          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}
-              className="flex-1 py-2.5 text-center text-xs font-semibold border border-slate-300 dark:border-slate-700 rounded-xl text-slate-800 dark:text-white"
+              className="flex-1 py-2 text-center rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800"
             >
               Sign In
             </Link>
             <Link
               to="/register"
               onClick={() => setMobileOpen(false)}
-              className="flex-1 py-2.5 text-center text-xs font-semibold bg-teal-600 text-white rounded-xl"
+              className="flex-1 py-2 text-center rounded-xl text-xs font-semibold bg-teal-600 text-white"
             >
               Create Account
             </Link>

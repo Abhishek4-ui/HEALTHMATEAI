@@ -192,7 +192,7 @@ export default function Module09_OnlineConsultation() {
             Video Consultation
           </h2>
           <p className="text-xs text-slate-500">
-            Secure end-to-end encrypted video and audio room for doctor consultations.
+            Encrypted WebRTC peer-to-peer video and audio room for clinical consultations.
           </p>
         </div>
         <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">

@@ -10,6 +10,7 @@ import {
   ShieldCheck, 
   AlertCircle,
   Building,
+  Building2,
   Phone,
   GraduationCap,
   Award
@@ -21,8 +22,10 @@ import EmptyState from '../../../components/ui/EmptyState';
 import { useToast } from '../../../context/ToastContext';
 import { discoveryService } from '../../../services/discoveryService';
 import { INDIAN_STATES_AND_UTS } from '../../../data/indianStatesAndDistricts';
+import Module07_HospitalDiscovery from './Module07_HospitalDiscovery';
 
 export default function Module06_DoctorDiscovery() {
+  const [discoveryTab, setDiscoveryTab] = useState('DOCTORS'); // 'DOCTORS' | 'HOSPITALS'
   const [searchQuery, setSearchQuery] = useState('');
   const [specialty, setSpecialty] = useState('ALL');
   const [stateFilter, setStateFilter] = useState('ALL');
@@ -181,8 +184,40 @@ export default function Module06_DoctorDiscovery() {
         </div>
       </div>
 
-      {/* Filter Box */}
-      <Card className="p-5 space-y-3.5">
+      {/* Mode Switcher: Integrated Doctor & Hospital Discovery */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setDiscoveryTab('DOCTORS')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            discoveryTab === 'DOCTORS'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Stethoscope className="w-4 h-4" />
+          <span>Doctors & Specialists</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setDiscoveryTab('HOSPITALS')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            discoveryTab === 'HOSPITALS'
+              ? 'bg-teal-600 text-white shadow-xs'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>Hospitals & Medical Centers</span>
+        </button>
+      </div>
+
+      {discoveryTab === 'HOSPITALS' ? (
+        <Module07_HospitalDiscovery embedded />
+      ) : (
+        <>
+          {/* Filter Box */}
+          <Card className="p-5 space-y-3.5">
         <form onSubmit={handleSearch} className="space-y-3">
           <div className="flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
@@ -456,6 +491,8 @@ export default function Module06_DoctorDiscovery() {
           />
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

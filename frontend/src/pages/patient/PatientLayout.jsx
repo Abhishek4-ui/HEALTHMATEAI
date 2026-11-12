@@ -22,45 +22,94 @@ import {
   Building2, 
   Clock,
   Scan,
-  HeartPulse
+  HeartPulse,
+  ClipboardList
 } from 'lucide-react';
 
-export const PATIENT_MODULES = [
-  { id: 'dashboard', name: 'Overview', path: '/patient/dashboard', icon: Activity },
-  { id: 'ai-assistant', name: 'AI Assistant', path: '/patient/ai-assistant', icon: Bot },
-  { id: 'symptom-checker', name: 'Symptom Checker', path: '/patient/symptom-checker', icon: ClipboardCheck },
-  { id: 'risk-assessment', name: 'Risk Assessment', path: '/patient/risk-assessment', icon: Heart },
-  { id: 'reports', name: 'Report Analyzer', path: '/patient/reports', icon: FileText },
-  { id: 'medical-imaging', name: 'Medical Imaging AI', path: '/patient/medical-imaging', icon: Scan },
-  { id: 'cardiac-ecg', name: 'ECG & Cardiac AI', path: '/patient/cardiac-ecg', icon: HeartPulse },
-  { id: 'doctors', name: 'Find Doctors', path: '/patient/doctors', icon: Stethoscope },
-  { id: 'hospitals', name: 'Find Hospitals', path: '/patient/hospitals', icon: Building2 },
-  { id: 'appointments', name: 'Appointments', path: '/patient/appointments', icon: Calendar },
-  { id: 'consultations', name: 'Consultations', path: '/patient/consultations', icon: Video },
-  { id: 'prescriptions', name: 'Prescriptions', path: '/patient/prescriptions', icon: Pill },
-  { id: 'medicines', name: 'Medicines & Reminders', path: '/patient/medicines', icon: Clock },
-  { id: 'health-metrics', name: 'Health Monitoring', path: '/patient/health-metrics', icon: Activity },
-  { id: 'nutrition', name: 'Nutrition & Fitness', path: '/patient/nutrition', icon: Flame },
-  { id: 'wellness', name: 'Sleep & Mental Wellness', path: '/patient/wellness', icon: Moon },
-  { id: 'lab-tests', name: 'Lab Tests', path: '/patient/lab-tests', icon: FlaskConical },
-  { id: 'emergency', name: 'Emergency SOS', path: '/patient/emergency', icon: ShieldAlert, badge: '112' },
-  { id: 'family', name: 'Family Health', path: '/patient/family', icon: Users },
-  { id: 'notifications', name: 'Notifications', path: '/patient/notifications', icon: Bell },
-  { id: 'privacy', name: 'Privacy & Settings', path: '/patient/privacy', icon: Settings },
+// Logically grouped Patient Sidebar Sections according to clinical domain
+export const PATIENT_SECTIONS = [
+  {
+    title: 'OVERVIEW',
+    items: [
+      { id: 'dashboard', name: 'Dashboard', path: '/patient/dashboard', icon: Activity },
+    ]
+  },
+  {
+    title: 'AI HEALTHCARE',
+    items: [
+      { id: 'ai-assistant', name: 'AI Assistant', path: '/patient/ai-assistant', icon: Bot },
+      { id: 'symptom-checker', name: 'Symptom Checker', path: '/patient/symptom-checker', icon: ClipboardCheck },
+      { id: 'risk-assessment', name: 'Risk Assessment', path: '/patient/risk-assessment', icon: Heart },
+    ]
+  },
+  {
+    title: 'MEDICAL RECORDS',
+    items: [
+      { id: 'reports', name: 'Report Analyzer', path: '/patient/reports', icon: FileText },
+      { id: 'medical-imaging', name: 'Medical Imaging AI', path: '/patient/medical-imaging', icon: Scan },
+      { id: 'cardiac-ecg', name: 'ECG Analysis', path: '/patient/cardiac-ecg', icon: HeartPulse },
+      { id: 'medical-history', name: 'Medical History', path: '/patient/reports', icon: ClipboardList },
+    ]
+  },
+  {
+    title: 'CARE & APPOINTMENTS',
+    items: [
+      { id: 'doctors', name: 'Find Doctors', path: '/patient/doctors', icon: Stethoscope },
+      { id: 'hospitals', name: 'Find Hospitals', path: '/patient/hospitals', icon: Building2 },
+      { id: 'appointments', name: 'Appointments', path: '/patient/appointments', icon: Calendar },
+      { id: 'consultations', name: 'My Consultations', path: '/patient/consultations', icon: Video },
+    ]
+  },
+  {
+    title: 'HEALTH MANAGEMENT',
+    items: [
+      { id: 'prescriptions', name: 'Prescriptions', path: '/patient/prescriptions', icon: Pill },
+      { id: 'medicines', name: 'Medicines & Reminders', path: '/patient/medicines', icon: Clock },
+      { id: 'lab-tests', name: 'Lab Tests', path: '/patient/lab-tests', icon: FlaskConical },
+      { id: 'health-metrics', name: 'Health Monitoring', path: '/patient/health-metrics', icon: Activity },
+    ]
+  },
+  {
+    title: 'WELLNESS',
+    items: [
+      { id: 'nutrition', name: 'Nutrition & Fitness', path: '/patient/nutrition', icon: Flame },
+      { id: 'wellness', name: 'Sleep & Mental Wellness', path: '/patient/wellness', icon: Moon },
+    ]
+  },
+  {
+    title: 'PERSONAL',
+    items: [
+      { id: 'family', name: 'Family Health', path: '/patient/family', icon: Users },
+      { id: 'notifications', name: 'Notifications', path: '/patient/notifications', icon: Bell },
+      { id: 'privacy', name: 'Privacy & Settings', path: '/patient/privacy', icon: Settings },
+    ]
+  }
 ];
+
+export const EMERGENCY_ACTION = {
+  id: 'emergency-sos',
+  name: 'Emergency SOS (112)',
+  path: '/patient/emergency',
+  icon: ShieldAlert,
+  badge: '24/7'
+};
+
+// Flat array for topnav active module resolution
+export const PATIENT_MODULES = PATIENT_SECTIONS.flatMap(s => s.items).concat(EMERGENCY_ACTION);
 
 export default function PatientLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
-  const activeModule = PATIENT_MODULES.find(m => m.path === location.pathname) || { name: 'Patient' };
+  const activeModule = PATIENT_MODULES.find(m => m.path === location.pathname) || { name: 'Patient Portal' };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-aurora-midnight text-slate-900 dark:text-slate-100 flex transition-colors duration-200">
       <DashboardSidebar
         role="PATIENT"
-        modules={PATIENT_MODULES}
+        sections={PATIENT_SECTIONS}
+        emergencyAction={EMERGENCY_ACTION}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
         mobileOpen={mobileOpen}

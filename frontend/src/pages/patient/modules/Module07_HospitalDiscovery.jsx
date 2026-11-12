@@ -19,7 +19,7 @@ import { useToast } from '../../../context/ToastContext';
 import { discoveryService } from '../../../services/discoveryService';
 import { INDIAN_STATES_AND_UTS } from '../../../data/indianStatesAndDistricts';
 
-export default function Module07_HospitalDiscovery() {
+export default function Module07_HospitalDiscovery({ embedded = false }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [cityFilter, setCityFilter] = useState('');
   const [stateFilter, setStateFilter] = useState('ALL');
@@ -151,19 +151,21 @@ export default function Module07_HospitalDiscovery() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-            Find Hospitals & Medical Centers
-          </h2>
-          <p className="text-xs text-slate-500">
-            Official Ministry of Health (MoHFW) registered institutions, trauma centers, and nearby verified clinics.
-          </p>
+      {!embedded && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-aurora-navy border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+              Find Hospitals & Medical Centers
+            </h2>
+            <p className="text-xs text-slate-500">
+              Official Ministry of Health (MoHFW) registered institutions, trauma centers, and nearby verified clinics.
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
+            <Building2 className="w-5 h-5" />
+          </div>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-aurora-blue flex items-center justify-center shrink-0">
-          <Building2 className="w-5 h-5" />
-        </div>
-      </div>
+      )}
 
       <Card className="p-5 space-y-3">
         <form onSubmit={handleSearch} className="space-y-3">

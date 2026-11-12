@@ -115,30 +115,30 @@ export default function LandingPage() {
           </Link>
 
           <Link
-            to="/doctor"
+            to="/patient/doctors"
             className="group p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50 border border-slate-200 hover:border-blue-500 transition-all shadow-sm hover:shadow-md"
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">Role 2</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md">Care Network</span>
               <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Doctor Portal</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Find Doctors & Care</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              NMC credential verification, appointment calendar, clinical consultation room, AI SOAP note builder, and digital signed prescriptions.
+              Discover verified medical practitioners and hospitals across all 36 Indian states and union territories.
             </p>
           </Link>
 
           <Link
-            to="/admin"
-            className="group p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50 border border-slate-200 hover:border-purple-500 transition-all shadow-sm hover:shadow-md"
+            to="/emergency"
+            className="group p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50 border border-slate-200 hover:border-rose-500 transition-all shadow-sm hover:shadow-md"
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md">Role 3</span>
-              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all" />
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md">Emergency 24/7</span>
+              <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-rose-600 group-hover:translate-x-1 transition-all" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Administration Portal</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Emergency Response</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Doctor qualification approval queue, facility sync pipeline monitor, MLOps model registry & drift alarms, and DPDP audit logs.
+              Rapid 112 ambulance linkage, trauma center locations, and offline first-aid protocol guidance.
             </p>
           </Link>
         </div>
