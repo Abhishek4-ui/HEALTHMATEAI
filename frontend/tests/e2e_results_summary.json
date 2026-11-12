@@ -1,0 +1,39 @@
+[
+  {
+    "testId": "PROD-E2E-01",
+    "name": "Desktop Homepage Load & Brand Integrity",
+    "status": "PASS",
+    "statusCode": 200,
+    "title": "HealthMate AI - Intelligent Healthcare Ecosystem",
+    "screenshot": "01_desktop_homepage.png"
+  },
+  {
+    "testId": "PROD-E2E-02",
+    "name": "Patient Authentication & Session Initiation",
+    "status": "PASS",
+    "currentUrl": "https://healthmate-ai-nine-mocha.vercel.app/patient/dashboard",
+    "screenshot": "04_post_login_dashboard.png"
+  },
+  {
+    "testId": "PROD-E2E-03",
+    "name": "All-India Doctor Discovery Interface",
+    "status": "PASS",
+    "doctorCardsFound": 10,
+    "screenshot": "05_doctor_discovery_page.png"
+  },
+  {
+    "testId": "PROD-E2E-04",
+    "name": "Dual-Rail Payment Selection Modal Appearance",
+    "status": "PASS",
+    "modalVisible": true,
+    "razorpayOption": true,
+    "manualUpiOption": true,
+    "screenshot": "08_payment_selection_modal.png"
+  },
+  {
+    "testId": "PROD-E2E-05",
+    "name": "Mobile Viewport (iPhone SE 375px) Layout Responsiveness",
+    "status": "PASS",
+    "screenshot": "09_mobile_homepage.png"
+  }
+]
