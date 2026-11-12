@@ -20,6 +20,11 @@ const EmergencyContact = require('./EmergencyContact');
 const DoctorAvailability = require('./DoctorAvailability');
 const SyncLog = require('./SyncLog');
 const MLOpsTelemetry = require('./MLOpsTelemetry');
+const MedicationSchedule = require('./MedicationSchedule');
+const PatientVital = require('./PatientVital');
+const WellnessLog = require('./WellnessLog');
+const FamilyMember = require('./FamilyMember');
+const LabOrder = require('./LabOrder');
 
 // Idempotent controlled index initialization without modifying data
 const initIndexes = async () => {
@@ -29,7 +34,8 @@ const initIndexes = async () => {
       Appointment, Consultation, Prescription, Notification, Consent,
       PaymentTransaction, AuditLog, DataSource, AIModelMetadata,
       DatasetMetadata, IntegrationStatus, UserSession, RefreshToken,
-      EmergencyContact, DoctorAvailability, SyncLog, MLOpsTelemetry
+      EmergencyContact, DoctorAvailability, SyncLog, MLOpsTelemetry,
+      MedicationSchedule, PatientVital, WellnessLog, FamilyMember, LabOrder
     ];
 
     for (const model of models) {
@@ -37,7 +43,7 @@ const initIndexes = async () => {
         await model.init();
       }
     }
-    console.log('[Database] All 20 Mongoose collection indexes verified and initialized.');
+    console.log('[Database] All 25 Mongoose collection indexes verified and initialized.');
   } catch (error) {
     console.warn(`[Database] Index initialization notice: ${error.message}`);
   }
@@ -66,5 +72,10 @@ module.exports = {
   DoctorAvailability,
   SyncLog,
   MLOpsTelemetry,
+  MedicationSchedule,
+  PatientVital,
+  WellnessLog,
+  FamilyMember,
+  LabOrder,
   initIndexes,
 };

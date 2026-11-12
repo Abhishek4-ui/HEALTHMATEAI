@@ -1,4 +1,15 @@
-const { PatientProfile, User, EmergencyContact, Consent, AuditLog } = require('../models');
+const { 
+  PatientProfile, 
+  User, 
+  EmergencyContact, 
+  Consent, 
+  AuditLog,
+  MedicationSchedule,
+  PatientVital,
+  WellnessLog,
+  FamilyMember,
+  LabOrder
+} = require('../models');
 const redisSessionService = require('./redisSession.service');
 
 class PatientService {
@@ -69,6 +80,88 @@ class PatientService {
     return await EmergencyContact.findOneAndDelete({ _id: contactId, patientId: userId });
   }
 
+  // --- Clinical Data Persistence: Medications ---
+  async getMedications(userId) {
+    return await MedicationSchedule.find({ patientId: userId }).sort({ createdAt: -1 });
+  }
+
+  async addMedication(userId, data) {
+    return await MedicationSchedule.create({
+      patientId: userId,
+      ...data,
+      provenance: { source: 'Patient Entered', verified: false }
+    });
+  }
+
+  async logMedicationAdherence(userId, medId, taken = true) {
+    return await MedicationSchedule.findOneAndUpdate(
+      { _id: medId, patientId: userId },
+      { $push: { adherenceLogs: { date: new Date(), taken, takenAt: new Date() } } },
+      { new: true }
+    );
+  }
+
+  async deleteMedication(userId, medId) {
+    return await MedicationSchedule.findOneAndDelete({ _id: medId, patientId: userId });
+  }
+
+  // --- Clinical Data Persistence: Vitals ---
+  async getVitals(userId, vitalType) {
+    const query = { patientId: userId };
+    if (vitalType) query.vitalType = vitalType;
+    return await PatientVital.find(query).sort({ recordedAt: -1 }).limit(100);
+  }
+
+  async logVital(userId, data) {
+    return await PatientVital.create({
+      patientId: userId,
+      ...data,
+      recordedAt: data.recordedAt || new Date(),
+    });
+  }
+
+  // --- Clinical Data Persistence: Wellness & Sleep ---
+  async getWellnessLogs(userId) {
+    return await WellnessLog.find({ patientId: userId }).sort({ logDate: -1 }).limit(30);
+  }
+
+  async logWellness(userId, data) {
+    return await WellnessLog.create({
+      patientId: userId,
+      ...data,
+      logDate: data.logDate || new Date(),
+    });
+  }
+
+  // --- Clinical Data Persistence: Family Healthcare ---
+  async getFamilyMembers(userId) {
+    return await FamilyMember.find({ patientId: userId }).sort({ createdAt: -1 });
+  }
+
+  async addFamilyMember(userId, data) {
+    return await FamilyMember.create({
+      patientId: userId,
+      ...data,
+    });
+  }
+
+  async deleteFamilyMember(userId, memberId) {
+    return await FamilyMember.findOneAndDelete({ _id: memberId, patientId: userId });
+  }
+
+  // --- Clinical Data Persistence: Lab Orders ---
+  async getLabOrders(userId) {
+    return await LabOrder.find({ patientId: userId }).sort({ scheduledDate: -1 });
+  }
+
+  async createLabOrder(userId, data) {
+    return await LabOrder.create({
+      patientId: userId,
+      ...data,
+      status: 'REQUESTED',
+    });
+  }
+
   /**
    * Record statutory consent under DPDP Act 2023
    */
@@ -105,7 +198,7 @@ class PatientService {
 
   /**
    * Execute DPDP "Forget Me" operation
-   * Purges all ephemeral memory buffers in Redis
+   * Purges all ephemeral memory buffers in Redis and clinical user traces
    */
   async executeForgetMe(userId, sessionId, ipAddress = '127.0.0.1') {
     let purged = false;
@@ -117,6 +210,16 @@ class PatientService {
       } catch (err) {
         // Continue if no file with that token exists
       }
+    }
+
+    if (userId) {
+      // Purge patient-entered logs upon explicit right-to-erasure request
+      await Promise.allSettled([
+        MedicationSchedule.deleteMany({ patientId: userId }),
+        PatientVital.deleteMany({ patientId: userId }),
+        WellnessLog.deleteMany({ patientId: userId }),
+        FamilyMember.deleteMany({ patientId: userId }),
+      ]);
     }
 
     const mongoose = require('mongoose');
@@ -134,7 +237,7 @@ class PatientService {
     return {
       success: true,
       purged,
-      message: 'All temporary health inputs, AI dialogue, and report extraction tokens have been completely wiped.',
+      message: 'All temporary health inputs, AI dialogue, report extraction tokens, and personal logs have been completely wiped.',
     };
   }
 }

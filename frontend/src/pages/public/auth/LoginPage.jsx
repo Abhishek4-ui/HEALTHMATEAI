@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Lock, 
   Mail, 
   ArrowRight, 
-  User, 
-  Stethoscope, 
-  ShieldAlert
+  User,
+  ShieldCheck
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -14,21 +13,10 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 
 export default function LoginPage() {
-  const [searchParams] = useSearchParams();
-  const initialRole = (searchParams.get('role') || 'PATIENT').toUpperCase();
-  const validRole = ['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(initialRole) ? initialRole : 'PATIENT';
-
-  const [role, setRole] = useState(validRole);
+  const role = 'PATIENT';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const paramRole = searchParams.get('role');
-    if (paramRole && ['PATIENT', 'DOCTOR', 'ADMINISTRATION'].includes(paramRole.toUpperCase())) {
-      setRole(paramRole.toUpperCase());
-    }
-  }, [searchParams]);
 
   const { login } = useAuth();
   const { addToast } = useToast();
@@ -47,17 +35,15 @@ export default function LoginPage() {
 
     setLoading(true);
     setTimeout(() => {
-      login(role, email);
+      login('PATIENT', email);
       setLoading(false);
       addToast({
         type: 'success',
         title: 'Signed In',
-        message: `Welcome. Signed in as ${role.toLowerCase()}.`,
+        message: 'Welcome to your HealthMate AI patient portal.',
       });
 
-      if (role === 'PATIENT') navigate('/patient/dashboard');
-      else if (role === 'DOCTOR') navigate('/doctor/dashboard');
-      else if (role === 'ADMINISTRATION') navigate('/admin/dashboard');
+      navigate('/patient/dashboard');
     }, 400);
   };
 
@@ -65,62 +51,15 @@ export default function LoginPage() {
     <div className="max-w-md mx-auto px-4 py-12 space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Sign In
+          Patient Sign In
         </h1>
         <p className="mt-1 text-xs text-slate-500">
-          Select your role to access your account.
+          Sign in to access your personal health records, AI diagnostics, and appointments.
         </p>
       </div>
 
       <Card className="p-6 space-y-5">
-        {/* Role Selector Tabs */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            Role
-          </label>
-          <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-aurora-midnight border border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setRole('PATIENT')}
-              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
-                role === 'PATIENT'
-                  ? 'bg-aurora-teal text-aurora-midnight shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Patient</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setRole('DOCTOR')}
-              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
-                role === 'DOCTOR'
-                  ? 'bg-aurora-blue text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Stethoscope className="w-3.5 h-3.5" />
-              <span>Doctor</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setRole('ADMINISTRATION')}
-              className={`py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
-                role === 'ADMINISTRATION'
-                  ? 'bg-aurora-violet text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Admin</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Login Form */}
+        {/* Login Form (Single Public Role: PATIENT) */}
         <form onSubmit={handleLogin} className="space-y-3.5">
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">

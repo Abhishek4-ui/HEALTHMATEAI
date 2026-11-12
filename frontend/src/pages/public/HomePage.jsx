@@ -58,27 +58,27 @@ export default function HomePage() {
             Connecting patients with certified doctors, diagnostic laboratory report analyzers, multi-modal medical imaging, and 24/7 emergency response across all 36 Indian States and Union Territories.
           </p>
 
-          {/* Primary Role Action Doors */}
+          {/* Primary Patient Action Doors (Single Public Role: PATIENT) */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link to="/login?role=PATIENT">
+            <Link to="/login">
               <button className="px-6 py-3.5 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-semibold text-sm shadow-lg shadow-teal-600/25 flex items-center gap-2.5 transition transform hover:-translate-y-0.5">
                 <Activity className="w-4 h-4" />
-                <span>Patient Portal</span>
+                <span>Enter Patient Portal</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </Link>
 
-            <Link to="/login?role=DOCTOR">
+            <Link to="/patient/symptom-checker">
               <button className="px-6 py-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm border border-slate-300 dark:border-slate-700 shadow-sm flex items-center gap-2.5 transition transform hover:-translate-y-0.5">
-                <Stethoscope className="w-4 h-4 text-blue-600" />
-                <span>Doctor Portal</span>
+                <Sparkles className="w-4 h-4 text-teal-600" />
+                <span>AI Symptom Triage</span>
               </button>
             </Link>
 
-            <Link to="/login?role=ADMINISTRATION">
+            <Link to="/patient/doctors">
               <button className="px-6 py-3.5 rounded-2xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm border border-slate-300 dark:border-slate-700 shadow-sm flex items-center gap-2.5 transition transform hover:-translate-y-0.5">
-                <Shield className="w-4 h-4 text-indigo-600" />
-                <span>Administration</span>
+                <Stethoscope className="w-4 h-4 text-blue-600" />
+                <span>Find Doctors & Care</span>
               </button>
             </Link>
           </div>

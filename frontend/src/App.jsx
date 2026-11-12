@@ -55,38 +55,6 @@ import Module19_PrivacySettings from './pages/patient/modules/Module19_PrivacySe
 import Module20_MedicalImagingCenter from './pages/patient/modules/Module20_MedicalImagingCenter';
 import Module21_ECGCardiacCenter from './pages/patient/modules/Module21_ECGCardiacCenter';
 
-// Doctor Portal Layout & Modules
-import DoctorLayout from './pages/doctor/DoctorLayout';
-import DocModule01_Dashboard from './pages/doctor/modules/DocModule01_Dashboard';
-import DocModule02_Profile from './pages/doctor/modules/DocModule02_Profile';
-import DocModule03_VerificationStatus from './pages/doctor/modules/DocModule03_VerificationStatus';
-import DocModule04_AppointmentManagement from './pages/doctor/modules/DocModule04_AppointmentManagement';
-import DocModule05_AvailabilityManagement from './pages/doctor/modules/DocModule05_AvailabilityManagement';
-import DocModule06_PatientConsultation from './pages/doctor/modules/DocModule06_PatientConsultation';
-import DocModule07_VideoConsultation from './pages/doctor/modules/DocModule07_VideoConsultation';
-import DocModule08_ConsentedReports from './pages/doctor/modules/DocModule08_ConsentedReports';
-import DocModule09_PrescriptionManagement from './pages/doctor/modules/DocModule09_PrescriptionManagement';
-import DocModule10_ConsultationHistory from './pages/doctor/modules/DocModule10_ConsultationHistory';
-import DocModule11_Notifications from './pages/doctor/modules/DocModule11_Notifications';
-import DocModule12_EarningsPayments from './pages/doctor/modules/DocModule12_EarningsPayments';
-import DocModule13_Settings from './pages/doctor/modules/DocModule13_Settings';
-
-// Administration Portal Layout & Modules
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminModule01_Dashboard from './pages/admin/modules/AdminModule01_Dashboard';
-import AdminModule02_DoctorManagement from './pages/admin/modules/AdminModule02_DoctorManagement';
-import AdminModule03_DoctorVerification from './pages/admin/modules/AdminModule03_DoctorVerification';
-import AdminModule04_HospitalDirectory from './pages/admin/modules/AdminModule04_HospitalDirectory';
-import AdminModule05_PatientAccounts from './pages/admin/modules/AdminModule05_PatientAccounts';
-import AdminModule06_AppointmentMonitoring from './pages/admin/modules/AdminModule06_AppointmentMonitoring';
-import AdminModule07_ContentManagement from './pages/admin/modules/AdminModule07_ContentManagement';
-import AdminModule08_AIModelMonitoring from './pages/admin/modules/AdminModule08_AIModelMonitoring';
-import AdminModule09_DatasetManagement from './pages/admin/modules/AdminModule09_DatasetManagement';
-import AdminModule10_APIIntegrationStatus from './pages/admin/modules/AdminModule10_APIIntegrationStatus';
-import AdminModule11_SecurityMonitoring from './pages/admin/modules/AdminModule11_SecurityMonitoring';
-import AdminModule12_AuditLogs from './pages/admin/modules/AdminModule12_AuditLogs';
-import AdminModule13_ReportsAnalytics from './pages/admin/modules/AdminModule13_ReportsAnalytics';
-import AdminModule14_SystemSettings from './pages/admin/modules/AdminModule14_SystemSettings';
 
 export default function App() {
   return (
@@ -149,51 +117,10 @@ export default function App() {
                 <Route path="privacy" element={<Module19_PrivacySettings />} />
               </Route>
 
-              {/* Doctor Portal Routes */}
-              <Route path="/doctor" element={
-                <ProtectedRoute allowedRole="DOCTOR">
-                  <DoctorLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Navigate to="/doctor/dashboard" replace />} />
-                <Route path="dashboard" element={<DocModule01_Dashboard />} />
-                <Route path="profile" element={<DocModule02_Profile />} />
-                <Route path="verification" element={<DocModule03_VerificationStatus />} />
-                <Route path="appointments" element={<DocModule04_AppointmentManagement />} />
-                <Route path="availability" element={<DocModule05_AvailabilityManagement />} />
-                <Route path="consultation" element={<DocModule06_PatientConsultation />} />
-                <Route path="video" element={<DocModule07_VideoConsultation />} />
-                <Route path="patient-reports" element={<DocModule08_ConsentedReports />} />
-                <Route path="prescriptions" element={<DocModule09_PrescriptionManagement />} />
-                <Route path="history" element={<DocModule10_ConsultationHistory />} />
-                <Route path="notifications" element={<DocModule11_Notifications />} />
-                <Route path="earnings" element={<DocModule12_EarningsPayments />} />
-                <Route path="settings" element={<DocModule13_Settings />} />
-              </Route>
-
-              {/* Administration Portal Routes */}
-              <Route path="/admin" element={
-                <ProtectedRoute allowedRole="ADMINISTRATION">
-                  <AdminLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminModule01_Dashboard />} />
-                <Route path="doctors" element={<AdminModule02_DoctorManagement />} />
-                <Route path="doctor-verification" element={<AdminModule03_DoctorVerification />} />
-                <Route path="hospitals" element={<AdminModule04_HospitalDirectory />} />
-                <Route path="patients" element={<AdminModule05_PatientAccounts />} />
-                <Route path="appointments" element={<AdminModule06_AppointmentMonitoring />} />
-                <Route path="content" element={<AdminModule07_ContentManagement />} />
-                <Route path="ai-models" element={<AdminModule08_AIModelMonitoring />} />
-                <Route path="datasets" element={<AdminModule09_DatasetManagement />} />
-                <Route path="integrations" element={<AdminModule10_APIIntegrationStatus />} />
-                <Route path="security" element={<AdminModule11_SecurityMonitoring />} />
-                <Route path="audit-logs" element={<AdminModule12_AuditLogs />} />
-                <Route path="reports" element={<AdminModule13_ReportsAnalytics />} />
-                <Route path="settings" element={<AdminModule14_SystemSettings />} />
-              </Route>
-              <Route path="/administration/*" element={<Navigate to="/admin" replace />} />
+              {/* Doctor and Admin routes redirected to maintain Patient-Only Public Ecosystem */}
+              <Route path="/doctor/*" element={<Navigate to="/login" replace />} />
+              <Route path="/admin/*" element={<Navigate to="/login" replace />} />
+              <Route path="/administration/*" element={<Navigate to="/login" replace />} />
 
               {/* 404 Catch-All */}
               <Route path="*" element={<NotFoundPage />} />

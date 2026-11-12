@@ -98,6 +98,30 @@ router.post('/cardiac/ecg-analyze', optionalAuth, upload.single('ecg'), async (r
   } catch (err) { next(err); }
 });
 
+// Clinical Persistent Records (MongoDB Atlas Persistence)
+// Medications & Reminders
+router.get('/medications', optionalAuth, patientController.getMedications);
+router.post('/medications', optionalAuth, patientController.addMedication);
+router.put('/medications/:id/adherence', optionalAuth, patientController.logMedicationAdherence);
+router.delete('/medications/:id', optionalAuth, patientController.deleteMedication);
+
+// Vitals & Health Monitoring
+router.get('/vitals', optionalAuth, patientController.getVitals);
+router.post('/vitals', optionalAuth, patientController.logVital);
+
+// Wellness, Sleep & Mental Health
+router.get('/wellness', optionalAuth, patientController.getWellnessLogs);
+router.post('/wellness', optionalAuth, patientController.logWellness);
+
+// Family Healthcare Profiles
+router.get('/family-members', optionalAuth, patientController.getFamilyMembers);
+router.post('/family-members', optionalAuth, patientController.addFamilyMember);
+router.delete('/family-members/:id', optionalAuth, patientController.deleteFamilyMember);
+
+// Laboratory Diagnostic Orders
+router.get('/lab-orders', optionalAuth, patientController.getLabOrders);
+router.post('/lab-orders', optionalAuth, patientController.createLabOrder);
+
 // Data Export
 router.get('/data-export', authenticateToken, requireRoles(['PATIENT']), patientController.getConsents);
 
