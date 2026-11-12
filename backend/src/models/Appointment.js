@@ -43,8 +43,20 @@ const AppointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['REQUESTED', 'CONFIRMED', 'CANCELLED', 'RESCHEDULED', 'COMPLETED', 'NO_SHOW'],
-    default: 'CONFIRMED',
+    enum: [
+      'DRAFT',
+      'PENDING_PAYMENT',
+      'REQUESTED',
+      'CONFIRMED',
+      'PAYMENT_FAILED',
+      'CANCELLED',
+      'RESCHEDULED',
+      'COMPLETED',
+      'NO_SHOW',
+      'REFUND_PENDING',
+      'REFUNDED',
+    ],
+    default: 'PENDING_PAYMENT',
     index: true,
   },
   cancellationReason: {
@@ -53,15 +65,28 @@ const AppointmentSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['PENDING', 'PAID', 'REFUNDED', 'FAILED'],
-    default: 'PAID',
+    enum: ['PENDING', 'PAID', 'REFUNDED', 'FAILED', 'PENDING_VERIFICATION', 'REFUND_PENDING'],
+    default: 'PENDING',
     index: true,
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['RAZORPAY', 'MANUAL_UPI', 'CASH_AT_CLINIC', 'NOT_SELECTED'],
+    default: 'NOT_SELECTED',
   },
   paymentAmount: {
     type: Number,
     default: 500,
   },
   paymentReferenceId: {
+    type: String,
+    default: null,
+  },
+  upiTransactionId: {
+    type: String,
+    default: null,
+  },
+  paymentReceiptUrl: {
     type: String,
     default: null,
   },
@@ -77,7 +102,7 @@ const AppointmentSchema = new mongoose.Schema({
 // Ensure a doctor is not double-booked for the exact same slot unless cancelled
 AppointmentSchema.index(
   { doctorId: 1, scheduledDate: 1, timeSlot: 1 },
-  { unique: true, partialFilterExpression: { status: { $in: ['REQUESTED', 'CONFIRMED'] } } }
+  { unique: true, partialFilterExpression: { status: { $in: ['REQUESTED', 'CONFIRMED', 'PENDING_PAYMENT'] } } }
 );
 
 module.exports = mongoose.model('Appointment', AppointmentSchema);

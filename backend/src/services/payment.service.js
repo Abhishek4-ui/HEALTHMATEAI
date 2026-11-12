@@ -204,7 +204,9 @@ class PaymentService {
 
     await Appointment.findByIdAndUpdate(transaction.appointmentId, {
       paymentStatus: 'PENDING_VERIFICATION',
+      paymentMethod: 'MANUAL_UPI',
       paymentReferenceId: utrNumber.trim(),
+      upiTransactionId: utrNumber.trim(),
     });
 
     logger.info('Manual UPI UTR submitted for admin reconciliation', {
@@ -239,9 +241,19 @@ class PaymentService {
     transaction.manualUpi.verifiedBy = adminUserId;
     await transaction.save();
 
-    await Appointment.findByIdAndUpdate(transaction.appointmentId, {
-      paymentStatus: 'PAID',
+    const appointmentService = require('./appointment.service');
+    await appointmentService.confirmAppointmentPayment(transaction.appointmentId, {
+      paymentMethod: 'MANUAL_UPI',
       paymentReferenceId: transaction.manualUpi.utrNumber || transaction.paymentReference,
+      upiTransactionId: transaction.manualUpi.utrNumber,
+      receiptUrl: transaction.manualUpi.receiptUrl,
+    }).catch(async () => {
+      await Appointment.findByIdAndUpdate(transaction.appointmentId, {
+        status: 'CONFIRMED',
+        paymentStatus: 'PAID',
+        paymentMethod: 'MANUAL_UPI',
+        paymentReferenceId: transaction.manualUpi.utrNumber || transaction.paymentReference,
+      });
     });
 
     logger.info('Administrator confirmed manual UPI payment reconciliation', {
@@ -394,9 +406,17 @@ class PaymentService {
 
       const targetAppointmentId = appointmentId || (transaction ? transaction.appointmentId : null);
       if (targetAppointmentId) {
-        await Appointment.findByIdAndUpdate(targetAppointmentId, {
-          paymentStatus: 'PAID',
+        const appointmentService = require('./appointment.service');
+        await appointmentService.confirmAppointmentPayment(targetAppointmentId, {
+          paymentMethod: 'RAZORPAY',
           paymentReferenceId: paymentId,
+        }).catch(async () => {
+          await Appointment.findByIdAndUpdate(targetAppointmentId, {
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            paymentMethod: 'RAZORPAY',
+            paymentReferenceId: paymentId,
+          });
         });
         logger.info('Appointment payment confirmed via verified client signature.', { orderId, paymentId, targetAppointmentId });
       }

@@ -31,7 +31,7 @@ class AppointmentService {
         $lte: new Date(scheduledDateObj.setUTCHours(23, 59, 59, 999)),
       },
       timeSlot,
-      status: { $in: ['REQUESTED', 'CONFIRMED'] },
+      status: { $in: ['REQUESTED', 'CONFIRMED', 'PENDING_PAYMENT'] },
     });
 
     if (existingBooking) {
@@ -40,8 +40,10 @@ class AppointmentService {
 
     // 4. Generate unique teleconsultation room UUID
     const roomId = 'room_' + crypto.randomBytes(8).toString('hex');
+    const fee = typeof doctor.consultationFee === 'number' ? doctor.consultationFee : 500;
+    const isFree = fee === 0;
 
-    // 5. Create Appointment
+    // 5. Create Appointment (Default PENDING_PAYMENT unless free)
     const appointment = await Appointment.create({
       patientId,
       doctorId,
@@ -49,50 +51,17 @@ class AppointmentService {
       timeSlot,
       consultationType: consultationType || 'VIDEO',
       chiefComplaint,
-      status: 'CONFIRMED',
-      paymentStatus: 'PAID',
-      paymentAmount: doctor.consultationFee || 500,
+      status: isFree ? 'CONFIRMED' : 'PENDING_PAYMENT',
+      paymentStatus: isFree ? 'PAID' : 'PENDING',
+      paymentAmount: fee,
       teleconsultationRoomId: roomId,
     });
 
-    // 6. Notify Doctor and Patient
-    if (doctor.userId) {
-      await Notification.create({
-        recipientId: doctor.userId,
-        recipientRole: 'DOCTOR',
-        type: 'APPOINTMENTS',
-        title: 'New Consultation Booked',
-        message: `A patient has confirmed a ${consultationType || 'video'} consultation for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
-        metadata: { appointmentId: appointment._id },
-      });
+    if (isFree) {
+      await this.dispatchConfirmationNotifications(appointment, doctor, patientId, scheduledDateObj, timeSlot, consultationType);
     }
 
-    await Notification.create({
-      recipientId: patientId,
-      recipientRole: 'PATIENT',
-      type: 'APPOINTMENTS',
-      title: 'Appointment Confirmed',
-      message: `Your appointment with Dr. ${doctor.fullName} is confirmed for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
-      metadata: { appointmentId: appointment._id },
-    });
-
-    // 7. Dispatch multi-channel confirmation (Email & SMS)
-    try {
-      const patientUser = await User.findById(patientId);
-      if (patientUser) {
-        const communicationService = require('./communication.service');
-        communicationService.sendAppointmentConfirmation({
-          patientEmail: patientUser.email,
-          patientPhone: patientUser.phone,
-          doctorName: doctor.fullName,
-          date: scheduledDateObj.toDateString(),
-          time: timeSlot,
-          appointmentId: appointment._id.toString(),
-        }).catch(err => {});
-      }
-    } catch (commErr) {}
-
-    // 8. Audit Log
+    // 6. Audit Log
     await AuditLog.create({
       actorId: patientId,
       actorRole: 'PATIENT',
@@ -103,6 +72,76 @@ class AppointmentService {
     });
 
     return appointment;
+  }
+
+  /**
+   * Confirm appointment after verified payment
+   */
+  async confirmAppointmentPayment(appointmentId, { paymentMethod = 'RAZORPAY', paymentReferenceId, upiTransactionId, receiptUrl }) {
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) throw new Error('Appointment not found.');
+
+    appointment.status = 'CONFIRMED';
+    appointment.paymentStatus = 'PAID';
+    appointment.paymentMethod = paymentMethod;
+    if (paymentReferenceId) appointment.paymentReferenceId = paymentReferenceId;
+    if (upiTransactionId) appointment.upiTransactionId = upiTransactionId;
+    if (receiptUrl) appointment.paymentReceiptUrl = receiptUrl;
+    await appointment.save();
+
+    const doctor = await DoctorProfile.findById(appointment.doctorId);
+    if (doctor) {
+      await this.dispatchConfirmationNotifications(
+        appointment,
+        doctor,
+        appointment.patientId,
+        new Date(appointment.scheduledDate),
+        appointment.timeSlot,
+        appointment.consultationType
+      );
+    }
+
+    return appointment;
+  }
+
+  /**
+   * Helper to dispatch in-app and communication notifications
+   */
+  async dispatchConfirmationNotifications(appointment, doctor, patientId, scheduledDateObj, timeSlot, consultationType) {
+    if (doctor && doctor.userId) {
+      await Notification.create({
+        recipientId: doctor.userId,
+        recipientRole: 'DOCTOR',
+        type: 'APPOINTMENTS',
+        title: 'New Consultation Booked',
+        message: `A patient has confirmed a ${consultationType || 'video'} consultation for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
+        metadata: { appointmentId: appointment._id },
+      }).catch(() => {});
+    }
+
+    await Notification.create({
+      recipientId: patientId,
+      recipientRole: 'PATIENT',
+      type: 'APPOINTMENTS',
+      title: 'Appointment Confirmed',
+      message: `Your appointment with Dr. ${doctor ? doctor.fullName : 'Specialist'} is confirmed for ${scheduledDateObj.toDateString()} at ${timeSlot}.`,
+      metadata: { appointmentId: appointment._id },
+    }).catch(() => {});
+
+    try {
+      const patientUser = await User.findById(patientId);
+      if (patientUser) {
+        const communicationService = require('./communication.service');
+        communicationService.sendAppointmentConfirmation({
+          patientEmail: patientUser.email,
+          patientPhone: patientUser.phone,
+          doctorName: doctor ? doctor.fullName : 'Specialist',
+          date: scheduledDateObj.toDateString(),
+          time: timeSlot,
+          appointmentId: appointment._id.toString(),
+        }).catch(() => {});
+      }
+    } catch (commErr) {}
   }
 
   /**

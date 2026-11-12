@@ -10,6 +10,10 @@ const { updateProfileSchema, emergencyContactSchema, consentActionSchema } = req
 router.get('/profile', authenticateToken, requireRoles(['PATIENT']), patientController.getProfile);
 router.put('/profile', authenticateToken, requireRoles(['PATIENT']), validate(updateProfileSchema), patientController.updateProfile);
 
+// Patient Appointments Alias
+const appointmentController = require('../controllers/appointment.controller');
+router.get('/appointments', authenticateToken, requireRoles(['PATIENT']), appointmentController.listAppointments);
+
 // Emergency Contacts (Proxy Caregivers)
 router.post('/emergency-contacts', authenticateToken, requireRoles(['PATIENT']), validate(emergencyContactSchema), patientController.addEmergencyContact);
 router.delete('/emergency-contacts/:id', authenticateToken, requireRoles(['PATIENT']), patientController.deleteEmergencyContact);

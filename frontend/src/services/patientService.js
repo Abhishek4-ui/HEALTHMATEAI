@@ -13,12 +13,16 @@ export const patientService = {
     return apiClient.get('/patient/prescriptions');
   },
 
-  getAppointments: async () => {
-    return apiClient.get('/patient/appointments');
+  getAppointments: async (params) => {
+    return apiClient.get('/appointments', { params });
   },
 
   bookAppointment: async (bookingData) => {
     return apiClient.post('/appointments/book', bookingData);
+  },
+
+  cancelAppointment: async (appointmentId, reason) => {
+    return apiClient.put(`/appointments/${appointmentId}/cancel`, { reason });
   },
 
   purgeSession: async (sessionId) => {
