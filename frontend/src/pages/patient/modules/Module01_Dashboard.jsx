@@ -15,7 +15,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   Stethoscope,
-  ChevronRight
+  ChevronRight,
+  UploadCloud,
+  Scan,
+  Heart,
+  Pill,
+  Camera
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -166,6 +171,48 @@ export default function Module01_Dashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* Quick Universal Upload Hub Banner */}
+      <Card className="p-5 border-teal-500/30 bg-gradient-to-r from-teal-950/20 via-slate-900/40 to-slate-850">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <UploadCloud className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span>Universal Medical Document & Scan Ingestion</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Quickly digitize documents using device upload, live camera capture, or document scanning filters.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link to="/patient/imaging">
+              <Button size="sm" variant="outline" className="text-xs border-teal-500/40 hover:bg-teal-500/10">
+                <Scan className="w-3.5 h-3.5 text-teal-500 mr-1" />
+                <span>Radiology & X-Ray</span>
+              </Button>
+            </Link>
+            <Link to="/patient/reports">
+              <Button size="sm" variant="outline" className="text-xs border-purple-500/40 hover:bg-purple-500/10">
+                <FileText className="w-3.5 h-3.5 text-purple-400 mr-1" />
+                <span>Lab Report OCR</span>
+              </Button>
+            </Link>
+            <Link to="/patient/cardiac-ecg">
+              <Button size="sm" variant="outline" className="text-xs border-rose-500/40 hover:bg-rose-500/10">
+                <Heart className="w-3.5 h-3.5 text-rose-500 mr-1" />
+                <span>ECG Rhythm</span>
+              </Button>
+            </Link>
+            <Link to="/patient/prescriptions">
+              <Button size="sm" variant="outline" className="text-xs border-amber-500/40 hover:bg-amber-500/10">
+                <Pill className="w-3.5 h-3.5 text-amber-500 mr-1" />
+                <span>Scan Prescription</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </Card>
 
       {/* Main Dashboard Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

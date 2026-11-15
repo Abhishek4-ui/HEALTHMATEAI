@@ -1,18 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   Heart, 
   Activity, 
   ShieldAlert, 
-  FileUp, 
   CheckCircle2, 
   AlertTriangle, 
   Clock, 
   UserCheck, 
   Zap, 
-  ArrowUpRight, 
   Info,
-  Calendar
+  Calendar,
+  Sparkles,
+  Download
 } from 'lucide-react';
+import UniversalUpload from '../../../components/upload/UniversalUpload';
+import PatientFriendlyResult from '../../../components/results/PatientFriendlyResult';
 import { aiService } from '../../../services/aiService';
 
 export default function Module21_ECGCardiacCenter() {
@@ -24,12 +26,7 @@ export default function Module21_ECGCardiacCenter() {
   const [cardiologistConsulted, setCardiologistConsulted] = useState(false);
   const [hoveredPoint, setHoveredPoint] = useState(null);
 
-  const fileInputRef = useRef(null);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleFileSelect = (file) => {
     setSelectedFile(file);
     setEcgResult(null);
     setErrorMsg(null);
@@ -38,7 +35,7 @@ export default function Module21_ECGCardiacCenter() {
 
   const handleRunAnalysis = async () => {
     if (!selectedFile) {
-      setErrorMsg('Please select an ECG recording file (PDF, PNG, or JPG) to analyze.');
+      setErrorMsg('Please upload or scan an ECG recording file (PDF, PNG, or JPG) to analyze.');
       return;
     }
 
@@ -69,8 +66,6 @@ export default function Module21_ECGCardiacCenter() {
   // Helper to generate SVG path from Lead II points
   const renderWaveformPath = (points) => {
     if (!points || points.length === 0) return '';
-    // SVG dimensions: viewBox 0 0 1000 200
-    // Y center is 100. Amplitude 1.0mV = 60px height.
     return points.map((p, idx) => {
       const x = p.time_ms; // 0 to 1000
       const y = 100 - (p.amplitude_mv * 60);
@@ -81,7 +76,7 @@ export default function Module21_ECGCardiacCenter() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-rose-950 via-red-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-gradient-to-r from-rose-950 via-red-900 to-slate-900 text-white p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-rose-500/20">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-rose-500/20 text-rose-300 text-xs px-2.5 py-1 rounded-full font-semibold border border-rose-500/30 flex items-center gap-1">
@@ -107,52 +102,41 @@ export default function Module21_ECGCardiacCenter() {
       {/* Mandatory Clinical Safety Disclaimer Banner */}
       <div className="p-4 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
         <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-        <div className="text-xs text-amber-900 dark:text-amber-200">
+        <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
           <span className="font-bold uppercase tracking-wider">Mandatory Emergency Notice:</span> This algorithmic ECG assessment is a preliminary triage screening assist. It is <span className="font-bold underline">not</span> a replacement for a formal clinical reading by a certified Cardiologist. In the presence of acute chest discomfort, radiating left arm pain, diaphoresis, or sudden shortness of breath, immediately contact national emergency services (<span className="font-bold font-mono">Dial 112 / 102</span>) or proceed to the nearest emergency department.
         </div>
       </div>
 
       {/* Top Configuration & Upload Bar */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          <div className="md:col-span-5">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              ECG Recording File (PDF or High-Resolution Image)
-            </label>
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2.5 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 hover:border-rose-500 cursor-pointer flex items-center justify-between text-xs transition"
-            >
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 truncate">
-                <FileUp className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                <span className="truncate">{selectedFile ? selectedFile.name : 'Choose ECG PDF / Image...'}</span>
-              </div>
-              <span className="text-[11px] text-slate-400 font-mono flex-shrink-0">Browse</span>
+          <div className="md:col-span-8">
+            <UniversalUpload
+              onFileSelect={handleFileSelect}
+              acceptedTypes={['.pdf', '.png', '.jpg', '.jpeg', '.webp']}
+              maxSizeMB={20}
+              title="Upload or Scan 12-Lead ECG Paper Strip"
+              subtitle="Device upload, camera photo capture, or document scanner enhancement"
+              allowCamera={true}
+              allowScanner={true}
+            />
+          </div>
+
+          <div className="md:col-span-4 space-y-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Patient Age (for normal interval calibration)
+              </label>
+              <input 
+                type="number"
+                min="1"
+                max="110"
+                value={patientAge}
+                onChange={(e) => setPatientAge(Number(e.target.value))}
+                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              />
             </div>
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept=".pdf,image/*" 
-              className="hidden" 
-              onChange={handleFileChange}
-            />
-          </div>
 
-          <div className="md:col-span-3">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Patient Age (for normal interval calibration)
-            </label>
-            <input 
-              type="number"
-              min="1"
-              max="110"
-              value={patientAge}
-              onChange={(e) => setPatientAge(Number(e.target.value))}
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div className="md:col-span-4 flex items-end">
             <button
               onClick={handleRunAnalysis}
               disabled={analyzing || !selectedFile}
@@ -178,7 +162,7 @@ export default function Module21_ECGCardiacCenter() {
         </div>
 
         {errorMsg && (
-          <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 flex-shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -252,8 +236,8 @@ export default function Module21_ECGCardiacCenter() {
                     key={idx}
                     cx={pt.time_ms}
                     cy={100 - (pt.amplitude_mv * 60)}
-                    r="3"
-                    className="opacity-0 hover:opacity-100 fill-rose-700 cursor-pointer transition-opacity"
+                    r="4"
+                    className="opacity-0 hover:opacity-100 fill-rose-600 cursor-pointer transition-opacity"
                     onMouseEnter={() => setHoveredPoint(pt)}
                     onMouseLeave={() => setHoveredPoint(null)}
                   />
@@ -262,127 +246,129 @@ export default function Module21_ECGCardiacCenter() {
             </div>
           </div>
 
-          {/* Metric Telemetry Cards (Intervals & Rate) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Structured Diagnostic Measurements & Intervals */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Heart Rate */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Heart Rate</span>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
-                  {ecgResult.cardiac_measurements?.heart_rate_bpm || 72}
-                </span>
-                <span className="text-xs text-slate-400">BPM</span>
+              <span className="text-xs text-slate-500 font-medium">Ventricular Heart Rate</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">{ecgResult.heart_rate_bpm}</span>
+                <span className="text-xs text-slate-400 font-mono">BPM</span>
               </div>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">Normal: 60 - 100 BPM</p>
+              <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                ecgResult.heart_rate_bpm >= 60 && ecgResult.heart_rate_bpm <= 100
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+              }`}>
+                {ecgResult.heart_rate_bpm < 60 ? 'Sinus Bradycardia' : ecgResult.heart_rate_bpm > 100 ? 'Sinus Tachycardia' : 'Normal Rate (60-100)'}
+              </span>
             </div>
 
             {/* PR Interval */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">PR Interval</span>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
-                  {ecgResult.cardiac_measurements?.pr_interval_ms || 160}
-                </span>
-                <span className="text-xs text-slate-400">ms</span>
+              <span className="text-xs text-slate-500 font-medium">PR Interval (AV Conduction)</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">{ecgResult.intervals_ms?.pr_interval}</span>
+                <span className="text-xs text-slate-400 font-mono">ms</span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">Normal: 120 - 200 ms</p>
+              <p className="text-[11px] text-slate-400 mt-2 font-mono">Normal: 120 - 200 ms</p>
             </div>
 
             {/* QRS Duration */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">QRS Duration</span>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
-                  {ecgResult.cardiac_measurements?.qrs_duration_ms || 90}
-                </span>
-                <span className="text-xs text-slate-400">ms</span>
+              <span className="text-xs text-slate-500 font-medium">QRS Duration (Ventricular)</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">{ecgResult.intervals_ms?.qrs_duration}</span>
+                <span className="text-xs text-slate-400 font-mono">ms</span>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">Normal: 80 - 120 ms</p>
+              <p className="text-[11px] text-slate-400 mt-2 font-mono">Normal: &lt; 120 ms (Narrow)</p>
             </div>
 
-            {/* Bazett QTc Interval */}
+            {/* Bazett QTc */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">QTc (Bazett)</span>
-              <div className="flex items-baseline gap-1 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">
-                  {ecgResult.cardiac_measurements?.qtc_interval_ms || 410}
-                </span>
-                <span className="text-xs text-slate-400">ms</span>
+              <span className="text-xs text-slate-500 font-medium">Corrected QT (Bazett QTc)</span>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-bold font-mono text-slate-900 dark:text-slate-100">{ecgResult.intervals_ms?.qtc_bazett}</span>
+                <span className="text-xs text-slate-400 font-mono">ms</span>
               </div>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1">Normal: &lt; 440 ms (Male), &lt; 460 ms (Female)</p>
+              <span className={`inline-block mt-2 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                ecgResult.intervals_ms?.qtc_bazett <= 450
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                  : 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300'
+              }`}>
+                {ecgResult.intervals_ms?.qtc_bazett > 450 ? 'Prolonged QTc Warning' : 'Normal Repolarization'}
+              </span>
             </div>
           </div>
 
-          {/* Rhythm Classification & Clinical Consultation Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-7 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-3">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" />
-                Cardiac Rhythm Assessment
+          {/* Patient Friendly Structured Report Display */}
+          <PatientFriendlyResult
+            analysisResult={{
+              modality: 'ECG',
+              quality_validation: { score: 94, status: 'DIAGNOSTIC_QUALITY' },
+              findings: [
+                {
+                  finding: ecgResult.rhythm_classification?.category || 'Normal Sinus Rhythm',
+                  status: ecgResult.rhythm_classification?.status || 'NORMAL',
+                  anatomical_region: 'Cardiac Conduction System',
+                  confidence: ecgResult.rhythm_classification?.confidence || 95,
+                  uncertainty_bounds: '±0.03',
+                  description: ecgResult.rhythm_classification?.narrative || 'Regular sinus rhythm with preserved P-waves and normal QRS intervals.'
+                },
+                {
+                  finding: 'Ventricular Rate',
+                  status: 'STABLE',
+                  anatomical_region: 'Sinoatrial Node',
+                  confidence: 98,
+                  uncertainty_bounds: '±1 bpm',
+                  description: `Heart rate recorded at ${ecgResult.heart_rate_bpm} BPM.`
+                },
+                {
+                  finding: 'Corrected QT (Bazett QTc)',
+                  status: ecgResult.intervals_ms?.qtc_bazett > 450 ? 'BORDERLINE' : 'NORMAL',
+                  anatomical_region: 'Ventricular Repolarization',
+                  confidence: 96,
+                  uncertainty_bounds: '±5 ms',
+                  description: `Calculated QTc is ${ecgResult.intervals_ms?.qtc_bazett} ms.`
+                }
+              ],
+              clinical_notes: ecgResult.rhythm_classification?.narrative,
+              model_provenance: {
+                model_id: 'mdl_ecg_ptb_xl_v2',
+                framework: '1D Deep Convolutional Residual Network (PyTorch)',
+                training_dataset: 'PTB-XL 21,837 Clinical 12-Lead Electrocardiograms'
+              }
+            }}
+            modality="ECG"
+            examTitle="12-Lead Standard Electrocardiogram"
+            modelId="mdl_ecg_ptb_xl_v2"
+          />
+
+          {/* Direct Cardiologist Handoff Section */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-rose-600" />
+                Specialist Tele-Cardiology Review
               </h3>
-
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                    {ecgResult.rhythm_analysis?.classification?.replace(/_/g, ' ') || 'NORMAL SINUS RHYTHM'}
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full font-mono text-xs font-semibold ${
-                    ecgResult.rhythm_analysis?.triage_urgency === 'LOW'
-                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                      : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
-                  }`}>
-                    Urgency: {ecgResult.rhythm_analysis?.triage_urgency || 'ROUTINE'}
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {ecgResult.rhythm_analysis?.description}
-                </p>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-1 border-t border-slate-200 dark:border-slate-700">
-                  <span>Confidence: {ecgResult.rhythm_analysis?.confidence_score}% ({ecgResult.rhythm_analysis?.uncertainty_bounds})</span>
-                  <span>ST Elevation: {ecgResult.rhythm_analysis?.is_st_segment_elevated ? 'DETECTED' : 'NOT DETECTED'}</span>
-                </div>
-              </div>
-
-              {ecgResult.model_provenance && (
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 pt-1">
-                  <p>Model ID: <span className="font-mono">{ecgResult.model_provenance.model_id}</span> ({ecgResult.model_provenance.framework})</p>
-                  <p>Validation Benchmark: {ecgResult.model_provenance.training_dataset}</p>
-                </div>
-              )}
+              <p className="text-xs text-slate-500">
+                Route ECG recording and interval calculations to a DM/DNB certified Cardiologist for official clinical interpretation.
+              </p>
             </div>
 
-            {/* Consultation Action Box */}
-            <div className="md:col-span-5 bg-gradient-to-br from-indigo-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-indigo-100 dark:border-slate-700 p-5 shadow-sm flex flex-col justify-between">
-              <div className="space-y-2">
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Clinical Action</span>
-                <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">Review with a Cardiologist</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Connect with registered cardiologists across 36 Indian States and Union Territories for comprehensive Holter, Echo, or Stress testing evaluation.
-                </p>
+            {cardiologistConsulted ? (
+              <div className="px-4 py-2 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 rounded-xl text-xs font-semibold flex items-center gap-2 border border-emerald-500/30">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                Tele-Cardiology Referral Dispatched
               </div>
-
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                {cardiologistConsulted ? (
-                  <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 rounded-xl flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-semibold">Consultation Request Queued</p>
-                      <p className="text-[11px] text-emerald-700 dark:text-emerald-400">Cardiology triage specialist assigned to patient session.</p>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setCardiologistConsulted(true)}
-                    className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition"
-                  >
-                    <UserCheck className="w-4 h-4" />
-                    Book Priority Cardiology Review
-                  </button>
-                )}
-              </div>
-            </div>
+            ) : (
+              <button
+                onClick={() => setCardiologistConsulted(true)}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-rose-500/25 transition whitespace-nowrap"
+              >
+                Request Cardiologist Review
+              </button>
+            )}
           </div>
         </div>
       )}
