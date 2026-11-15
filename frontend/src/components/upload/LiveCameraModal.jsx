@@ -8,146 +8,266 @@ import {
   AlertCircle, 
   Sparkles,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Video
 } from 'lucide-react';
 import Button from '../ui/Button';
 
 export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'Live Clinical Camera' }) {
-  const [stream, setStream] = useState(null);
+  // UI and capture state
   const [facingMode, setFacingMode] = useState('environment'); // 'user' (front) or 'environment' (rear)
   const [capturedBlob, setCapturedBlob] = useState(null);
   const [capturedUrl, setCapturedUrl] = useState(null);
   const [cameraError, setCameraError] = useState(null);
-  const [isInitializing, setIsInitializing] = useState(false);
+  const [cameraStatus, setCameraStatus] = useState('IDLE'); // 'IDLE' | 'INITIALIZING' | 'WAITING_FOR_FRAMES' | 'READY' | 'ERROR'
+  const [statusMessage, setStatusMessage] = useState('Initializing camera feed...');
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [flashEffect, setFlashEffect] = useState(false);
+  const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
 
+  // Stable references that do not trigger effect re-executions
+  const streamRef = useRef(null);
+  const initCounterRef = useRef(0);
+  const isPlayingRef = useRef(false);
+  const frameReceivedRef = useRef(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Stop all active tracks
-  const stopTracks = useCallback(() => {
-    if (stream) {
+  // Stop active media tracks safely and release resources
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
       try {
-        stream.getTracks().forEach(track => {
+        streamRef.current.getTracks().forEach(track => {
           try {
             track.stop();
           } catch (e) {}
         });
       } catch (e) {}
-      setStream(null);
+      streamRef.current = null;
     }
-  }, [stream]);
 
-  // Progressive camera initialization with safe fallback constraints
-  const startCamera = useCallback(async (desiredFacing) => {
-    stopTracks();
+    if (videoRef.current) {
+      try {
+        videoRef.current.pause();
+        videoRef.current.srcObject = null;
+      } catch (e) {}
+    }
+
+    isPlayingRef.current = false;
+    frameReceivedRef.current = false;
+  }, []);
+
+  // Centralized, race-condition-free camera initialization
+  const initCamera = useCallback(async (requestedFacing) => {
+    // Increment initialization sequence counter to invalidate prior async invocations
+    const currentInitId = ++initCounterRef.current;
+
+    stopStream();
     setCameraError(null);
-    setIsInitializing(true);
+    setCameraStatus('INITIALIZING');
+    setStatusMessage('Requesting camera permissions...');
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setCameraError('Camera access is not supported by your browser or requires a secure HTTPS connection.');
-      setIsInitializing(false);
+      setCameraStatus('ERROR');
       return;
     }
 
-    const currentFacing = desiredFacing || facingMode;
-    let mediaStream = null;
+    const targetFacing = requestedFacing || facingMode;
+    let newStream = null;
 
     // Attempt 1: High definition ideal constraints without rigid min bounds
     try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({
+      newStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: currentFacing },
+          facingMode: { ideal: targetFacing },
           width: { ideal: 1920 },
           height: { ideal: 1080 },
         },
         audio: false,
       });
     } catch (err1) {
-      console.warn('High-res constraints failed, falling back to basic facingMode:', err1.name, err1.message);
+      console.warn('[Camera] High-res constraints failed, falling back to facingMode:', err1.name);
       // Attempt 2: Relaxed constraint with facingMode only
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: currentFacing } },
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: targetFacing } },
           audio: false,
         });
       } catch (err2) {
-        console.warn('FacingMode constraints failed, falling back to basic video:', err2.name, err2.message);
-        // Attempt 3: Any available video device
+        console.warn('[Camera] FacingMode constraint failed, falling back to basic video:', err2.name);
+        // Attempt 3: Any video device
         try {
-          mediaStream = await navigator.mediaDevices.getUserMedia({
+          newStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: false,
           });
         } catch (err3) {
-          console.error('All camera attempts failed:', err3);
+          console.error('[Camera] All getUserMedia attempts failed:', err3);
+          if (currentInitId !== initCounterRef.current) return; // Stale call
+
           if (err3.name === 'NotAllowedError' || err3.name === 'PermissionDeniedError') {
             setCameraError('Camera permission was denied. Please allow camera permissions in your browser address bar.');
           } else if (err3.name === 'NotFoundError' || err3.name === 'DevicesNotFoundError') {
-            setCameraError('No camera device detected on this device.');
+            setCameraError('No camera hardware was detected on your computer or mobile device.');
           } else {
-            setCameraError(`Camera initialization error: ${err3.message || 'Device unavailable or in use by another application.'}`);
+            setCameraError(`Camera initialization error: ${err3.message || 'Device in use or unavailable.'}`);
           }
-          setIsInitializing(false);
+          setCameraStatus('ERROR');
           return;
         }
       }
     }
 
-    if (mediaStream) {
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        try {
-          await videoRef.current.play();
-        } catch (playErr) {
-          console.warn('Video auto-play warning:', playErr);
-        }
+    // Discard stream if a newer initCamera call was launched while awaiting getUserMedia
+    if (currentInitId !== initCounterRef.current) {
+      if (newStream) {
+        newStream.getTracks().forEach(t => t.stop());
       }
-
-      // Check for multiple cameras (e.g. front and rear)
-      try {
-        if (navigator.mediaDevices.enumerateDevices) {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const videoInputs = devices.filter(d => d.kind === 'videoinput');
-          setHasMultipleCameras(videoInputs.length > 1);
-        }
-      } catch (enumErr) {
-        console.warn('Could not enumerate devices:', enumErr);
-      }
+      return;
     }
 
-    setIsInitializing(false);
-  }, [facingMode, stopTracks]);
-
-  // Keep videoRef.srcObject synchronized whenever stream changes
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.play().catch(e => console.warn('Stream play warning:', e));
+    // Verify that the stream contains an active live video track
+    const videoTracks = newStream.getVideoTracks();
+    if (!videoTracks || videoTracks.length === 0 || videoTracks[0].readyState !== 'live') {
+      setCameraError('Camera device connected, but no active live video track was received.');
+      setCameraStatus('ERROR');
+      newStream.getTracks().forEach(t => t.stop());
+      return;
     }
-  }, [stream]);
 
-  // Modal open / close lifecycle
+    streamRef.current = newStream;
+    setCameraStatus('WAITING_FOR_FRAMES');
+    setStatusMessage('Waiting for video frames...');
+
+    const video = videoRef.current;
+    if (!video) {
+      console.warn('[Camera] Video element ref not mounted');
+      return;
+    }
+
+    // Assign stream to video element exactly ONCE
+    if (video.srcObject !== newStream) {
+      video.srcObject = newStream;
+    }
+
+    // Controlled single play attempt that handles AbortError gracefully
+    const attemptPlay = () => {
+      if (currentInitId !== initCounterRef.current) return;
+      if (isPlayingRef.current) return;
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            if (currentInitId !== initCounterRef.current) return;
+            isPlayingRef.current = true;
+            console.log('[Camera] Playback initiated successfully');
+          })
+          .catch(playErr => {
+            if (currentInitId !== initCounterRef.current) return;
+            if (playErr.name === 'AbortError') {
+              // Interrupted by an intentional stream update; not a fatal error
+              console.warn('[Camera] Play request interrupted by load request');
+            } else {
+              console.error('[Camera] Play error:', playErr);
+              setCameraError('Video playback could not be started: ' + (playErr.message || 'Autoplay blocked'));
+              setCameraStatus('ERROR');
+            }
+          });
+      }
+    };
+
+    // Frame confirmation: verify videoWidth/videoHeight > 0 and frames rendering
+    const confirmFrames = () => {
+      if (currentInitId !== initCounterRef.current) return;
+
+      if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+        setVideoDimensions({ width: video.videoWidth, height: video.videoHeight });
+        frameReceivedRef.current = true;
+        setCameraStatus('READY');
+        setStatusMessage('Live Camera Active');
+        console.log(`[Camera] Confirmed video dimensions: ${video.videoWidth}x${video.videoHeight}`);
+        return;
+      }
+
+      // Check via requestVideoFrameCallback if supported
+      if (video && 'requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+        video.requestVideoFrameCallback(() => {
+          if (currentInitId !== initCounterRef.current) return;
+          if (video.videoWidth > 0) {
+            setVideoDimensions({ width: video.videoWidth, height: video.videoHeight });
+            frameReceivedRef.current = true;
+            setCameraStatus('READY');
+            setStatusMessage('Live Camera Active');
+            console.log(`[Camera] rVFC confirmed frame: ${video.videoWidth}x${video.videoHeight}`);
+          }
+        });
+      } else {
+        // Fallback polling loop (up to 2 seconds)
+        let attempts = 0;
+        const interval = setInterval(() => {
+          attempts++;
+          if (currentInitId !== initCounterRef.current || attempts > 10) {
+            clearInterval(interval);
+            return;
+          }
+          if (video && video.videoWidth > 0) {
+            clearInterval(interval);
+            setVideoDimensions({ width: video.videoWidth, height: video.videoHeight });
+            frameReceivedRef.current = true;
+            setCameraStatus('READY');
+            setStatusMessage('Live Camera Active');
+          }
+        }, 200);
+      }
+    };
+
+    // Attach event listeners for robust lifecycle tracking
+    video.onloadedmetadata = () => {
+      attemptPlay();
+      confirmFrames();
+    };
+
+    video.onplaying = () => {
+      confirmFrames();
+    };
+
+    // If metadata was already available synchronously
+    if (video.readyState >= 1) {
+      attemptPlay();
+      confirmFrames();
+    }
+
+    // Enumerate devices for front/rear switch button
+    try {
+      if (navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter(d => d.kind === 'videoinput');
+        setHasMultipleCameras(videoInputs.length > 1);
+      }
+    } catch (e) {}
+  }, [facingMode, stopStream]);
+
+  // Modal open / close lifecycle: runs ONLY when `isOpen` changes
   useEffect(() => {
     if (isOpen) {
       setCapturedBlob(null);
       setCapturedUrl(null);
-      startCamera();
+      initCamera(facingMode);
     } else {
-      stopTracks();
+      stopStream();
     }
     return () => {
-      stopTracks();
+      stopStream();
     };
-  }, [isOpen, startCamera, stopTracks]);
+  }, [isOpen, initCamera, stopStream, facingMode]);
 
   // Toggle front / rear camera
   const toggleCameraFacing = () => {
     const nextFacing = facingMode === 'environment' ? 'user' : 'environment';
     setFacingMode(nextFacing);
-    startCamera(nextFacing);
+    initCamera(nextFacing);
   };
 
   // Safe helper to construct a File object across all browsers (including iOS Safari)
@@ -155,7 +275,6 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     try {
       return new File([blob], filename, { type: 'image/jpeg' });
     } catch (e) {
-      // Fallback for older Safari/WebKit where File constructor fails
       const fallbackFile = blob;
       fallbackFile.name = filename;
       fallbackFile.lastModifiedDate = new Date();
@@ -169,11 +288,11 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     const video = videoRef.current;
 
     // Verify video stream dimensions
-    const width = video.videoWidth || 1280;
-    const height = video.videoHeight || 720;
+    const width = video.videoWidth;
+    const height = video.videoHeight;
 
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setCameraError('Camera stream is still warming up. Please wait a moment and try again.');
+    if (!width || !height || width === 0 || height === 0) {
+      setCameraError('Camera stream is still warming up. Please wait until the live feed appears.');
       return;
     }
 
@@ -191,7 +310,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     const filename = `clinical_photo_${Date.now()}.jpg`;
 
     const handleCreatedBlob = (blob) => {
-      if (!blob) {
+      if (!blob || blob.size === 0) {
         setCameraError('Failed to capture image frame from video feed. Please try again.');
         return;
       }
@@ -204,7 +323,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     try {
       if (canvas.toBlob) {
         canvas.toBlob((blob) => {
-          if (blob) {
+          if (blob && blob.size > 0) {
             handleCreatedBlob(blob);
           } else {
             // Fallback for browsers returning null on toBlob
@@ -235,7 +354,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     }
   };
 
-  // Retake photo: clear captured preview without unmounting video stream
+  // Retake photo: clear captured preview without stopping video stream
   const handleRetake = () => {
     if (capturedUrl) {
       try {
@@ -244,6 +363,11 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     }
     setCapturedBlob(null);
     setCapturedUrl(null);
+
+    // Resume video playback if needed
+    if (videoRef.current && videoRef.current.paused) {
+      videoRef.current.play().catch(() => {});
+    }
   };
 
   // Confirm photo capture and hand off to parent
@@ -251,7 +375,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
     if (capturedBlob && onCapture) {
       onCapture(capturedBlob, capturedUrl);
     }
-    stopTracks();
+    stopStream();
     onClose();
   };
 
@@ -262,11 +386,14 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
         URL.revokeObjectURL(capturedUrl);
       } catch (e) {}
     }
-    stopTracks();
+    stopStream();
     onClose();
   };
 
   if (!isOpen) return null;
+
+  const isReady = cameraStatus === 'READY';
+  const isInitializing = cameraStatus === 'INITIALIZING' || cameraStatus === 'WAITING_FOR_FRAMES';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
@@ -298,10 +425,12 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
             <div className="absolute inset-0 bg-white z-30 opacity-90 animate-out fade-out duration-200 pointer-events-none" />
           )}
 
-          {isInitializing && !stream && !cameraError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 space-y-2">
+          {/* Initializing / Waiting for frames indicator */}
+          {isInitializing && !cameraError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-20 space-y-2.5 bg-black/75">
               <RefreshCw className="w-8 h-8 animate-spin text-teal-400" />
-              <p className="text-xs text-slate-300">Initializing camera feed...</p>
+              <p className="text-xs text-slate-200 font-medium">{statusMessage}</p>
+              <p className="text-[10px] text-slate-400">Please grant camera permissions if prompted</p>
             </div>
           )}
 
@@ -312,19 +441,19 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
               </div>
               <h4 className="text-sm font-semibold">Camera Access Notice</h4>
               <p className="text-xs text-slate-300 leading-relaxed">{cameraError}</p>
-              <Button size="sm" variant="secondary" onClick={() => startCamera()} className="mt-2 text-xs">
+              <Button size="sm" variant="secondary" onClick={() => initCamera(facingMode)} className="mt-2 text-xs">
                 Retry Camera Access
               </Button>
             </div>
           ) : (
             <>
-              {/* Keep video permanently mounted in DOM so stream is never lost */}
+              {/* Permanent Video Element with direct stream binding */}
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className={`w-full h-full object-contain max-h-[500px] ${capturedUrl ? 'invisible' : 'visible'}`}
+                className={`w-full h-full object-contain max-h-[500px] ${capturedUrl ? 'hidden' : 'block'}`}
               />
               <canvas ref={canvasRef} className="hidden" />
 
@@ -333,12 +462,12 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
                 <img
                   src={capturedUrl}
                   alt="Captured Frame Preview"
-                  className="absolute inset-0 w-full h-full object-contain max-h-[500px] z-20 bg-black"
+                  className="w-full h-full object-contain max-h-[500px] z-20 bg-black"
                 />
               )}
 
-              {/* Document Alignment Overlay Box (only visible during live preview) */}
-              {!capturedUrl && !isInitializing && (
+              {/* Document Alignment Overlay Box (only visible when video is live and ready) */}
+              {!capturedUrl && isReady && (
                 <div className="absolute inset-8 sm:inset-12 border-2 border-dashed border-teal-400/60 rounded-xl pointer-events-none flex flex-col justify-between p-3 z-10">
                   <div className="flex justify-between text-[10px] text-teal-300 font-mono bg-black/50 px-2 py-0.5 rounded self-start">
                     <span>CLINICAL PHOTO ALIGNMENT</span>
@@ -364,7 +493,7 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
                 <Button size="sm" variant="ghost" onClick={handleClose} className="text-xs">
                   Cancel
                 </Button>
-                <Button size="sm" variant="primary" onClick={handleConfirm} className="flex items-center gap-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white">
+                <Button size="sm" variant="primary" onClick={handleConfirm} className="flex items-center gap-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold">
                   <Check className="w-3.5 h-3.5" />
                   <span>Use This Photo</span>
                 </Button>
@@ -382,9 +511,22 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
                   <span>Switch Camera</span>
                 </button>
               ) : (
-                <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Live Camera Active</span>
+                <div className="text-[11px] flex items-center gap-1.5">
+                  {isReady ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                        Live Camera Active ({videoDimensions.width}x{videoDimensions.height})
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="text-slate-500 dark:text-slate-400">
+                        {statusMessage}
+                      </span>
+                    </>
+                  )}
                 </div>
               )}
 
@@ -396,8 +538,12 @@ export default function LiveCameraModal({ isOpen, onClose, onCapture, title = 'L
                   size="sm"
                   variant="primary"
                   onClick={capturePhoto}
-                  disabled={Boolean(cameraError) || isInitializing}
-                  className="flex items-center gap-1.5 text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                  disabled={Boolean(cameraError) || !isReady}
+                  className={`flex items-center gap-1.5 text-xs font-semibold ${
+                    !isReady
+                      ? 'bg-slate-400 cursor-not-allowed text-white'
+                      : 'bg-teal-600 hover:bg-teal-700 text-white'
+                  }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Capture Photo</span>
