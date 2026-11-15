@@ -8,6 +8,29 @@ const { saveSoapNotesSchema } = require('../validators/consultation.validator');
 
 router.use(authenticateToken);
 
+// ==========================================
+// 1. AI Doctor Consultation Routes (Patient)
+// ==========================================
+router.post('/ai/start', requireRoles(['PATIENT']), consultationController.startAIDoctorSession);
+router.post('/ai/:id/message', requireRoles(['PATIENT']), consultationController.sendAIDoctorMessage);
+router.post('/ai/:id/end', requireRoles(['PATIENT']), consultationController.endAIDoctorSession);
+router.delete('/ai/:id', requireRoles(['PATIENT']), consultationController.deleteAIDoctorConsultation);
+
+// ==========================================
+// 2. Consultation Histories & Details
+// ==========================================
+router.get('/history', requireRoles(['PATIENT']), consultationController.listPatientConsultations);
+router.get('/detail/:id', requireRoles(['PATIENT']), consultationController.getConsultationById);
+
+// ==========================================
+// 3. AI Pre-Consultation Summary for Doctor
+// ==========================================
+router.get('/pre-summary/:appointmentId', requireRoles(['PATIENT']), consultationController.generatePreConsultationSummary);
+router.post('/pre-summary/:appointmentId/approve', requireRoles(['PATIENT']), consultationController.approvePreConsultationSummary);
+
+// ==========================================
+// 4. Real Doctor Video & Session Routes
+// ==========================================
 // Start or load consultation session
 router.post('/appointment/:appointmentId', consultationController.getOrCreateConsultation);
 

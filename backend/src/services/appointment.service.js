@@ -8,10 +8,14 @@ class AppointmentService {
   async createAppointment(patientId, appointmentData, ipAddress = '127.0.0.1') {
     const { doctorId, scheduledDate, timeSlot, consultationType, chiefComplaint } = appointmentData;
 
-    // 1. Verify doctor exists
+    // 1. Verify doctor exists and has verified booking credentials
     const doctor = await DoctorProfile.findById(doctorId);
     if (!doctor) {
       throw new Error('Selected practitioner not found.');
+    }
+
+    if (doctor.verificationStatus === 'DISCOVERED' || doctor.verificationStatus === 'SOURCE_VERIFIED') {
+      throw new Error(`Appointment booking is disabled for unverified practitioner profiles (Status: ${doctor.verificationStatus}). Only verified practitioners with confirmed registration credentials can accept appointments.`);
     }
 
     const scheduledDateObj = new Date(scheduledDate);

@@ -113,10 +113,10 @@ export default function Module21_ECGCardiacCenter() {
           <div className="md:col-span-8">
             <UniversalUpload
               onFileSelect={handleFileSelect}
-              acceptedTypes={['.pdf', '.png', '.jpg', '.jpeg', '.webp']}
+              acceptedTypes={['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.csv', '.json', '.txt', '.dat']}
               maxSizeMB={20}
-              title="Upload or Scan 12-Lead ECG Paper Strip"
-              subtitle="Device upload, camera photo capture, or document scanner enhancement"
+              title="Upload 12-Lead Paper Strip, Scanned Image, or 1D ECG Signal Record"
+              subtitle="Device upload (.png, .jpg, .pdf, .csv, .json), live camera photo, or document scanner enhancement"
               allowCamera={true}
               allowScanner={true}
             />
@@ -172,6 +172,46 @@ export default function Module21_ECGCardiacCenter() {
       {/* Main Analysis Display */}
       {ecgResult && (
         <div className="space-y-6">
+          {/* Waveform Source & Calibration Integrity Banner */}
+          <div className="p-4 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Waveform Provenance:</span>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold font-mono uppercase ${
+                ecgResult.waveform_source === '1D_SIGNAL_RECORD'
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-500/30'
+                  : ecgResult.waveform_source === 'DIGITIZED_PIXEL_TRACE'
+                  ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950/80 dark:text-cyan-300 border border-cyan-500/30'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-500/30'
+              }`}>
+                {ecgResult.waveform_source === '1D_SIGNAL_RECORD' && '● Genuine 1D Telemetry Signal'}
+                {ecgResult.waveform_source === 'DIGITIZED_PIXEL_TRACE' && '● Scanned Paper ECG Contour Digitized'}
+                {ecgResult.waveform_source === 'SYNTHETIC_CALIBRATED_DEMO' && '▲ Synthetic Demo Waveform (Calibration Fallback)'}
+                {!['1D_SIGNAL_RECORD', 'DIGITIZED_PIXEL_TRACE', 'SYNTHETIC_CALIBRATED_DEMO'].includes(ecgResult.waveform_source) && (ecgResult.waveform_source || 'Unknown Source')}
+              </span>
+
+              <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                Quality: {ecgResult.signal_quality || 'ACCEPTABLE'}
+              </span>
+
+              {ecgResult.r_peaks_detected !== undefined && (
+                <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  R-Peaks Detected: {ecgResult.r_peaks_detected}
+                </span>
+              )}
+            </div>
+
+            <div className="text-xs font-mono">
+              <span className="text-slate-500">Intervals Status: </span>
+              <span className={
+                ecgResult.intervals_status === 'MEASURED_FROM_SIGNAL' || ecgResult.intervals_status === 'MEASURED_FROM_DIGITIZED_TRACE'
+                  ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                  : 'text-amber-600 dark:text-amber-400 font-bold'
+              }>
+                {ecgResult.intervals_status || 'MEASURED'}
+              </span>
+            </div>
+          </div>
+
           {/* Waveform Visualizer Canvas (Interactive SVG with Standard ECG Millivolt Grid) */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-700 pb-3">
@@ -180,13 +220,15 @@ export default function Module21_ECGCardiacCenter() {
                   <Activity className="w-4 h-4 text-rose-600" />
                   Lead II Rhythm Strip Waveform (1000 ms Sweep)
                 </h2>
-                <p className="text-xs text-slate-500">Standard Calibration: 25 mm/s, 10 mm/mV (0.04s small box, 0.20s major box)</p>
+                <p className="text-xs text-slate-500">
+                  {ecgResult.waveform_notes || 'Standard Calibration: 25 mm/s, 10 mm/mV (0.04s small box, 0.20s major box)'}
+                </p>
               </div>
 
               <div className="flex items-center gap-3 text-xs font-mono">
                 <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-600 inline-block" />
-                  P-QRS-T Synthesized Trace
+                  {ecgResult.waveform_source === 'DIGITIZED_PIXEL_TRACE' ? 'Digitized Ink Trace' : ecgResult.waveform_source === '1D_SIGNAL_RECORD' ? 'Discrete 1D Signal' : 'P-QRS-T Synthesized Trace'}
                 </span>
                 {hoveredPoint && (
                   <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-slate-800 dark:text-slate-200">

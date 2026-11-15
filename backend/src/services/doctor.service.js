@@ -191,7 +191,7 @@ class DoctorService {
       const docLng = doc.location?.coordinates?.[0] || null;
       const distanceKm = calculateHaversineDistanceKm(userLat, userLng, docLat, docLng);
 
-      const isVerified = doc.verificationStatus === 'CREDENTIAL_VERIFIED' || doc.isClaimed;
+      const isVerified = doc.verificationStatus === 'CREDENTIAL_VERIFIED' || doc.verificationStatus === 'APPOINTMENT_ENABLED';
       const hasSchedule = availableSet.has(doc._id.toString());
       const appointmentBookingAvailable = Boolean(isVerified && hasSchedule);
 
@@ -268,7 +268,7 @@ class DoctorService {
       const docLat = doc.location?.coordinates?.[1];
       const docLng = doc.location?.coordinates?.[0];
       const distanceKm = calculateHaversineDistanceKm(lat, lng, docLat, docLng);
-      const isVerified = doc.verificationStatus === 'CREDENTIAL_VERIFIED' || doc.isClaimed;
+      const isVerified = doc.verificationStatus === 'CREDENTIAL_VERIFIED' || doc.verificationStatus === 'APPOINTMENT_ENABLED';
       const hasSchedule = availableSet.has(doc._id.toString());
       const appointmentBookingAvailable = Boolean(isVerified && hasSchedule);
 

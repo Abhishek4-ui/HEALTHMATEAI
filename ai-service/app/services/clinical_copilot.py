@@ -207,6 +207,116 @@ class ClinicalCopilot:
             "disclaimer": "Informational guidance only. Not medical advice. Consult a doctor for any health concern."
         }
 
+    async def consult_ai_doctor(
+        self,
+        query: str,
+        language: str = "en",
+        history: Optional[List[Dict[str, str]]] = None,
+        patient_context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Enterprise AI Doctor Consultation Engine:
+        - Multi-turn conversation with clinical context integration
+        - English & Hindi language adaptation
+        - Immediate emergency red flag detection
+        - Guidelines grounding (RAG)
+        - Structured clinical response schema
+        """
+        start_time = time.time()
+        
+        # Check emergency red flags
+        emergency_pattern = r"(chest\s*pain|heart\s*attack|stroke|left\s*arm\s*pain|breathless|cannot\s*breathe|unconscious|fainted|coughing\s*blood|seizure|choking|सीने\s*में\s*दर्द|सांस\s*लेने\s*में\s*दिक्कत|बेहोश)"
+        is_emergency = bool(re.search(emergency_pattern, query, re.IGNORECASE))
+        
+        # Format patient context block
+        context_str = ""
+        if patient_context:
+            age = patient_context.get("age", "Not specified")
+            gender = patient_context.get("gender", "Not specified")
+            conditions = patient_context.get("chronic_conditions", [])
+            allergies = patient_context.get("allergies", [])
+            meds = patient_context.get("current_medications", [])
+            labs = patient_context.get("recent_lab_biomarkers", [])
+            
+            cond_str = ", ".join(conditions) if conditions else "None reported"
+            allg_str = ", ".join(allergies) if allergies else "None reported"
+            med_str = ", ".join(meds) if meds else "None reported"
+            lab_list = [f"{b.get('name', 'Marker')}: {b.get('value', 'N/A')}" for b in labs] if labs else []
+            lab_str = ", ".join(lab_list) if lab_list else "None"
+
+            context_str = (
+                f"\n\nCONSENTED PATIENT HEALTH CONTEXT:\n"
+                f"- Age: {age}, Gender: {gender}\n"
+                f"- Chronic Conditions: {cond_str}\n"
+                f"- Allergies: {allg_str}\n"
+                f"- Current Medications: {med_str}\n"
+                f"- Recent Lab Biomarkers: {lab_str}\n"
+            )
+
+        # Retrieve RAG evidence
+        rag_result = clinical_rag_grounder.retrieve_guidelines(query, top_k=2)
+        evidence_text = ""
+        if rag_result["is_grounded"]:
+            evidence_text = "\n\nAUTHORITATIVE CLINICAL GUIDELINES:\n"
+            for doc in rag_result["retrieved_evidence"]:
+                evidence_text += f"- [{doc['title']}]: {doc['excerpt']}\n"
+
+        lang_instruction = "Respond entirely in clear, respectful, natural Hindi (Devanagari script)." if language == "hi" else "Respond in clear, empathetic, accessible English."
+
+        system_prompt = (
+            "You are HealthMate AI Doctor, an enterprise medical information assistant. "
+            "You are an informational assistant, NOT a licensed human doctor. "
+            "CRITICAL MEDICAL SAFETY MANDATES:\n"
+            "1. NEVER give a definitive diagnosis. Frame all conditions as possibilities to discuss with a physician.\n"
+            "2. NEVER prescribe, recommend dosages, or advise changing/stopping medications.\n"
+            "3. If emergency red flags are detected, immediately advise calling national emergency services 112 (or local emergency room) without delaying.\n"
+            "4. Clearly explain medical terms, laboratory values, and reports in patient-friendly language.\n"
+            "5. Ask 1-2 thoughtful clinical follow-up questions to understand the patient's symptoms better.\n"
+            f"6. {lang_instruction}\n"
+            f"{context_str}"
+            f"{evidence_text}"
+        )
+
+        messages = [{"role": "system", "content": system_prompt}]
+        if history:
+            messages.extend(history[-6:])
+        messages.append({"role": "user", "content": query})
+
+        ai_response = await self.gateway.generate_chat_completion(messages=messages, max_tokens=700)
+        duration_ms = (time.time() - start_time) * 1000
+
+        # Structured response metadata
+        warning_signs = []
+        if is_emergency:
+            warning_signs.append("Acute red flag detected: immediate emergency medical attention required (Dial 112).")
+
+        return {
+            "query": query,
+            "answer": ai_response.get("content", ""),
+            "language": language,
+            "is_emergency": is_emergency,
+            "emergency_guidance": "Dial 112 or visit nearest Emergency Department immediately" if is_emergency else None,
+            "patient_concern": query[:120],
+            "warning_signs": warning_signs,
+            "possible_explanations": ["Clinical symptom presentation requires physician evaluation"],
+            "recommended_next_steps": [
+                "Schedule a clinical evaluation with a registered practitioner",
+                "Keep a log of symptoms, duration, and triggers",
+                "Seek immediate emergency care if symptoms rapidly escalate"
+            ],
+            "professional_review_advisable": True,
+            "provider_used": ai_response.get("provider", "local_safeguard"),
+            "model_used": ai_response.get("model", "healthmate-ai-doctor-v1"),
+            "rag_grounded": rag_result["is_grounded"],
+            "guideline_citations": rag_result["citations"],
+            "latency_ms": round(duration_ms, 2),
+            "disclaimer": (
+                "CLINICAL SAFETY MANDATE: HealthMate AI Doctor provides educational and triage health information only. "
+                "It is NOT a licensed medical doctor, cannot issue definitive clinical diagnoses, and cannot prescribe or alter medications. "
+                "For emergencies in India, dial 112 immediately."
+            )
+        }
+
     async def generate_soap_note(self, consultation_text: str, patient_info: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Synthesizes structured clinical documentation with strict Doctor Approval Workflow."""
         start_time = time.time()

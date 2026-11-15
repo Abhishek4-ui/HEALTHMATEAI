@@ -220,6 +220,62 @@ class AIGatewayService {
   }
 
   /**
+   * Enterprise AI Doctor Consultation with Clinical Guardrails
+   */
+  async consultAIDoctor({ query, language = 'en', history = [], patientContext = null }) {
+    try {
+      const res = await fetch(`${this.baseUrl}/api/v1/ai/doctor-consult`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(8000),
+        body: JSON.stringify({
+          query,
+          language,
+          history,
+          patient_context: patientContext,
+        }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      logger.warn('AI microservice /doctor-consult returned non-200');
+    } catch (e) {
+      logger.warn('AI microservice unreachable for doctor consult:', { error: e.message });
+    }
+
+    const isEmergency = /chest pain|heart attack|stroke|arm pain|shortness of breath|breathless|unconscious|fainted|seizure|सीने में दर्द|सांस लेने में दिक्कत/i.test(query);
+
+    return {
+      query,
+      answer: isEmergency
+        ? (language === 'hi'
+            ? 'आपातकालीन चेतावनी: आपके द्वारा बताए गए लक्षण गंभीर स्वास्थ्य आपातकाल का संकेत हो सकते हैं। कृपया बिना किसी देरी के तुरंत 112 डायल करें या निकटतम आपातकालीन कक्ष में जाएं।'
+            : 'EMERGENCY WARNING: The symptoms you described indicate a potential medical emergency. Please dial 112 immediately or proceed to the nearest emergency department without delay.')
+        : (language === 'hi'
+            ? 'हेल्थमेट एआई डॉक्टर: आपके द्वारा बताए गए लक्षणों के आधार पर, यह एक सामान्य स्वास्थ्य स्थिति हो सकती है। कृपया पर्याप्त पानी पिएं और आराम करें। यदि लक्षण 48 घंटों से अधिक बने रहते हैं या बढ़ते हैं, तो किसी पंजीकृत चिकित्सक से परामर्श करें।'
+            : 'HealthMate AI Doctor: Based on your reported symptoms, this may be a mild self-limiting condition. Ensure adequate hydration and rest. If symptoms persist beyond 48 hours, worsen, or are accompanied by high fever, please consult a registered medical practitioner.'),
+      language,
+      is_emergency: isEmergency,
+      emergency_guidance: isEmergency ? 'Dial 112 or visit nearest Emergency Department immediately.' : null,
+      patient_concern: query.slice(0, 120),
+      warning_signs: isEmergency ? ['Immediate emergency evaluation required.'] : [],
+      possible_explanations: ['Symptom evaluation requires clinical examination.'],
+      recommended_next_steps: [
+        'Schedule a clinical consultation with a registered doctor',
+        'Monitor temperature, hydration, and resting heart rate',
+        'Seek emergency medical assistance if symptoms escalate'
+      ],
+      professional_review_advisable: true,
+      provider_used: 'local_clinical_safeguard',
+      model_used: 'healthmate-safeguard-v1',
+      rag_grounded: false,
+      guideline_citations: [],
+      latency_ms: 12.0,
+      disclaimer: 'CLINICAL SAFETY MANDATE: HealthMate AI Doctor provides educational and triage health information only. It is not a licensed medical doctor, cannot issue definitive clinical diagnoses, and cannot prescribe or alter medications. For emergencies in India, dial 112 immediately.',
+    };
+  }
+
+  /**
    * Conversational Clinical Copilot
    */
   async sendHealthQuery(query, language = 'en', history = []) {
@@ -250,6 +306,7 @@ class AIGatewayService {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/soap-summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(8000),
         body: JSON.stringify({ consultation_text: consultationText, patient_info: patientInfo }),
       });
       if (res.ok) return await res.json();

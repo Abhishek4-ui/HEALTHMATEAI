@@ -171,10 +171,10 @@ export default function UniversalUpload({
                 size="sm"
                 variant="secondary"
                 onClick={() => setIsCameraOpen(true)}
-                className="flex items-center gap-1.5 text-xs"
+                className="flex items-center gap-1.5 text-xs font-semibold border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/30"
               >
-                <Camera className="w-3.5 h-3.5 text-aurora-teal" />
-                <span>Open Live Camera</span>
+                <Camera className="w-4 h-4 text-aurora-teal shrink-0" />
+                <span>Take Live Photo</span>
               </Button>
             )}
 

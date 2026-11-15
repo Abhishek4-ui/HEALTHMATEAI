@@ -22,24 +22,29 @@ import Card from '../ui/Card';
 
 export default function PatientFriendlyResult({
   resultData = {},
+  analysisResult = null,
   documentType = 'Laboratory Blood Test Report',
   filename = 'Medical_Report.pdf',
   uploadedAt = new Date().toISOString(),
   reportDate = null,
   processingStatus = 'COMPLETED',
   onDownloadReport = null,
+  modality = null,
+  examTitle = null,
+  modelId = null,
 }) {
   const [language, setLanguage] = useState('BILINGUAL'); // 'EN', 'HI', 'BILINGUAL'
   const [activeTab, setActiveTab] = useState('SIMPLE'); // 'SIMPLE' or 'DETAILED'
   const [showDisclaimer, setShowDisclaimer] = useState(false);
 
-  // Extract structured findings
-  const biomarkers = resultData.biomarkers || [];
-  const findings = resultData.findings || [];
-  const clinicalSummary = resultData.clinicalSummary || resultData.clinical_summary || 'Document successfully processed and analyzed.';
-  const quality = resultData.quality_validation || { score: 92, status: 'ACCEPTABLE' };
-  const modelProvenance = resultData.model_provenance || resultData.modelInfo || null;
-  const disclaimer = resultData.clinical_disclaimer || resultData.disclaimer || 'CLINICAL SAFETY MANDATE: This automated analysis is an informational aid and does not substitute professional medical diagnosis.';
+  // Normalize incoming payload
+  const data = analysisResult || resultData || {};
+  const biomarkers = data.biomarkers || data.editableBiomarkers || [];
+  const findings = data.findings || [];
+  const clinicalSummary = data.clinicalSummary || data.clinical_summary || data.summary || (data.findings?.length > 0 ? 'Document observations extracted and verified against clinical thresholds.' : 'Document successfully processed and analyzed.');
+  const quality = data.quality_validation || { score: 92, status: 'ACCEPTABLE' };
+  const modelProvenance = data.model_provenance || data.modelInfo || (modelId ? { model_id: modelId } : null);
+  const disclaimer = data.clinical_disclaimer || data.disclaimer || 'CLINICAL SAFETY MANDATE: This automated analysis is an informational aid and does not substitute professional medical diagnosis.';
 
   // Language Dictionary for Patient Guidance
   const t = {

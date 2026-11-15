@@ -9,6 +9,7 @@ router.get('/config', (req, res) => paymentController.getConfig(req, res));
 
 // Razorpay Test Mode Workflow (Patient & Guest)
 router.post('/order', optionalAuth, paymentController.createOrder);
+router.post('/create-order', optionalAuth, paymentController.createOrder);
 router.post('/verify-signature', optionalAuth, paymentController.verifySignature);
 router.post('/record-failure', optionalAuth, paymentController.recordFailure);
 

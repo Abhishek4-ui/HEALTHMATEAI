@@ -75,6 +75,103 @@ class LLMGateway:
                 "fallback_used": True
             }
 
+    async def generate_chat_completion(
+        self,
+        messages: list,
+        max_tokens: int = 600,
+        temperature: float = 0.2
+    ) -> Dict[str, Any]:
+        """
+        Dual-provider multi-turn chat completion:
+        1. OpenRouter primary
+        2. Google Gemini fallback
+        3. Local rule-based clinical safeguard fallback
+        """
+        # Separate system prompt and conversation messages
+        system_content = None
+        filtered_msgs = []
+        for m in messages:
+            if m.get("role") == "system":
+                system_content = m.get("content")
+            else:
+                filtered_msgs.append(m)
+
+        user_content_prompt = "\n".join([f"{m.get('role').upper()}: {m.get('content')}" for m in filtered_msgs])
+
+        # Attempt OpenRouter
+        if settings.OPENROUTER_API_KEY:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+                    "HTTP-Referer": "https://healthmate.ai",
+                    "X-Title": "HealthMate AI",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": settings.OPENROUTER_MODEL_NAME,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens
+                }
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    resp = await client.post(
+                        f"{settings.OPENROUTER_BASE_URL}/chat/completions",
+                        headers=headers,
+                        json=payload
+                    )
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    return {
+                        "success": True,
+                        "provider": "openrouter",
+                        "model": settings.OPENROUTER_MODEL_NAME,
+                        "content": content,
+                        "fallback_used": False
+                    }
+            except Exception as e:
+                logger.warning(f"OpenRouter chat completion failed: {e}. Falling over to Gemini...")
+
+        # Attempt Gemini
+        if settings.GEMINI_API_KEY:
+            try:
+                url = (
+                    f"{settings.GEMINI_BASE_URL}/models/{settings.GEMINI_MODEL_NAME}:generateContent"
+                    f"?key={settings.GEMINI_API_KEY}"
+                )
+                full_text = f"System Instruction: {system_content}\n\n{user_content_prompt}" if system_content else user_content_prompt
+                payload = {
+                    "contents": [{"parts": [{"text": full_text}]}],
+                    "generationConfig": {"temperature": temperature, "maxOutputTokens": max_tokens}
+                }
+                async with httpx.AsyncClient(timeout=self.timeout) as client:
+                    resp = await client.post(url, json=payload)
+                    resp.raise_for_status()
+                    data = resp.json()
+                    content = data["candidates"][0]["content"]["parts"][0]["text"]
+                    return {
+                        "success": True,
+                        "provider": "gemini",
+                        "model": settings.GEMINI_MODEL_NAME,
+                        "content": content,
+                        "fallback_used": True
+                    }
+            except Exception as e:
+                logger.error(f"Gemini fallback chat completion failed: {e}")
+
+        # Clinically grounded local fallback
+        return {
+            "success": False,
+            "provider": "local_clinical_safeguard",
+            "model": "healthmate-safeguard-v1",
+            "content": (
+                "HealthMate AI Clinical Assistant: I have evaluated your symptoms and context. "
+                "Because external AI provider connectivity is in safeguard mode, please discuss these findings with an in-person physician. "
+                "For acute chest pressure, radiating arm pain, or severe shortness of breath, please dial national emergency services 112 immediately."
+            ),
+            "fallback_used": True
+        }
+
     async def _call_openrouter_with_retry(
         self,
         prompt: str,

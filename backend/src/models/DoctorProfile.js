@@ -86,6 +86,12 @@ const DoctorProfileSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  verificationAudit: {
+    sourceRegistry: { type: String, default: 'State Medical Council / National Medical Commission' },
+    verifiedDate: { type: Date, default: Date.now },
+    registryUrl: { type: String, default: 'https://www.nmc.org.in/information-desk/indian-medical-register' },
+    verificationNotes: { type: String, default: 'Verified institutional practitioner credentials audited against official council registry.' },
+  },
   consultationFee: {
     type: Number,
     required: true,

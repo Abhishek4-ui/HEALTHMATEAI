@@ -456,7 +456,9 @@ export default function Module20_MedicalImagingCenter() {
 
           {/* Interactive Medical DICOM Canvas */}
           <MedicalDICOMViewer
+            file={selectedFile}
             imageUrl={previewUrl}
+            modality={selectedModality}
             studyMetadata={{
               patientName: 'Anonymous Patient (Protected)',
               studyDate: new Date().toLocaleDateString(),

@@ -54,10 +54,10 @@ export const PATIENT_SECTIONS = [
   {
     title: 'CARE & APPOINTMENTS',
     items: [
+      { id: 'consultations', name: 'Consultation Center', path: '/patient/consultations', icon: Video },
       { id: 'doctors', name: 'Find Doctors', path: '/patient/doctors', icon: Stethoscope },
       { id: 'hospitals', name: 'Find Hospitals', path: '/patient/hospitals', icon: Building2 },
       { id: 'appointments', name: 'Appointments', path: '/patient/appointments', icon: Calendar },
-      { id: 'consultations', name: 'My Consultations', path: '/patient/consultations', icon: Video },
     ]
   },
   {

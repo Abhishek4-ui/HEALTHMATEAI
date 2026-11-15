@@ -37,6 +37,12 @@ class CopilotQueryRequest(BaseModel):
     language: str = "en"
     history: Optional[List[Dict[str, str]]] = None
 
+class AIDoctorConsultRequest(BaseModel):
+    query: str
+    language: str = "en"
+    history: Optional[List[Dict[str, str]]] = None
+    patient_context: Optional[Dict[str, Any]] = None
+
 class SoapSummarizeRequest(BaseModel):
     consultation_text: str
     patient_info: Optional[Dict[str, Any]] = None
@@ -127,6 +133,15 @@ async def copilot_chat(payload: CopilotQueryRequest):
         query=payload.query,
         language=payload.language,
         history=payload.history
+    )
+
+@router.post("/doctor-consult")
+async def doctor_consult(payload: AIDoctorConsultRequest):
+    return await clinical_copilot.consult_ai_doctor(
+        query=payload.query,
+        language=payload.language,
+        history=payload.history,
+        patient_context=payload.patient_context
     )
 
 @router.post("/soap-summarize")

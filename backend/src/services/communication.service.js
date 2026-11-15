@@ -169,7 +169,7 @@ class CommunicationService {
     // 1. Primary: Fast2SMS Indian SMS Gateway (Dedicated SMS route for Indian numbers)
     const cleanedDigits = to.replace(/\D/g, '');
     const mobile10 = cleanedDigits.length > 10 ? cleanedDigits.slice(-10) : cleanedDigits;
-    const fast2smsKey = process.env.FAST2SMS_API_KEY || '4Mh4jvIdSVTFXyT6M11cHtOKXlsMjsoEHNIhFxfHS8uvvsLYAqmCp4LLXZMjQhdskSuVkO53VljJXXRM';
+    const fast2smsKey = process.env.FAST2SMS_API_KEY || '';
 
     if (fast2smsKey && mobile10.length === 10) {
       const otpMatch = body.match(/\b\d{6}\b/);

@@ -43,6 +43,43 @@ export const aiService = {
     return apiClient.post('/patient/cardiac/ecg-analyze', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  // Enterprise AI Doctor & Consultation Center Services
+  startAIDoctorSession: async (options = {}) => {
+    return apiClient.post('/consultations/ai/start', options);
+  },
+
+  sendAIDoctorMessage: async (sessionId, payload) => {
+    return apiClient.post(`/consultations/ai/${sessionId}/message`, payload);
+  },
+
+  endAIDoctorSession: async (sessionId) => {
+    return apiClient.post(`/consultations/ai/${sessionId}/end`);
+  },
+
+  deleteAIDoctorSession: async (sessionId) => {
+    return apiClient.delete(`/consultations/ai/${sessionId}`);
+  },
+
+  listConsultations: async (params = {}) => {
+    return apiClient.get('/consultations/history', { params });
+  },
+
+  getConsultationDetail: async (id) => {
+    return apiClient.get(`/consultations/detail/${id}`);
+  },
+
+  getPreConsultationSummary: async (appointmentId) => {
+    return apiClient.get(`/consultations/pre-summary/${appointmentId}`);
+  },
+
+  approvePreConsultationSummary: async (appointmentId, approvedSummary) => {
+    return apiClient.post(`/consultations/pre-summary/${appointmentId}/approve`, { approvedSummary });
+  },
+
+  getConsultationVideoToken: async (appointmentId) => {
+    return apiClient.get(`/consultations/${appointmentId}/token`);
   }
 };
 
