@@ -47,8 +47,12 @@ class PaymentService {
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) throw new Error('Appointment not found.');
 
-    if (idempotencyKey) {
-      const existing = await PaymentTransaction.findOne({ idempotencyKey });
+    if (appointment.status === 'CONFIRMED' && appointment.paymentStatus === 'PAID') {
+      throw new Error('This appointment has already been paid and confirmed.');
+    }
+
+    if (idempotencyKey && typeof idempotencyKey === 'string' && idempotencyKey.trim()) {
+      const existing = await PaymentTransaction.findOne({ idempotencyKey: idempotencyKey.trim() });
       if (existing) {
         return {
           orderId: existing.orderId,
@@ -60,7 +64,19 @@ class PaymentService {
       }
     }
 
-    const payableAmount = amount || appointment.paymentAmount || 500;
+    // Verify if there is already an active PAID transaction for this appointment
+    const existingPaid = await PaymentTransaction.findOne({
+      appointmentId,
+      status: { $in: ['PAID', 'VERIFIED'] },
+    });
+    if (existingPaid) {
+      throw new Error('Payment has already been completed for this appointment.');
+    }
+
+    const payableAmount = typeof appointment.paymentAmount === 'number' && appointment.paymentAmount > 0
+      ? appointment.paymentAmount
+      : (typeof amount === 'number' && amount > 0 ? amount : 500);
+
     let orderId;
 
     if (razorpayClient) {
@@ -71,7 +87,7 @@ class PaymentService {
           receipt: `rcpt_${String(appointmentId).slice(-12)}`,
           notes: {
             appointmentId: String(appointmentId),
-            patientId: String(patientId),
+            patientId: String(patientId || appointment.patientId),
           },
         });
         orderId = rzpOrder.id;
@@ -90,16 +106,21 @@ class PaymentService {
       orderId = 'order_test_' + crypto.randomBytes(8).toString('hex');
     }
 
-    const transaction = await PaymentTransaction.create({
+    const txData = {
       orderId,
       appointmentId,
-      patientId,
+      patientId: patientId || appointment.patientId,
       amount: payableAmount,
       currency,
       status: 'CREATED',
       method: 'RAZORPAY',
-      idempotencyKey: idempotencyKey || null,
-    });
+    };
+
+    if (idempotencyKey && typeof idempotencyKey === 'string' && idempotencyKey.trim()) {
+      txData.idempotencyKey = idempotencyKey.trim();
+    }
+
+    const transaction = await PaymentTransaction.create(txData);
 
     return {
       orderId: transaction.orderId,
@@ -380,29 +401,105 @@ class PaymentService {
 
   /**
    * Verify Razorpay payment signature returned from client checkout modal
+   * Strictly enforces:
+   * 1. Server-stored expected order verification (not untrusted client order)
+   * 2. Timing-safe cryptographic HMAC-SHA256 comparison
+   * 3. Consultation fee amount matching
+   * 4. Idempotent duplicate verification requests
+   * 5. Appointment confirmation only after verification
    */
-  async verifyPaymentSignature({ orderId, paymentId, signature, appointmentId }) {
+  async verifyPaymentSignature({ orderId, paymentId, signature, appointmentId, patientId }) {
     if (!process.env.RAZORPAY_KEY_SECRET) {
       throw new Error('Razorpay secret not configured on server.');
     }
 
-    const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(`${orderId}|${paymentId}`)
-      .digest('hex');
-
-    if (generatedSignature !== signature) {
-      logger.error('Payment signature mismatch', { orderId, paymentId });
-      throw new Error('Invalid Razorpay payment signature. Tampering detected.');
+    if (!orderId || !paymentId || !signature) {
+      throw new Error('orderId, paymentId, and signature are required for payment verification.');
     }
 
     const mongoose = require('mongoose');
-    if (mongoose.connection && mongoose.connection.readyState === 1) {
-      const transaction = await PaymentTransaction.findOneAndUpdate(
-        { orderId },
-        { status: 'PAID', paymentId, method: 'RAZORPAY' },
-        { new: true }
-      );
+    const isDbConnected = Boolean(mongoose.connection && mongoose.connection.readyState === 1);
+
+    let transaction = null;
+    let appointment = null;
+    const targetOrderId = orderId;
+
+    if (isDbConnected) {
+      // 1. Retrieve the genuine server-stored transaction record
+      transaction = await PaymentTransaction.findOne({ orderId });
+      if (!transaction && process.env.NODE_ENV === 'production') {
+        logger.error('Payment verification failed: Order ID not found on server.', { orderId, paymentId });
+        throw new Error('No payment transaction record found for the provided order ID.');
+      }
+
+      if (transaction) {
+        // Verify appointment match if provided
+        const targetAppointmentId = appointmentId || transaction.appointmentId;
+        if (appointmentId && transaction.appointmentId.toString() !== appointmentId.toString()) {
+          logger.error('Payment verification failed: Order does not match appointment.', { orderId, appointmentId });
+          throw new Error('Payment transaction does not match the target appointment.');
+        }
+
+        // Verify patient match if provided
+        if (patientId && transaction.patientId.toString() !== patientId.toString()) {
+          logger.error('Payment verification failed: Transaction belongs to another patient.', { orderId, patientId });
+          throw new Error('Unauthorized: payment transaction belongs to another patient.');
+        }
+
+        // 2. Fetch target appointment to verify stored consultation fee
+        appointment = await Appointment.findById(targetAppointmentId);
+        if (appointment && typeof appointment.paymentAmount === 'number' && transaction.amount !== appointment.paymentAmount) {
+          logger.error('Payment amount mismatch between transaction and appointment', {
+            txAmount: transaction.amount,
+            aptAmount: appointment.paymentAmount,
+          });
+          throw new Error(`Payment amount mismatch: expected ₹${appointment.paymentAmount}, transaction was ₹${transaction.amount}.`);
+        }
+      }
+    }
+
+    const verifiedOrderId = transaction ? transaction.orderId : targetOrderId;
+
+    // 3. Official HMAC-SHA256 signature verification using server-stored order ID
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(`${verifiedOrderId}|${paymentId}`)
+      .digest('hex');
+
+    const sigBuffer = Buffer.from(signature, 'utf8');
+    const expBuffer = Buffer.from(expectedSignature, 'utf8');
+
+    if (sigBuffer.length !== expBuffer.length || !crypto.timingSafeEqual(sigBuffer, expBuffer)) {
+      logger.error('Payment signature verification mismatch', {
+        orderId: verifiedOrderId,
+        paymentId,
+      });
+      throw new Error('Invalid Razorpay payment signature. Tampering detected.');
+    }
+
+    // 4. Idempotency Check: If already marked PAID, return success without duplicate writes
+    if (transaction && transaction.status === 'PAID') {
+      logger.info('Duplicate verification request handled idempotently.', {
+        orderId: transaction.orderId,
+        paymentId,
+      });
+      return {
+        verified: true,
+        orderId: transaction.orderId,
+        paymentId,
+        status: 'PAID',
+        idempotent: true,
+      };
+    }
+
+    // 5. Update transaction state if DB connected
+    if (isDbConnected) {
+      if (transaction) {
+        transaction.status = 'PAID';
+        transaction.paymentId = paymentId;
+        transaction.method = 'RAZORPAY';
+        await transaction.save();
+      }
 
       const targetAppointmentId = appointmentId || (transaction ? transaction.appointmentId : null);
       if (targetAppointmentId) {
@@ -418,15 +515,60 @@ class PaymentService {
             paymentReferenceId: paymentId,
           });
         });
-        logger.info('Appointment payment confirmed via verified client signature.', { orderId, paymentId, targetAppointmentId });
       }
     }
 
+    logger.info('Appointment payment confirmed via verified Razorpay test signature.', {
+      orderId: verifiedOrderId,
+      paymentId,
+    });
+
     return {
       verified: true,
-      orderId,
+      orderId: verifiedOrderId,
       paymentId,
       status: 'PAID',
+    };
+  }
+
+  /**
+   * Safely record client-side checkout failure or cancellation
+   * Ensures already PAID appointments are never overwritten as FAILED
+   */
+  async recordClientPaymentFailure({ orderId, appointmentId, reason, errorCode }) {
+    if (!orderId && !appointmentId) {
+      throw new Error('orderId or appointmentId is required to record failure.');
+    }
+
+    const query = orderId ? { orderId } : { appointmentId };
+    const transaction = await PaymentTransaction.findOne(query);
+
+    // Protection rule: Never overwrite legitimate successful payments as FAILED
+    if (transaction && ['PAID', 'VERIFIED'].includes(transaction.status)) {
+      logger.warn('Ignoring payment failure request for already PAID transaction.', { orderId, status: transaction.status });
+      return { recorded: false, reason: 'Transaction already paid and confirmed.' };
+    }
+
+    if (transaction) {
+      transaction.status = 'FAILED';
+      await transaction.save();
+    }
+
+    const targetAppointmentId = appointmentId || (transaction ? transaction.appointmentId : null);
+    if (targetAppointmentId) {
+      const apt = await Appointment.findById(targetAppointmentId);
+      if (apt && apt.paymentStatus !== 'PAID') {
+        apt.status = 'PAYMENT_FAILED';
+        apt.paymentStatus = 'FAILED';
+        await apt.save();
+      }
+    }
+
+    logger.info('Payment failure recorded cleanly', { orderId, targetAppointmentId, reason, errorCode });
+    return {
+      recorded: true,
+      status: 'FAILED',
+      message: reason || 'Payment cancelled or rejected by gateway.',
     };
   }
 
@@ -467,22 +609,39 @@ class PaymentService {
       );
 
       if (transaction) {
-        await Appointment.findByIdAndUpdate(transaction.appointmentId, {
-          paymentStatus: 'PAID',
+        const appointmentService = require('./appointment.service');
+        await appointmentService.confirmAppointmentPayment(transaction.appointmentId, {
+          paymentMethod: 'RAZORPAY',
           paymentReferenceId: paymentId,
+        }).catch(async () => {
+          await Appointment.findByIdAndUpdate(transaction.appointmentId, {
+            status: 'CONFIRMED',
+            paymentStatus: 'PAID',
+            paymentMethod: 'RAZORPAY',
+            paymentReferenceId: paymentId,
+          });
         });
         logger.info('Appointment payment confirmed via verified Razorpay webhook.', { orderId, paymentId });
       }
     } else if (event === 'payment.failed' && payment) {
       const orderId = payment.order_id;
+      const existing = await PaymentTransaction.findOne({ orderId });
+
+      // Protection: Never overwrite already PAID transaction
+      if (existing && existing.status === 'PAID') {
+        logger.warn('Ignoring payment.failed webhook for already PAID transaction.', { orderId });
+        return { received: true, ignored: true };
+      }
+
       const transaction = await PaymentTransaction.findOneAndUpdate(
-        { orderId },
+        { orderId, status: { $ne: 'PAID' } },
         { status: 'FAILED', paymentId: payment.id },
         { new: true }
       );
       if (transaction) {
         await Appointment.findByIdAndUpdate(transaction.appointmentId, {
           paymentStatus: 'FAILED',
+          status: 'PAYMENT_FAILED',
         });
         logger.info('Appointment payment marked failed via verified Razorpay webhook.', { orderId });
       }

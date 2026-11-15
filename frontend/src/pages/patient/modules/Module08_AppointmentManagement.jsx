@@ -253,15 +253,39 @@ export default function Module08_AppointmentManagement() {
         theme: {
           color: '#0D9488',
         },
+        modal: {
+          ondismiss: function () {
+            addToast({
+              type: 'info',
+              title: 'Checkout Dismissed',
+              message: 'Payment was cancelled. You can retry checkout anytime from your appointments dashboard.',
+            });
+            setPaymentModal(prev => ({ ...prev, loading: false }));
+            loadAppointments();
+          },
+        },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (resp) {
+        const errDesc = resp?.error?.description || resp?.error?.reason || 'Payment was cancelled or rejected by gateway.';
+        const errReason = resp?.error?.reason ? ` (${resp.error.reason})` : '';
         addToast({
           type: 'error',
-          title: 'Payment Incomplete',
-          message: resp?.error?.description || 'Payment was cancelled or rejected by gateway.',
+          title: 'Payment Failed',
+          message: `${errDesc}${errReason}`,
         });
+
+        // Record failure state in backend so retry options remain clean
+        patientService.recordPaymentFailure({
+          orderId: orderData.orderId,
+          appointmentId,
+          reason: errDesc,
+          errorCode: resp?.error?.code,
+        }).catch(() => {});
+
+        setPaymentModal(prev => ({ ...prev, loading: false }));
+        loadAppointments();
       });
       rzp.open();
     } catch (err) {
@@ -566,6 +590,7 @@ export default function Module08_AppointmentManagement() {
             upcomingList.map((apt) => {
               const doc = apt.doctorId || {};
               const isPaymentPending = apt.status === 'PENDING_PAYMENT' || apt.paymentStatus === 'PENDING';
+              const isPaymentFailed = apt.status === 'PAYMENT_FAILED' || apt.paymentStatus === 'FAILED';
               const isUpiVerification = apt.paymentStatus === 'PENDING_VERIFICATION';
               const isConfirmed = apt.status === 'CONFIRMED' && apt.paymentStatus === 'PAID';
 
@@ -595,6 +620,12 @@ export default function Module08_AppointmentManagement() {
                         <Badge variant="amber" className="flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
                           <span>Payment Pending</span>
+                        </Badge>
+                      )}
+                      {isPaymentFailed && (
+                        <Badge variant="rose" className="flex items-center gap-1 text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Payment Failed</span>
                         </Badge>
                       )}
                       {isUpiVerification && (
@@ -636,15 +667,15 @@ export default function Module08_AppointmentManagement() {
                   )}
 
                   <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                    {isPaymentPending && (
+                    {(isPaymentPending || isPaymentFailed) && (
                       <Button
                         size="sm"
-                        variant="primary"
+                        variant={isPaymentFailed ? 'danger' : 'primary'}
                         onClick={() => openPaymentModal(apt, doc)}
                         className="flex items-center gap-1.5"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>Complete Payment (₹{apt.paymentAmount || doc.consultationFee || 500})</span>
+                        <span>{isPaymentFailed ? 'Retry Payment' : 'Complete Payment'} (₹{apt.paymentAmount || doc.consultationFee || 500})</span>
                       </Button>
                     )}
 

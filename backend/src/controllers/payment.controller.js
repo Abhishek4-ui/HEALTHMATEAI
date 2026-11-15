@@ -41,10 +41,26 @@ class PaymentController {
         paymentId,
         signature,
         appointmentId,
+        patientId: req.user?.id,
       });
       return successResponse(res, result, 'Payment signature verified successfully.');
     } catch (err) {
       return errorResponse(res, err.message, 400, 'SIGNATURE_VERIFICATION_FAILED');
+    }
+  }
+
+  async recordFailure(req, res, next) {
+    try {
+      const { orderId, appointmentId, reason, errorCode } = req.body;
+      const result = await paymentService.recordClientPaymentFailure({
+        orderId,
+        appointmentId,
+        reason,
+        errorCode,
+      });
+      return successResponse(res, result, 'Payment failure status recorded.');
+    } catch (err) {
+      return errorResponse(res, err.message, 400, 'PAYMENT_FAILURE_RECORDING_ERROR');
     }
   }
 

@@ -82,6 +82,7 @@ const PaymentTransactionSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true,
+    default: undefined,
   },
   rawWebhookSignatureHash: {
     type: String,
@@ -90,6 +91,13 @@ const PaymentTransactionSchema = new mongoose.Schema({
 }, {
   timestamps: true,
   collection: 'payment_transactions',
+});
+
+PaymentTransactionSchema.pre('save', function (next) {
+  if (!this.idempotencyKey) {
+    this.idempotencyKey = undefined;
+  }
+  next();
 });
 
 module.exports = mongoose.model('PaymentTransaction', PaymentTransactionSchema);

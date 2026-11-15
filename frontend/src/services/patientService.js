@@ -41,6 +41,10 @@ export const patientService = {
     return apiClient.post('/payments/verify-signature', paymentData);
   },
 
+  recordPaymentFailure: async (failureData) => {
+    return apiClient.post('/payments/record-failure', failureData);
+  },
+
   getPaymentConfig: async () => {
     return apiClient.get('/payments/config');
   },
