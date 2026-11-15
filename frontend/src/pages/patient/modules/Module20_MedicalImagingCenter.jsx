@@ -12,7 +12,11 @@ import {
   UserCheck, 
   Info, 
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck,
+  Sliders,
+  HardDrive,
+  Maximize2
 } from 'lucide-react';
 import UniversalUpload from '../../../components/upload/UniversalUpload';
 import MedicalDICOMViewer from '../../../components/imaging/MedicalDICOMViewer';
@@ -64,38 +68,81 @@ export default function Module20_MedicalImagingCenter() {
     return RADIOLOGY_CATALOGUE.find(r => r.id === selectedRegionId) || RADIOLOGY_CATALOGUE[0];
   }, [selectedRegionId]);
 
-  // Current examination object
+  // Current examination object with strict clinical model compatibility mapping
   const currentExam = useMemo(() => {
     if (selectedModality === 'XRAY') {
-      const exam = currentRegion.examinations.find(e => e.id === selectedExamId);
-      return exam || currentRegion.examinations[0];
+      const exam = currentRegion.examinations.find(e => e.id === selectedExamId) || currentRegion.examinations[0];
+      const isChest = exam.id === 'CXR_STANDARD' || exam.id === 'CXR_PORTABLE';
+      
+      let reason = null;
+      if (!isChest) {
+        if (selectedRegionId === 'HEAD_FACE') {
+          reason = 'Thoracic deep learning models are strictly sequestered from Craniofacial radiographs to prevent diagnostic hallucination. Certified radiologist review is recommended.';
+        } else if (selectedRegionId === 'SPINE') {
+          reason = 'Thoracic screening pipelines cannot evaluate vertebral compression, disc spacing, or spinal curvature. Certified spine specialist review is required.';
+        } else if (selectedRegionId === 'SHOULDER_UPPER_LIMB' || selectedRegionId === 'LOWER_LIMB' || selectedRegionId === 'PELVIS_HIP') {
+          reason = 'Musculoskeletal extremity and pelvic radiographs require certified orthopedic/radiological evaluation for joint spacing and trabecular disruption.';
+        } else if (selectedRegionId === 'ABDOMEN') {
+          reason = 'Bowel gas patterns and intra-abdominal calcifications require specialized abdominal radiological assessment.';
+        } else if (selectedRegionId === 'DENTAL') {
+          reason = 'Maxillofacial and dental radiographs require licensed dental specialist interpretation.';
+        } else {
+          reason = 'Thoracic AI models must never be applied to non-thoracic radiographs to maintain clinical safety standards.';
+        }
+      }
+
+      return {
+        ...exam,
+        aiModelSupported: isChest,
+        modelId: isChest ? 'mdl_cxr_denseresnet_v2' : null,
+        unsupportedReason: reason
+      };
     }
+
     if (selectedModality === 'CT') {
+      const isSupported = selectedCtStudy.includes('Head') || 
+                          selectedCtStudy.includes('Brain') || 
+                          selectedCtStudy.includes('Thorax') || 
+                          selectedCtStudy.includes('Chest') || 
+                          selectedCtStudy.includes('Abdomen');
       return { 
         id: 'CT_SCAN', 
         name: selectedCtStudy, 
-        aiModelSupported: selectedCtStudy.includes('Head') || selectedCtStudy.includes('Brain'), 
-        modelId: 'mdl_ct_axial_slice_v1' 
+        aiModelSupported: isSupported, 
+        modelId: isSupported ? 'mdl_ct_axial_slice_v1' : null,
+        unsupportedReason: isSupported ? null : 'Axial attenuation profiling is validated for Thoracic, Neuro, and Abdominopelvic CT series. Extremity / specialized CT requires manual radiologist inspection.'
       };
     }
+
     if (selectedModality === 'MRI') {
+      const isSupported = selectedMriStudy.includes('Brain');
       return { 
         id: 'MRI_SCAN', 
         name: selectedMriStudy, 
-        aiModelSupported: selectedMriStudy.includes('Brain'), 
-        modelId: 'mdl_mri_neuro_t2_v1' 
+        aiModelSupported: isSupported, 
+        modelId: isSupported ? 'mdl_mri_neuro_t2_v1' : null,
+        unsupportedReason: isSupported ? null : 'Neuro-MRI signal boundary classifier is validated for Brain structural series. Musculoskeletal and cardiac MRI require certified radiologist evaluation.'
       };
     }
+
     if (selectedModality === 'ULTRASOUND') {
       return { 
         id: 'US_SCAN', 
         name: selectedUsStudy, 
         aiModelSupported: false, 
-        modelId: null 
+        modelId: null,
+        unsupportedReason: 'Diagnostic ultrasound relies on dynamic operator-dependent acoustic impedance and real-time probe sweeps. Static single-frame algorithmic diagnosis is not clinically recommended.'
       };
     }
-    return { id: 'HISTOPATHOLOGY', name: 'Histopathology Biopsy', aiModelSupported: false, modelId: null };
-  }, [selectedModality, currentRegion, selectedExamId, selectedCtStudy, selectedMriStudy, selectedUsStudy]);
+
+    return { 
+      id: 'HISTOPATHOLOGY', 
+      name: 'Digital Histopathology Biopsy', 
+      aiModelSupported: false, 
+      modelId: null,
+      unsupportedReason: 'Whole-slide digital histopathology requires calibrated multi-gigabyte pyramidal WSI scanning and board-certified histopathologist review.'
+    };
+  }, [selectedModality, currentRegion, selectedExamId, selectedRegionId, selectedCtStudy, selectedMriStudy, selectedUsStudy]);
 
   // Available views for currently selected exam
   const availableViews = useMemo(() => {
@@ -140,7 +187,7 @@ export default function Module20_MedicalImagingCenter() {
     }
 
     if (!currentExam.aiModelSupported) {
-      setErrorMsg(`AI analysis is not currently available for ${currentExam.name}. Secure medical archiving and DICOM inspection are active.`);
+      setErrorMsg(`AI automated analysis is intentionally unavailable for ${currentExam.name} pursuant to clinical safety guardrails. Secure cloud storage and DICOM viewing are active.`);
       return;
     }
 
@@ -177,10 +224,10 @@ export default function Module20_MedicalImagingCenter() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-teal-500/20 text-teal-300 text-xs px-2.5 py-1 rounded-full font-semibold border border-teal-500/30 flex items-center gap-1">
-              <Scan className="w-3.5 h-3.5" /> Medical Imaging AI Center
+              <Scan className="w-3.5 h-3.5" /> Medical Imaging Center
             </span>
             <span className="bg-indigo-500/20 text-indigo-300 text-xs px-2 py-0.5 rounded-full font-mono">
-              All-Body Coverage • DICOM Canvas
+              All-Body Modality Coverage • Cornerstone3D Canvas
             </span>
           </div>
           <h1 className="text-2xl font-bold">Clinical Radiology & Multi-Modality Intelligence</h1>
@@ -411,29 +458,88 @@ export default function Module20_MedicalImagingCenter() {
           </div>
         )}
 
-        {/* AI Eligibility Notification Badge */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex flex-wrap items-center justify-between gap-2">
-          {currentExam.aiModelSupported ? (
-            <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
-              <Sparkles className="w-4 h-4 text-emerald-600" />
-              <span>
-                AI Pre-Screening Model Active: <strong className="font-mono text-emerald-800 dark:text-emerald-200">{currentExam.modelId}</strong>
-              </span>
+        {/* Dedicated 3-Tier Examination Capability Status Matrix */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-700 space-y-2">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Examination Capability & Service Matrix
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Status 1: File Upload & Secure Storage */}
+            <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-emerald-600 text-white shrink-0 mt-0.5">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-200">1. Storage & Archival</h4>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 leading-tight">
+                  Always available. Encrypted cloud storage for DICOM (.dcm), PNG, JPG, and PDF.
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 font-medium">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-              <span>
-                AI analysis is not currently supported for this examination. Secure cloud storage and interactive DICOM viewing are fully available.
-              </span>
-            </div>
-          )}
 
-          {currentExam.modelId && (
-            <span className="text-[11px] text-slate-500 font-mono">
-              Dataset: {MODEL_REGISTRY[currentExam.modelId]?.trainingDataset || 'Clinical Benchmark'}
-            </span>
-          )}
+            {/* Status 2: Interactive DICOM Viewing */}
+            <div className="p-3 rounded-xl border border-cyan-200 dark:border-cyan-900/50 bg-cyan-50/50 dark:bg-cyan-950/20 flex items-start gap-2.5">
+              <div className="p-1.5 rounded-lg bg-cyan-600 text-white shrink-0 mt-0.5">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-cyan-900 dark:text-cyan-200">2. Interactive DICOM</h4>
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-300">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-[11px] text-cyan-800/80 dark:text-cyan-300/80 mt-0.5 leading-tight">
+                  Cornerstone3D WebGL engine with custom Hounsfield windowing, pan, zoom, and invert.
+                </p>
+              </div>
+            </div>
+
+            {/* Status 3: AI Analysis Compatibility */}
+            <div className={`p-3 rounded-xl border flex items-start gap-2.5 ${
+              currentExam.aiModelSupported
+                ? 'border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-950/20'
+                : 'border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20'
+            }`}>
+              <div className={`p-1.5 rounded-lg text-white shrink-0 mt-0.5 ${
+                currentExam.aiModelSupported ? 'bg-teal-600' : 'bg-amber-600'
+              }`}>
+                {currentExam.aiModelSupported ? <Sparkles className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h4 className={`text-xs font-bold ${
+                    currentExam.aiModelSupported ? 'text-teal-900 dark:text-teal-200' : 'text-amber-900 dark:text-amber-200'
+                  }`}>
+                    3. AI Clinical Model
+                  </h4>
+                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                    currentExam.aiModelSupported
+                      ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                  }`}>
+                    {currentExam.aiModelSupported ? 'MODEL READY' : 'PEER-REVIEW ONLY'}
+                  </span>
+                </div>
+                <p className={`text-[11px] mt-0.5 leading-tight ${
+                  currentExam.aiModelSupported
+                    ? 'text-teal-800/80 dark:text-teal-300/80'
+                    : 'text-amber-800/80 dark:text-amber-300/80'
+                }`}>
+                  {currentExam.aiModelSupported ? (
+                    <>Model <strong className="font-mono">{currentExam.modelId}</strong> is validated for {currentExam.name}.</>
+                  ) : (
+                    currentExam.unsupportedReason || 'Clinical guardrail active: model withheld for non-thoracic anatomy to prevent diagnostic error.'
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -444,6 +550,7 @@ export default function Module20_MedicalImagingCenter() {
           {/* Universal Upload Integration */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm">
             <UniversalUpload
+              files={selectedFile ? [selectedFile] : []}
               onFileSelect={handleFileSelect}
               acceptedTypes={['.dcm', '.png', '.jpg', '.jpeg', '.webp', '.pdf']}
               maxSizeMB={25}
@@ -470,36 +577,53 @@ export default function Module20_MedicalImagingCenter() {
           />
 
           {/* Action Trigger Buttons */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="text-xs text-slate-500">
+          <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="text-xs text-slate-500 w-full sm:w-auto">
               {selectedFile ? (
-                <span>Loaded: <strong className="text-slate-700 dark:text-slate-300">{selectedFile.name}</strong></span>
+                <span>Loaded Scan: <strong className="text-slate-800 dark:text-slate-200">{selectedFile.name}</strong></span>
               ) : (
-                <span>No scan loaded</span>
+                <span>No scan loaded yet. Browse or take a live camera photo above.</span>
               )}
             </div>
 
-            <button
-              onClick={handleRunAnalysis}
-              disabled={analyzing || !selectedFile || !currentExam.aiModelSupported}
-              className={`px-6 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md flex items-center gap-2 transition ${
-                analyzing || !selectedFile || !currentExam.aiModelSupported
-                  ? 'bg-slate-400 cursor-not-allowed' 
-                  : 'bg-teal-600 hover:bg-teal-500 shadow-teal-500/25'
-              }`}
-            >
-              {analyzing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analyzing {currentExam.name}...
-                </>
-              ) : (
-                <>
-                  <Scan className="w-4 h-4" />
-                  Run AI Imaging Analysis
-                </>
-              )}
-            </button>
+            {currentExam.aiModelSupported ? (
+              <button
+                onClick={handleRunAnalysis}
+                disabled={analyzing || !selectedFile}
+                className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md flex items-center justify-center gap-2 transition ${
+                  analyzing || !selectedFile
+                    ? 'bg-slate-400 cursor-not-allowed' 
+                    : 'bg-teal-600 hover:bg-teal-500 shadow-teal-500/25'
+                }`}
+              >
+                {analyzing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Analyzing {currentExam.name}...
+                  </>
+                ) : (
+                  <>
+                    <Scan className="w-4 h-4" />
+                    Run AI Imaging Analysis
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => setShowReviewModal(true)}
+                  disabled={!selectedFile}
+                  className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md flex items-center justify-center gap-2 transition ${
+                    !selectedFile
+                      ? 'bg-slate-400 cursor-not-allowed'
+                      : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/25'
+                  }`}
+                >
+                  <UserCheck className="w-4 h-4" />
+                  <span>Request Radiologist Review</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {errorMsg && (
@@ -516,7 +640,7 @@ export default function Module20_MedicalImagingCenter() {
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700/60 pb-3">
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-teal-600" />
-                Preliminary AI Findings
+                Preliminary Clinical Triage
               </h2>
               {analysisResult && (
                 <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300">
@@ -610,22 +734,25 @@ export default function Module20_MedicalImagingCenter() {
                 </div>
               </div>
             ) : (
-              <div className="py-12 px-4 text-center space-y-3">
+              <div className="py-10 px-4 text-center space-y-3">
                 <Scan className="w-10 h-10 text-slate-400 mx-auto" />
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  {currentExam.aiModelSupported ? 'Awaiting Scan Input' : 'Manual Radiological Review'}
-                </p>
-                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  {currentExam.aiModelSupported ? 'Awaiting Scan Input' : 'Certified Clinician Review Channel'}
+                </h3>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
                   {currentExam.aiModelSupported
-                    ? `Load an image for ${currentExam.name} and click "Run AI Imaging Analysis" to inspect morphological markers.`
-                    : `${currentExam.name} does not have an automated AI model. You can view it in the DICOM canvas with custom Hounsfield presets and request a certified radiologist review.`}
+                    ? `Load an imaging file for ${currentExam.name} and click "Run AI Imaging Analysis" to inspect morphological markers.`
+                    : `${currentExam.name} operates under peer-review safety protocol. You can inspect the image in the DICOM canvas with custom windowing or dispatch it to an accredited Radiologist.`}
                 </p>
-                {!currentExam.aiModelSupported && selectedFile && (
+                {!currentExam.aiModelSupported && (
                   <button
                     onClick={() => setShowReviewModal(true)}
-                    className="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition"
+                    disabled={!selectedFile}
+                    className={`mt-3 px-5 py-2 text-white rounded-xl text-xs font-semibold shadow-md transition ${
+                      !selectedFile ? 'bg-slate-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 shadow-indigo-500/20'
+                    }`}
                   >
-                    Send to Radiologist Directly
+                    Dispatch to Radiologist Directly
                   </button>
                 )}
               </div>
