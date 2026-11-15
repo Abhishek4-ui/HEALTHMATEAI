@@ -17,6 +17,14 @@ export const aiService = {
     return apiClient.post('/patient/risk-assessment', riskParameters);
   },
 
+  assessCardioRisk: async (riskParameters) => {
+    return apiClient.post('/patient/risk-assessment/cardio', riskParameters);
+  },
+
+  assessDiabetesRisk: async (riskParameters) => {
+    return apiClient.post('/patient/risk-assessment/diabetes', riskParameters);
+  },
+
   extractLabReportOCR: async (formData) => {
     return apiClient.post('/patient/reports/ocr-extract', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -28,8 +36,12 @@ export const aiService = {
   },
 
   checkDrugInteractions: async (medicationsList) => {
-    return apiClient.post('/doctor/prescriptions/check-interactions', {
+    return apiClient.post('/patient/prescriptions/check-interactions', {
       medications: medicationsList,
+    }).catch(() => {
+      return apiClient.post('/doctor/prescriptions/check-interactions', {
+        medications: medicationsList,
+      });
     });
   },
 

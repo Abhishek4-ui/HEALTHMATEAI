@@ -36,7 +36,16 @@ const upload = multer({
 });
 
 // Ephemeral Diagnostic Report Upload & AI OCR Staging
-router.post('/reports/ocr-extract', optionalAuth, upload.single('report'), reportController.uploadReport);
+const handleReportUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) return next(err);
+    if (req.files && req.files.length > 0) {
+      req.file = req.files.find(f => f.fieldname === 'report' || f.fieldname === 'file') || req.files[0];
+    }
+    next();
+  });
+};
+router.post('/reports/ocr-extract', optionalAuth, handleReportUpload, reportController.uploadReport);
 
 // AI Copilot, Symptom Checker, and Health Risk Assessment
 router.post('/copilot/message', optionalAuth, async (req, res, next) => {
@@ -57,7 +66,41 @@ router.post('/symptom-check', optionalAuth, async (req, res, next) => {
 
 router.post('/risk-assessment', optionalAuth, async (req, res, next) => {
   try {
+    const isDiabetes = req.body.type === 'diabetes' || req.body.assessmentType === 'diabetes' || req.body.assessment_type === 'diabetes';
+    const result = isDiabetes
+      ? await aiGateway.assessDiabetesRisk(req.body)
+      : await aiGateway.assessCardioRisk(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/risk-assessment/cardio', optionalAuth, async (req, res, next) => {
+  try {
     const result = await aiGateway.assessCardioRisk(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/risk-assessment/diabetes', optionalAuth, async (req, res, next) => {
+  try {
+    const result = await aiGateway.assessDiabetesRisk(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+// Pharmacovigilance Drug Interaction Safety Analysis (Accessible to Patients)
+router.post('/prescriptions/check-interactions', optionalAuth, async (req, res, next) => {
+  try {
+    const medications = req.body.medications || req.body.drugs || [];
+    const result = await aiGateway.checkDrugInteractions(medications);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+router.post('/medications/check-interactions', optionalAuth, async (req, res, next) => {
+  try {
+    const medications = req.body.medications || req.body.drugs || [];
+    const result = await aiGateway.checkDrugInteractions(medications);
     res.status(200).json({ success: true, data: result });
   } catch (err) { next(err); }
 });

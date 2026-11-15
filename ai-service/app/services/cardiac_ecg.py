@@ -81,6 +81,18 @@ class CardiacECGAnalyzer:
     Uses pixel luminance thresholding and vertical column tracing along the Lead II region.
     """
     try:
+      # If PDF document, extract the first raster image from embedded pages
+      if file_bytes.startswith(b'%PDF'):
+        try:
+          from pypdf import PdfReader
+          reader = PdfReader(io.BytesIO(file_bytes))
+          for page in reader.pages:
+            if hasattr(page, 'images') and len(page.images) > 0:
+              file_bytes = page.images[0].data
+              break
+        except Exception:
+          pass
+
       img = Image.open(io.BytesIO(file_bytes))
       if img.mode != 'L':
         img = img.convert('L')

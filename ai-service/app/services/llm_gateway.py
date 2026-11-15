@@ -121,7 +121,10 @@ class LLMGateway:
                     )
                     resp.raise_for_status()
                     data = resp.json()
-                    content = data["choices"][0]["message"]["content"]
+                    msg = data["choices"][0]["message"]
+                    content = msg.get("content") or msg.get("reasoning")
+                    if not content or not content.strip():
+                        raise ValueError("OpenRouter returned empty or null content.")
                     return {
                         "success": True,
                         "provider": "openrouter",

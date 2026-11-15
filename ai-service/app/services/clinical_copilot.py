@@ -197,7 +197,7 @@ class ClinicalCopilot:
 
         return {
             "query": query,
-            "response": ai_response.get("content", ""),
+            "response": ai_response.get("content") or "HealthMate AI Clinical Assistant: Please consult a licensed medical professional for clinical guidance.",
             "language": language,
             "provider_used": ai_response.get("provider", "local_rule_engine"),
             "model_used": ai_response.get("model", "healthmate-clinical-copilot"),

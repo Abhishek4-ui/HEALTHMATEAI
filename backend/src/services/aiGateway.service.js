@@ -1,9 +1,16 @@
 const config = require('../config/env');
 const logger = require('../utils/logger');
+const crypto = require('crypto');
 
 class AIGatewayService {
   constructor() {
-    this.baseUrl = config.aiServiceUrl || 'http://localhost:8000';
+    let base = (config.aiServiceUrl || '').trim();
+    if (!base) {
+      base = 'http://localhost:8000';
+    } else if (!base.startsWith('http://') && !base.startsWith('https://')) {
+      base = `https://${base}`;
+    }
+    this.baseUrl = base.replace(/\/+$/, '');
   }
 
   /**
@@ -72,20 +79,28 @@ class AIGatewayService {
   /**
    * Framingham / WHO Cardiovascular 10-Year Risk Assessment
    */
-  async assessCardioRisk(params) {
+  async assessCardioRisk(params = {}) {
+    const systolicBp = Number(params.systolic_bp || params.systolicBP || params.systolic || 120);
+    const cholesterol = Number(params.total_cholesterol || params.cholesterol || 190);
+    const hdl = Number(params.hdl_cholesterol || params.hdl || 50);
+    const glucose = Number(params.bloodGlucose || params.fasting_glucose || params.fastingGlucose || 95);
+    const isSmoker = Boolean(params.smoker || params.is_smoker || params.isSmoker);
+    const hasDiabetes = Boolean(params.diabetic || params.has_diabetes || params.hasDiabetes || glucose > 125);
+
     const payload = {
-      age: params.age || 45,
-      systolic_bp: params.systolic_bp || 120,
-      total_cholesterol: params.total_cholesterol || 190,
-      hdl_cholesterol: params.hdl_cholesterol || 50,
-      is_smoker: Boolean(params.smoker || params.is_smoker),
-      has_diabetes: Boolean(params.diabetic || params.has_diabetes),
+      age: Number(params.age || 45),
+      systolic_bp: systolicBp,
+      total_cholesterol: cholesterol,
+      hdl_cholesterol: hdl,
+      is_smoker: isSmoker,
+      has_diabetes: hasDiabetes,
     };
 
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/health-risk/cardio`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -116,10 +131,10 @@ class AIGatewayService {
       risk_category: 'HIGH',
       badge_color: '#FF708F',
       shap_feature_importance: [
-        { feature: 'Blood Pressure', value: `${params.systolic_bp || 140} mmHg`, risk_contribution_percent: 8.0 },
+        { feature: 'Blood Pressure', value: `${systolicBp} mmHg`, risk_contribution_percent: 8.0 },
       ],
       shap_feature_attributions: [
-        { feature: 'Blood Pressure', value: `${params.systolic_bp || 140} mmHg`, risk_contribution_percent: 8.0 },
+        { feature: 'Blood Pressure', value: `${systolicBp} mmHg`, risk_contribution_percent: 8.0 },
       ],
       clinical_recommendations: ['Maintain regular aerobic exercise and annual lipid screening.'],
       lifestyle_recommendations: ['Maintain regular aerobic exercise and annual lipid screening.'],
@@ -130,19 +145,27 @@ class AIGatewayService {
   /**
    * ADA / FINDRISC 5-Year Type-2 Diabetes Risk Assessment
    */
-  async assessDiabetesRisk(params) {
+  async assessDiabetesRisk(params = {}) {
+    const bmiVal = Number(params.bmi || 25.0);
+    const fastingGluc = Number(params.fasting_glucose || params.fastingGlucose || params.bloodGlucose || 95);
+    const hasFamilyHistory = Boolean(params.family_history || params.family_history_diabetes || params.familyHistory);
+    const isPhysActive = params.physical_activity !== undefined 
+      ? Boolean(params.physical_activity) 
+      : (params.physically_active !== undefined ? Boolean(params.physically_active) : true);
+
     const payload = {
-      age: params.age || 45,
-      bmi: params.bmi || 25.0,
-      family_history: Boolean(params.family_history || params.family_history_diabetes),
-      physical_activity: params.physically_active !== undefined ? Boolean(params.physically_active) : true,
-      fasting_glucose: params.fasting_glucose || (params.history_high_blood_glucose ? 115 : 90),
+      age: Number(params.age || 45),
+      bmi: bmiVal,
+      family_history: hasFamilyHistory,
+      physical_activity: isPhysActive,
+      fasting_glucose: fastingGluc,
     };
 
     try {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/health-risk/diabetes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify(payload),
       });
       if (res.ok) {
@@ -166,28 +189,46 @@ class AIGatewayService {
       risk_tier: 'HIGH',
       risk_category: 'HIGH',
       shap_feature_importance: [
-        { feature: 'Body Mass Index', value: `${params.bmi || 28} kg/m²`, risk_contribution_percent: 6.0 },
+        { feature: 'Body Mass Index', value: `${bmiVal} kg/m²`, risk_contribution_percent: 6.0 },
       ],
       shap_feature_attributions: [
-        { feature: 'Body Mass Index', value: `${params.bmi || 28} kg/m²`, risk_contribution_percent: 6.0 },
+        { feature: 'Body Mass Index', value: `${bmiVal} kg/m²`, risk_contribution_percent: 6.0 },
       ],
       disclaimer: 'Informational health risk stratification.',
     };
   }
 
   /**
-   * Clinical Biomarker Extraction via OCR / RegEx
+   * Clinical Biomarker Extraction via OCR / RegEx / PyPDF
    */
-  async extractReportOCR(rawText) {
+  async extractReportOCR(input) {
     try {
-      const formData = new URLSearchParams();
-      formData.append('raw_text', rawText);
+      let res;
+      if (input && typeof input === 'object' && input.fileBuffer) {
+        const form = new FormData();
+        const blob = new Blob([input.fileBuffer], { type: input.mimetype || 'application/octet-stream' });
+        form.append('file', blob, input.filename || 'report.pdf');
+        if (input.rawText) {
+          form.append('raw_text', input.rawText);
+        }
 
-      const res = await fetch(`${this.baseUrl}/api/v1/ai/ocr-extract`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
-      });
+        res = await fetch(`${this.baseUrl}/api/v1/ai/ocr-extract`, {
+          method: 'POST',
+          signal: AbortSignal.timeout(25000),
+          body: form,
+        });
+      } else {
+        const rawText = typeof input === 'string' ? input : (input?.rawText || '');
+        const form = new FormData();
+        form.append('raw_text', rawText);
+
+        res = await fetch(`${this.baseUrl}/api/v1/ai/ocr-extract`, {
+          method: 'POST',
+          signal: AbortSignal.timeout(25000),
+          body: form,
+        });
+      }
+
       if (res.ok) {
         const data = await res.json();
         return {
@@ -227,7 +268,7 @@ class AIGatewayService {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/doctor-consult`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(30000),
         body: JSON.stringify({
           query,
           language,
@@ -283,6 +324,7 @@ class AIGatewayService {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/copilot-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(30000),
         body: JSON.stringify({ query, language, history }),
       });
       if (res.ok) return await res.json();
@@ -306,7 +348,7 @@ class AIGatewayService {
       const res = await fetch(`${this.baseUrl}/api/v1/ai/soap-summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(30000),
         body: JSON.stringify({ consultation_text: consultationText, patient_info: patientInfo }),
       });
       if (res.ok) return await res.json();

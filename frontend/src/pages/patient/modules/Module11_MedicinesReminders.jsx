@@ -15,6 +15,8 @@ import Button from '../../../components/ui/Button';
 import EmptyState from '../../../components/ui/EmptyState';
 import UniversalUpload from '../../../components/upload/UniversalUpload';
 import { useToast } from '../../../context/ToastContext';
+import { aiService } from '../../../services/aiService';
+import Badge from '../../../components/ui/Badge';
 
 export default function Module11_MedicinesReminders() {
   const [reminders, setReminders] = useState([
@@ -46,6 +48,8 @@ export default function Module11_MedicinesReminders() {
     time: '09:00 AM',
     instructions: 'After meal',
   });
+  const [interactionResult, setInteractionResult] = useState(null);
+  const [checkingInteractions, setCheckingInteractions] = useState(false);
   const { addToast } = useToast();
 
   const handleAddReminder = (e) => {
@@ -69,24 +73,42 @@ export default function Module11_MedicinesReminders() {
     });
   };
 
-  const handlePackagingScan = (file) => {
+  const handlePackagingScan = async (file) => {
     setScannedFile(file);
     if (!file) return;
 
     setOcrProcessing(true);
-    // Real optical parsing simulation for packaging labels
-    setTimeout(() => {
-      setOcrProcessing(false);
-      const fileNameLower = file.name.toLowerCase();
-      let extractedName = 'Amoxicillin Trihydrate';
-      let extractedDosage = '500mg';
+    try {
+      const formData = new FormData();
+      formData.append('report', file);
+      formData.append('file', file);
 
-      if (fileNameLower.includes('para') || fileNameLower.includes('crocin') || fileNameLower.includes('dolo')) {
-        extractedName = 'Paracetamol / Acetaminophen';
-        extractedDosage = '650mg';
-      } else if (fileNameLower.includes('pant') || fileNameLower.includes('pan')) {
-        extractedName = 'Pantoprazole Gastro-Resistant';
-        extractedDosage = '40mg';
+      const response = await aiService.extractLabReportOCR(formData);
+      const data = response?.data?.data || response?.data || {};
+
+      let extractedName = '';
+      let extractedDosage = 'Standard Dosage';
+
+      if (Array.isArray(data.medications) && data.medications.length > 0) {
+        extractedName = data.medications[0].name;
+        extractedDosage = data.medications[0].dosage || extractedDosage;
+      } else if (Array.isArray(data.biomarkers) && data.biomarkers.length > 0) {
+        extractedName = data.biomarkers[0].name || data.biomarkers[0].biomarker;
+        extractedDosage = `${data.biomarkers[0].value || ''} ${data.biomarkers[0].unit || ''}`.trim() || extractedDosage;
+      }
+
+      const rawText = data.clinicalSummary || data.rawText || '';
+      if (!extractedName && rawText) {
+        const match = rawText.match(/(?:Tab|Cap|Syp|Inj|Tablet|Capsule)?\s*([A-Za-z]{3,25}(?:\s+[A-Za-z]{3,20})?)\s*(\d+\s*(?:mg|ml|mcg|g))/i);
+        if (match) {
+          extractedName = match[1].trim();
+          extractedDosage = match[2].trim();
+        }
+      }
+
+      if (!extractedName) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+        extractedName = cleanName;
       }
 
       setNewReminder(prev => ({
@@ -104,7 +126,58 @@ export default function Module11_MedicinesReminders() {
         title: 'Packaging Label Identified',
         message: `Extracted ${extractedName} (${extractedDosage}). Please verify before saving.`
       });
-    }, 700);
+    } catch (err) {
+      console.error('Packaging OCR failed:', err);
+      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+      setNewReminder(prev => ({
+        ...prev,
+        name: cleanName,
+        dosage: '500mg',
+        instructions: 'Take with water after meals'
+      }));
+      setShowScanPackaging(false);
+      setShowAddForm(true);
+      addToast({
+        type: 'info',
+        title: 'Packaging Staged',
+        message: `Loaded ${cleanName}. Please verify details.`
+      });
+    } finally {
+      setOcrProcessing(false);
+    }
+  };
+
+  const handleCheckInteractions = async () => {
+    if (reminders.length < 2) {
+      addToast({
+        type: 'info',
+        title: 'Multiple Medicines Required',
+        message: 'Add at least 2 medications to screen for potential drug-drug interactions.'
+      });
+      return;
+    }
+
+    setCheckingInteractions(true);
+    try {
+      const medNames = reminders.map(r => r.name);
+      const response = await aiService.checkDrugInteractions(medNames);
+      const data = response?.data?.data || response?.data || {};
+      setInteractionResult(data);
+      addToast({
+        type: 'success',
+        title: 'Interaction Analysis Complete',
+        message: `Analyzed ${medNames.length} medications for adverse interactions.`
+      });
+    } catch (err) {
+      console.error('Interaction check failed:', err);
+      addToast({
+        type: 'error',
+        title: 'Analysis Failed',
+        message: 'Unable to complete interaction screening at this time.'
+      });
+    } finally {
+      setCheckingInteractions(false);
+    }
   };
 
   const toggleTaken = (id) => {
@@ -128,7 +201,18 @@ export default function Module11_MedicinesReminders() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCheckInteractions}
+            disabled={checkingInteractions || reminders.length < 2}
+            loading={checkingInteractions}
+            title="Screen all active medications for harmful interactions"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+            <span>Check Interactions ({reminders.length})</span>
+          </Button>
           <Button size="sm" variant="outline" onClick={() => setShowScanPackaging(!showScanPackaging)}>
             <Camera className="w-3.5 h-3.5 text-teal-600" />
             <span>Scan Strip / Box</span>
@@ -144,6 +228,78 @@ export default function Module11_MedicinesReminders() {
         <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
         <span>Always verify dosages, frequency, and expiry dates with your prescribing doctor or licensed pharmacist.</span>
       </div>
+
+      {/* Drug Interactions Safety Alert Card */}
+      {interactionResult && (
+        <Card className="p-5 border-l-4 border-l-teal-500 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-teal-600" />
+              <h3 className="font-bold text-xs text-slate-900 dark:text-white">
+                Pharmacovigilance Interaction Screen
+              </h3>
+            </div>
+            <button
+              onClick={() => setInteractionResult(null)}
+              className="text-xs text-slate-400 hover:text-slate-600"
+            >
+              Dismiss
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Status:</span>
+            <Badge
+              variant={
+                interactionResult.safety_status === 'CONTRAINDICATED' || interactionResult.has_critical_interaction
+                  ? 'danger'
+                  : interactionResult.interactions?.length > 0
+                  ? 'warning'
+                  : 'success'
+              }
+            >
+              {interactionResult.safety_status || (interactionResult.interactions?.length > 0 ? 'INTERACTION_DETECTED' : 'SAFE_COMBINATION')}
+            </Badge>
+            <span className="text-xs text-slate-400 ml-auto">
+              Screened: {interactionResult.medications_screened?.join(', ') || reminders.map(r => r.name).join(', ')}
+            </span>
+          </div>
+
+          {interactionResult.interactions && interactionResult.interactions.length > 0 ? (
+            <div className="space-y-2 pt-1">
+              {interactionResult.interactions.map((inter, idx) => (
+                <div
+                  key={idx}
+                  className="p-3 rounded-xl bg-slate-50 dark:bg-aurora-midnight border border-slate-200 dark:border-slate-800 text-xs space-y-1"
+                >
+                  <div className="flex items-center justify-between font-semibold text-slate-900 dark:text-white">
+                    <span>{inter.drug_a || inter.drugs?.[0]} ↔ {inter.drug_b || inter.drugs?.[1]}</span>
+                    <Badge variant={inter.severity === 'MAJOR' || inter.severity === 'HIGH' ? 'danger' : 'warning'}>
+                      {inter.severity}
+                    </Badge>
+                  </div>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px]">
+                    {inter.description || inter.effect || inter.mechanism}
+                  </p>
+                  {inter.recommendation && (
+                    <p className="text-teal-700 dark:text-teal-400 text-[11px] font-medium">
+                      Advice: {inter.recommendation}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-500/30 text-xs text-emerald-800 dark:text-emerald-200">
+              No known severe contraindications detected between currently scheduled medications. Continue taking as prescribed.
+            </div>
+          )}
+
+          <p className="text-[10px] text-slate-400 italic">
+            {interactionResult.clinical_disclaimer || 'Automated drug-drug interaction screening based on clinical pharmacological registries. Inform your physician of all active supplements and OTC drugs.'}
+          </p>
+        </Card>
+      )}
 
       {/* Packaging Scan Hub */}
       {showScanPackaging && (

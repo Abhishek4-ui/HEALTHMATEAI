@@ -35,7 +35,7 @@ router.post('/copilot/summarize', authenticateToken, requireRoles(['DOCTOR']), a
   } catch (err) { next(err); }
 });
 
-router.post('/prescriptions/check-interactions', authenticateToken, requireRoles(['DOCTOR']), async (req, res, next) => {
+router.post('/prescriptions/check-interactions', authenticateToken, requireRoles(['DOCTOR', 'PATIENT']), async (req, res, next) => {
   try {
     const { medications } = req.body;
     const result = await aiGateway.checkDrugInteractions(medications || []);

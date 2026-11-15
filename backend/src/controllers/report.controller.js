@@ -11,8 +11,12 @@ class ReportController {
 
       let ocrResult = null;
       try {
-        const textToExtract = file.buffer ? file.buffer.toString('utf-8') : '';
-        ocrResult = await aiGateway.extractReportOCR(textToExtract);
+        ocrResult = await aiGateway.extractReportOCR({
+          fileBuffer: file.buffer,
+          filename: file.originalname,
+          mimetype: file.mimetype,
+          rawText: file.buffer ? file.buffer.toString('utf-8') : '',
+        });
       } catch (ocrErr) {
         ocrResult = {
           biomarkers: [],
