@@ -5,10 +5,10 @@ services:
     env: node
     rootDir: backend
     plan: free
-    buildCommand: npm install --production
+    buildCommand: npm install
     startCommand: node src/server.js
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
@@ -44,7 +44,7 @@ services:
     dockerfilePath: Dockerfile
     plan: free
     healthCheckPath: /health
-    autoDeploy: false
+    autoDeploy: true
     envVars:
       - key: ENVIRONMENT
         value: production
