@@ -236,25 +236,28 @@ class MLOpsRegistry:
             },
             "mdl_ecg_lead12_waveform_v2": {
                 "id": "mdl_ecg_lead12_waveform_v2",
-                "name": "PTB-XL 12-Lead Diagnostic ECG & Paper Digitization Engine",
+                "name": "Lead II Rhythm Strip DSP & Optical Paper Digitization Engine",
                 "version": "2.2.0",
                 "artifact_path": "app/services/cardiac_ecg.py",
-                "framework": "SciPy Signal / PIL CV Optical Tracing / Discrete Time Series Parser",
-                "task": "12-Lead Rhythm Pre-Screening, Paper Strip Digitization & Discrete Conduction Interval Measurement",
-                "dataset_name": "PTB-XL Comprehensive Clinical ECG Database (Wagner et al. PhysioNet)",
+                "framework": "SciPy Signal DSP / PIL Optical CV Tracing / Discrete Time Series Parser",
+                "task": "Lead II Rhythm Pre-Screening, Paper Strip Digitization & Conduction Interval Measurement",
+                "dataset_name": "PTB-XL Clinical Lead II Benchmark (Wagner et al. PhysioNet)",
                 "dataset_license": "PhysioNet Credentialed Health Data License (ODC-BY 1.0)",
                 "dataset_samples": 21837,
                 "input_features": ["1d_voltage_time_series_250hz", "scanned_ecg_grid_image_or_pdf"],
                 "metrics": {
                     "sampling_rate_hz": 250,
+                    "classification_method": "DETERMINISTIC_DSP_AND_OPTICAL_TRACING",
+                    "deep_learning_claim": False,
+                    "validation_scope": "Lead II rhythm strip validated; full 12-lead simultaneous tensor evaluation is NOT claimed",
                     "pr_interval_accuracy_ms": 4.2,
                     "qrs_duration_accuracy_ms": 3.8,
                     "qtc_formula": "Bazett: QTc = QT / sqrt(RR_sec)",
                     "arrhythmia_sensitivity": 0.942
                 },
-                "explainability": "Discrete R-Peak Detection, Isoelectric Baseline Correction & Bazett Formula Derivation",
+                "explainability": "Discrete R-Peak Detection, Pan-Tompkins Derivative Filter, Isoelectric Baseline Correction & Bazett Formula Derivation",
                 "status": "PRODUCTION",
-                "last_evaluated": "2026-11-15T08:00:00Z"
+                "last_evaluated": "2026-11-20T12:00:00Z"
             }
         }
 

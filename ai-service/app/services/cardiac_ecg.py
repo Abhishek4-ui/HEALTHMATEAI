@@ -21,9 +21,11 @@ class CardiacECGAnalyzer:
   def __init__(self):
     self.model_metadata = {
       'model_id': 'mdl_ecg_lead12_waveform_v2',
-      'framework': 'PyTorch 2.15 / SciPy Signal / PIL CV',
-      'training_dataset': 'PTB-XL Comprehensive Clinical ECG Database (21,837 12-Lead Records)',
-      'intended_use': 'Cardiac conduction interval measurement, paper strip digitization, and rhythm pre-screening triage'
+      'framework': 'SciPy Signal DSP / PIL Optical CV Tracing',
+      'engine_type': 'DETERMINISTIC_DIGITAL_SIGNAL_PROCESSING',
+      'validation_scope': 'Lead II rhythm strip (1D discrete time-series and optical scan); full 12-lead simultaneous tensor evaluation is NOT claimed',
+      'reference_dataset': 'PTB-XL Clinical Lead II Benchmark (Wagner et al. PhysioNet)',
+      'intended_use': 'Cardiac conduction interval measurement, Lead II paper strip digitization, and rhythm pre-screening triage'
     }
 
   def _parse_1d_signal(self, file_bytes: bytes, filename: str) -> Optional[List[float]]:

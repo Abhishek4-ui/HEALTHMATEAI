@@ -9,10 +9,11 @@ const RTC_CONFIG = {
 };
 
 export class TelehealthSession {
-  constructor({ appointmentId, token, iceServers, onRemoteStream, onPeerJoined, onPeerLeft, onError, onConnectionStateChange }) {
+  constructor({ appointmentId, token, iceServers, iceTransportPolicy = 'all', onRemoteStream, onPeerJoined, onPeerLeft, onError, onConnectionStateChange }) {
     this.appointmentId = appointmentId;
     this.token = token;
     this.iceServers = iceServers || RTC_CONFIG.iceServers;
+    this.iceTransportPolicy = iceTransportPolicy; // 'all' or 'relay' to force TURN
     this.onRemoteStream = onRemoteStream;
     this.onPeerJoined = onPeerJoined;
     this.onPeerLeft = onPeerLeft;
@@ -66,7 +67,10 @@ export class TelehealthSession {
   _ensurePeerConnection() {
     if (this.peerConnection) return this.peerConnection;
 
-    const pc = new RTCPeerConnection({ iceServers: this.iceServers });
+    const pc = new RTCPeerConnection({
+      iceServers: this.iceServers,
+      iceTransportPolicy: this.iceTransportPolicy || 'all',
+    });
 
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => {
