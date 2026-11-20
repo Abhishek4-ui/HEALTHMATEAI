@@ -100,6 +100,7 @@ export default function App() {
                 <Route path="risk-assessment" element={<Module04_HealthRiskAssessment />} />
                 <Route path="reports" element={<Module05_ReportAnalyzer />} />
                 <Route path="medical-imaging" element={<Module20_MedicalImagingCenter />} />
+                <Route path="imaging" element={<Navigate to="/patient/medical-imaging" replace />} />
                 <Route path="cardiac-ecg" element={<Module21_ECGCardiacCenter />} />
                 <Route path="doctors" element={<Module06_DoctorDiscovery />} />
                 <Route path="hospitals" element={<Module07_HospitalDiscovery />} />

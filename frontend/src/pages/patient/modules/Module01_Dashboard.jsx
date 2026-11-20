@@ -186,7 +186,7 @@ export default function Module01_Dashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Link to="/patient/imaging">
+            <Link to="/patient/medical-imaging">
               <Button size="sm" variant="outline" className="text-xs border-teal-500/40 hover:bg-teal-500/10">
                 <Scan className="w-3.5 h-3.5 text-teal-500 mr-1" />
                 <span>Radiology & X-Ray</span>
