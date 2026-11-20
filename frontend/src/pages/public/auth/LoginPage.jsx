@@ -57,19 +57,23 @@ export default function LoginPage() {
       const redirect = searchParams.get('redirect') || '/patient/dashboard';
       navigate(redirect);
     } catch (err) {
-      let errorMsg = 'Invalid email or password.';
-      if (err?.response?.status === 502 || err?.response?.status === 504 || err?.response?.status === 503) {
-        errorMsg = 'Backend server is currently starting up (cold start). Please wait 30 seconds and retry.';
-      } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('Network Error')) {
-        errorMsg = 'Unable to reach backend server. Please check your network connection.';
-      } else if (err?.response?.data?.message) {
-        errorMsg = err.response.data.message;
-      } else if (err?.message) {
-        errorMsg = err.message;
+      const status = err?.status || err?.response?.status;
+      const isServerError = status === 502 || status === 504 || status === 503 || err?.code === 'BACKEND_DISCONNECTED' || (err?.message && String(err.message).includes('502'));
+      
+      let title = 'Authentication Failed';
+      let errorMsg = err?.response?.data?.message || err?.message || 'Invalid email or password.';
+      
+      if (isServerError) {
+        title = 'Backend Server Sleeping (502)';
+        errorMsg = 'Render cloud backend is currently suspended/starting up. Please resume healthmate-backend on dashboard.render.com.';
+      } else if (err?.code === 'ECONNABORTED' || (err?.message && String(err.message).includes('Network Error'))) {
+        title = 'Connection Error';
+        errorMsg = 'Unable to connect to server. Please check your network connection.';
       }
+      
       addToast({
         type: 'error',
-        title: 'Authentication Failed',
+        title,
         message: errorMsg,
       });
     } finally {
