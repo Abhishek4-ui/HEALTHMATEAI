@@ -671,33 +671,51 @@ export default function Module20_MedicalImagingCenter() {
 
                 {/* Findings List */}
                 <div className="space-y-2.5">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Detected Morphological Markers</p>
-                  {(analysisResult.findings || []).map((item, idx) => (
-                    <div 
-                      key={idx}
-                      className="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-800/40 space-y-1.5 text-xs"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">{item.finding}</span>
-                        <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
-                          item.status.includes('NORMAL') || item.status.includes('PRESERVED') || item.status.includes('CLEAR')
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
-                        }`}>
-                          {item.status}
-                        </span>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    {analysisResult.ai_model_supported === false ? 'Clinical Sequestration Safeguard' : 'Detected Morphological Markers'}
+                  </p>
+                  {analysisResult.ai_model_supported === false ? (
+                    <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-2 text-xs">
+                      <div className="flex items-center gap-2 font-bold text-amber-600 dark:text-amber-400">
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        <span>Thoracic Deep Learning Sequestration Active</span>
                       </div>
-
-                      <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                        <span>Region: {item.anatomical_region}</span>
-                        <span>Confidence: {item.confidence}% ({item.uncertainty_bounds})</span>
-                      </div>
-
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {item.description}
+                      <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                        {analysisResult.unsupported_reason || 'Thoracic AI models must never be applied to non-thoracic radiographs to maintain clinical safety standards. Certified specialist review is required.'}
                       </p>
+                      <div className="pt-1 flex items-center gap-2 text-[11px] text-amber-700 dark:text-amber-300 font-semibold">
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>Recommended Action: Dispatch to certified radiologist below.</span>
+                      </div>
                     </div>
-                  ))}
+                  ) : (
+                    (analysisResult.findings || []).map((item, idx) => (
+                      <div 
+                        key={idx}
+                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-800/40 space-y-1.5 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-900 dark:text-slate-100">{item.finding}</span>
+                          <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
+                            item.status.includes('NORMAL') || item.status.includes('PRESERVED') || item.status.includes('CLEAR')
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                          <span>Region: {item.anatomical_region}</span>
+                          <span>Confidence: {item.confidence}% ({item.uncertainty_bounds})</span>
+                        </div>
+
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* Model Provenance */}

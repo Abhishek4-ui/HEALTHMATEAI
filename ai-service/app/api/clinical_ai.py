@@ -97,7 +97,9 @@ async def extract_report_ocr(
 async def analyze_imaging(
     file: UploadFile = File(...),
     modality: str = Form("XRAY"),
-    patient_consent: bool = Form(True)
+    patient_consent: bool = Form(True),
+    examination_id: Optional[str] = Form(None),
+    anatomical_region: Optional[str] = Form(None)
 ):
     try:
         content = await file.read()
@@ -105,7 +107,9 @@ async def analyze_imaging(
             file_bytes=content,
             filename=file.filename or "scan.jpg",
             modality=modality,
-            patient_consent=patient_consent
+            patient_consent=patient_consent,
+            examination_id=examination_id,
+            anatomical_region=anatomical_region
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

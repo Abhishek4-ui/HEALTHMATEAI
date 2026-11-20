@@ -9,7 +9,7 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '5001', 10),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  aiServiceUrl: process.env.AI_SERVICE_URL || 'http://localhost:8000',
+  aiServiceUrl: process.env.AI_SERVICE_URL || (process.env.NODE_ENV === 'production' ? 'https://healthmate-ai-service.onrender.com' : 'http://localhost:8000'),
 
   mongo: {
     uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/healthmate_ai',

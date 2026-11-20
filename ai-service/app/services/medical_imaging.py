@@ -50,7 +50,9 @@ class MedicalImagingAnalyzer:
     file_bytes: bytes, 
     filename: str, 
     modality: str = 'XRAY', 
-    patient_consent: bool = True
+    patient_consent: bool = True,
+    examination_id: str = None,
+    anatomical_region: str = None
   ) -> Dict[str, Any]:
     if not patient_consent:
       raise ValueError("Patient consent is mandatory before processing medical imaging files.")
@@ -74,6 +76,30 @@ class MedicalImagingAnalyzer:
     # Image quality validation
     quality_score = min(98.5, max(65.0, round((std_dev / 128.0) * 100, 1)))
     quality_status = 'ACCEPTABLE' if quality_score >= 70.0 else 'SUBOPTIMAL_CONTRAST'
+
+    # Anatomical sequestration for X-Ray
+    if modality == 'XRAY':
+      is_chest = not examination_id or examination_id in ['CXR_STANDARD', 'CXR_PORTABLE', 'CHEST_THORAX', 'CHEST_XRAY']
+      if not is_chest:
+        return {
+          'success': True,
+          'ai_model_supported': False,
+          'filename': filename,
+          'file_size_kb': file_size_kb,
+          'file_hash_sha256': file_hash,
+          'modality': 'XRAY',
+          'examination_id': examination_id,
+          'is_dicom_format': is_dicom,
+          'quality_validation': {
+            'score': quality_score,
+            'status': quality_status,
+            'contrast_std_dev': round(std_dev, 2),
+            'mean_brightness': round(mean_val, 2)
+          },
+          'unsupported_reason': f"Thoracic deep learning models are strictly sequestered from {examination_id or anatomical_region or 'non-thoracic'} radiographs to prevent diagnostic hallucination. Certified radiologist review is recommended.",
+          'doctor_review_status': 'MANDATORY_RADIOLOGIST_REVIEW',
+          'clinical_disclaimer': 'Thoracic AI models must never be applied to non-thoracic radiographs to maintain clinical safety standards. Certified radiologist review is required.'
+        }
 
     # Modality specific analysis
     findings = []

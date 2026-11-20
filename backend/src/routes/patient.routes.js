@@ -106,13 +106,25 @@ router.post('/medications/check-interactions', optionalAuth, async (req, res, ne
 });
 
 // Phase 9: Medical Imaging AI Analysis (X-Ray, CT, MRI, Ultrasound, Pathology)
-router.post('/imaging/analyze', optionalAuth, upload.single('image'), async (req, res, next) => {
+const handleImageUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) return next(err);
+    if (req.files && req.files.length > 0) {
+      req.file = req.files.find(f => f.fieldname === 'image' || f.fieldname === 'file') || req.files[0];
+    }
+    next();
+  });
+};
+
+router.post('/imaging/analyze', optionalAuth, handleImageUpload, async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'Medical scan image file is required.' });
     }
     const modality = (req.body.modality || 'XRAY').toUpperCase();
     const patientConsent = req.body.patient_consent === undefined ? true : String(req.body.patient_consent) === 'true';
+    const examinationId = req.body.examination_id || req.body.examinationId || null;
+    const anatomicalRegion = req.body.anatomical_region || req.body.region || null;
 
     const result = await aiGateway.analyzeMedicalImaging({
       fileBuffer: req.file.buffer,
@@ -120,13 +132,25 @@ router.post('/imaging/analyze', optionalAuth, upload.single('image'), async (req
       mimetype: req.file.mimetype,
       modality,
       patientConsent,
+      examinationId,
+      anatomicalRegion,
     });
     res.status(200).json(result);
   } catch (err) { next(err); }
 });
 
 // Phase 9: ECG & Cardiac Waveform Intelligence
-router.post('/cardiac/ecg-analyze', optionalAuth, upload.single('ecg'), async (req, res, next) => {
+const handleEcgUpload = (req, res, next) => {
+  upload.any()(req, res, (err) => {
+    if (err) return next(err);
+    if (req.files && req.files.length > 0) {
+      req.file = req.files.find(f => f.fieldname === 'ecg' || f.fieldname === 'file') || req.files[0];
+    }
+    next();
+  });
+};
+
+router.post('/cardiac/ecg-analyze', optionalAuth, handleEcgUpload, async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'BAD_REQUEST', message: 'ECG file (PDF or Image) is required.' });
