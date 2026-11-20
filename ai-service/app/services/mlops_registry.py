@@ -168,7 +168,10 @@ class MLOpsRegistry:
                     "mean_auroc": 0.841,
                     "cardiomegaly_auroc": 0.901,
                     "pneumothorax_auroc": 0.884,
-                    "consolidation_auroc": 0.798
+                    "consolidation_auroc": 0.798,
+                    "clinical_validation": "EXPERIMENTAL_RESEARCH_USE_ONLY",
+                    "regulatory_clearance": "NONE (Not cleared by CDSCO/FDA; Research Prototype Only)",
+                    "intended_use": "Research pre-screening demonstration; strictly non-diagnostic"
                 },
                 "explainability": "Thoracic Anatomical Sequestration & Grad-CAM Morphological Localization",
                 "status": "PRODUCTION",

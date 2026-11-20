@@ -15,10 +15,12 @@ class MedicalImagingAnalyzer:
     self.model_registry = {
       'XRAY': {
         'model_id': 'mdl_cxr_denseresnet_v2',
-        'architecture_type': 'DEEP_LEARNING_BASELINE',
+        'architecture_type': 'DEEP_LEARNING_EXPERIMENTAL_RESEARCH',
         'framework': 'PyTorch 2.2 / TorchVision (DenseNet-121 Checkpoint)',
-        'training_dataset': 'NIH ChestX-ray14 (Thoracic Hemithorax Subset)',
-        'intended_use': 'Chest radiograph preliminary screening and finding prioritization'
+        'training_dataset': 'NIH ChestX-ray14 (Research Benchmark Subset)',
+        'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Research Demonstration Prototype Only)',
+        'intended_use': 'Chest radiograph preliminary screening demonstration; strictly non-diagnostic'
       },
       'CT': {
         'model_id': 'alg_ct_window_triage_v1',
