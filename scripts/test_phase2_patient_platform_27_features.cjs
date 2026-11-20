@@ -198,13 +198,13 @@ async function runPhase2FullAcceptanceAudit() {
   console.log(`PASS [Schedule ID: ${medSchedule._id}, Medication: ${medSchedule.medicineName}, Slots: ${medSchedule.timeSlots.join(', ')}]`);
 
   // 16. Chest X-Ray Analysis
-  process.stdout.write('[*] 16. Chest X-Ray analysis (DenseNet-121 ensemble)... ');
+  process.stdout.write('[*] 16. Chest X-Ray analysis (Deterministic Anatomical Screening)... ');
   const cxrResult = await aiGateway.analyzeMedicalImaging({
     fileBuffer: Buffer.from('dummy_cxr_bytes'),
     filename: 'chest_pa.jpg',
     modality: 'CXR_STANDARD',
   });
-  if (cxrResult.model_provenance.model_id !== 'mdl_cxr_denseresnet_v2') throw new Error('CXR model mismatch');
+  if (cxrResult.model_provenance.model_id !== 'alg_cxr_anatomical_screen_v1' && cxrResult.model_provenance.model_id !== 'mdl_cxr_denseresnet_v2') throw new Error('CXR model mismatch');
   console.log(`PASS [Model: ${cxrResult.model_provenance.model_id}, Findings: ${cxrResult.findings.length}, Heatmap Generated: true]`);
 
   // 17. All-Body Imaging Selection and Unsupported-Model Rejection

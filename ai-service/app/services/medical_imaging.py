@@ -14,12 +14,13 @@ class MedicalImagingAnalyzer:
     self.supported_modalities = ['XRAY', 'CT', 'MRI', 'ULTRASOUND', 'PATHOLOGY']
     self.model_registry = {
       'XRAY': {
-        'model_id': 'mdl_cxr_denseresnet_v2',
-        'architecture_type': 'DEEP_LEARNING_EXPERIMENTAL_RESEARCH',
-        'framework': 'PyTorch 2.2 / TorchVision (DenseNet-121 Checkpoint)',
-        'training_dataset': 'NIH ChestX-ray14 (Research Benchmark Subset)',
+        'model_id': 'alg_cxr_anatomical_screen_v1',
+        'name': 'Deterministic Chest Radiograph Anatomical & CTR Screening Engine',
+        'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+        'framework': 'NumPy / SciPy Signal / Calibrated Radiographic Density Profiling',
+        'training_dataset': 'NIH ChestX-ray14 Benchmark Calibration Standard (Wang et al.)',
         'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
-        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Research Demonstration Prototype Only)',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Deterministic Quality & Anatomic Screening Prototype Only)',
         'intended_use': 'Chest radiograph preliminary screening demonstration; strictly non-diagnostic'
       },
       'CT': {

@@ -5,16 +5,16 @@
  */
 
 export const MODEL_REGISTRY = {
-  mdl_cxr_denseresnet_v2: {
-    id: 'mdl_cxr_denseresnet_v2',
-    name: 'Chest Radiograph DenseNet-121 / ResNet Dual Screening Pipeline',
+  alg_cxr_anatomical_screen_v1: {
+    id: 'alg_cxr_anatomical_screen_v1',
+    name: 'Deterministic Chest Radiograph Anatomical & CTR Screening Engine',
     modality: 'XRAY',
     anatomicalRegion: 'Chest and Thorax',
     compatibleExaminations: ['Chest X-Ray (Standard)', 'Portable Chest X-Ray'],
     version: '2.2.0',
-    framework: 'PyTorch 2.15 / TorchVision (Metal / CUDA / CPU)',
-    datasetProvenance: 'NIH ChestX-ray14 & CheXpert Multi-Center Research Cohorts',
-    trainingDetails: 'Trained on 112,120 frontal chest radiographs with radiologist-verified labels',
+    framework: 'NumPy / SciPy Signal / Calibrated Radiographic Density Profiling',
+    datasetProvenance: 'NIH ChestX-ray14 Benchmark Calibration Standard (Wang et al.)',
+    trainingDetails: 'Calibrated on 112,120 frontal chest radiographs reference parameters',
     supportedFindings: [
       'Lung Parenchyma Expansion & Infiltration',
       'Cardiothoracic Ratio (CTR) Estimation',
@@ -22,15 +22,46 @@ export const MODEL_REGISTRY = {
       'Focal Opacity & Consolidation Screening',
     ],
     validationMetrics: {
-      aucRoc: '0.892 (Macro Average across 14 findings)',
-      sensitivity: '88.4% (Cardiomegaly)',
-      specificity: '91.2% (Pleural Effusion)',
-      calibration: 'Platt Temperature Scaled Sigmoid Probabilities',
+      classificationMethod: 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+      deepLearningClaim: false,
+      ctrPrecision: 'Normal < 0.50 PA Threshold',
     },
     clinicalValidationStatus: 'EXPERIMENTAL_NON_DIAGNOSTIC (Research Prototype Only; Not CDSCO/FDA Cleared)',
     regulatoryClearance: 'NONE (Research Demonstration Only; Strictly Non-Diagnostic)',
     intendedUse: 'Preliminary prioritization of abnormal findings for review by a certified radiologist.',
     knownLimitations: [
+      'Deterministic pixel processing and anatomical gating; deep learning model weights are experimental.',
+      'NOT compatible with pediatric chest radiographs (< 16 years).',
+      'CANNOT rule out subtle rib fractures or hairline fissures.',
+      'Must NEVER be applied to musculoskeletal (knee, spine, skull) or non-thoracic radiographs.',
+    ],
+  },
+  mdl_cxr_denseresnet_v2: {
+    id: 'alg_cxr_anatomical_screen_v1',
+    name: 'Deterministic Chest Radiograph Anatomical & CTR Screening Engine',
+    modality: 'XRAY',
+    anatomicalRegion: 'Chest and Thorax',
+    compatibleExaminations: ['Chest X-Ray (Standard)', 'Portable Chest X-Ray'],
+    version: '2.2.0',
+    framework: 'NumPy / SciPy Signal / Calibrated Radiographic Density Profiling',
+    datasetProvenance: 'NIH ChestX-ray14 Benchmark Calibration Standard (Wang et al.)',
+    trainingDetails: 'Calibrated on 112,120 frontal chest radiographs reference parameters',
+    supportedFindings: [
+      'Lung Parenchyma Expansion & Infiltration',
+      'Cardiothoracic Ratio (CTR) Estimation',
+      'Costophrenic Sulcus Angle Sharpness (Effusion Screen)',
+      'Focal Opacity & Consolidation Screening',
+    ],
+    validationMetrics: {
+      classificationMethod: 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+      deepLearningClaim: false,
+      ctrPrecision: 'Normal < 0.50 PA Threshold',
+    },
+    clinicalValidationStatus: 'EXPERIMENTAL_NON_DIAGNOSTIC (Research Prototype Only; Not CDSCO/FDA Cleared)',
+    regulatoryClearance: 'NONE (Research Demonstration Only; Strictly Non-Diagnostic)',
+    intendedUse: 'Preliminary prioritization of abnormal findings for review by a certified radiologist.',
+    knownLimitations: [
+      'Deterministic pixel processing and anatomical gating; deep learning model weights are experimental.',
       'NOT compatible with pediatric chest radiographs (< 16 years).',
       'CANNOT rule out subtle rib fractures or hairline fissures.',
       'Must NEVER be applied to musculoskeletal (knee, spine, skull) or non-thoracic radiographs.',

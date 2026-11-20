@@ -153,29 +153,28 @@ class MLOpsRegistry:
                 "status": "PRODUCTION",
                 "last_evaluated": "2026-11-11T12:30:00Z"
             },
-            "mdl_cxr_denseresnet_v2": {
-                "id": "mdl_cxr_denseresnet_v2",
-                "name": "Chest Radiograph Deep Learning Screening Engine",
+            "alg_cxr_anatomical_screen_v1": {
+                "id": "alg_cxr_anatomical_screen_v1",
+                "name": "Deterministic Chest Radiograph Anatomical & CTR Screening Engine",
                 "version": "2.2.0",
-                "artifact_path": "models/cxr_denseresnet_v2.pt",
-                "framework": "PyTorch 2.2 / TorchVision (DenseNet-121 Baseline Architecture)",
+                "artifact_path": "app/services/medical_imaging.py (Deterministic Statistical Pipeline)",
+                "framework": "NumPy / SciPy Signal / Calibrated Radiographic Density Profiling",
                 "task": "Thoracic Hemithorax Screening, CTR Measurement & Finding Prioritization",
-                "dataset_name": "NIH ChestX-ray14 Benchmark (Wang et al. NIH Clinical Center)",
+                "dataset_name": "NIH ChestX-ray14 Benchmark Calibration Standard (Wang et al. NIH Clinical Center)",
                 "dataset_license": "Public Domain (NIH Clinical Research Dissemination)",
                 "dataset_samples": 112120,
                 "input_features": ["dicom_pixel_array_224x224_grayscale"],
                 "metrics": {
-                    "mean_auroc": 0.841,
-                    "cardiomegaly_auroc": 0.901,
-                    "pneumothorax_auroc": 0.884,
-                    "consolidation_auroc": 0.798,
+                    "classification_method": "DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING",
+                    "deep_learning_claim": False,
+                    "ctr_precision": "Normal < 0.50 PA Threshold",
                     "clinical_validation": "EXPERIMENTAL_RESEARCH_USE_ONLY",
-                    "regulatory_clearance": "NONE (Not cleared by CDSCO/FDA; Research Prototype Only)",
+                    "regulatory_clearance": "NONE (Not cleared by CDSCO/FDA; Deterministic Quality & Anatomic Screening Prototype Only)",
                     "intended_use": "Research pre-screening demonstration; strictly non-diagnostic"
                 },
-                "explainability": "Thoracic Anatomical Sequestration & Grad-CAM Morphological Localization",
+                "explainability": "Thoracic Anatomical Sequestration & Contrast Histogram Profiling",
                 "status": "PRODUCTION",
-                "last_evaluated": "2026-11-15T08:00:00Z"
+                "last_evaluated": "2026-11-20T12:00:00Z"
             },
             "alg_ct_window_triage_v1": {
                 "id": "alg_ct_window_triage_v1",

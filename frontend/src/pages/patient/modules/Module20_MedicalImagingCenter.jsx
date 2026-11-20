@@ -94,7 +94,7 @@ export default function Module20_MedicalImagingCenter() {
       return {
         ...exam,
         aiModelSupported: isChest,
-        modelId: isChest ? 'mdl_cxr_denseresnet_v2' : null,
+        modelId: isChest ? 'alg_cxr_anatomical_screen_v1' : null,
         unsupportedReason: reason
       };
     }
@@ -786,7 +786,7 @@ export default function Module20_MedicalImagingCenter() {
             analysisResult={analysisResult}
             modality={selectedModality}
             examTitle={currentExam.name}
-            modelId={currentExam.modelId || 'mdl_cxr_denseresnet_v2'}
+            modelId={currentExam.modelId || 'alg_cxr_anatomical_screen_v1'}
           />
         </div>
       )}

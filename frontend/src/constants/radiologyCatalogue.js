@@ -9,8 +9,8 @@ export const RADIOLOGY_CATALOGUE = [
     id: 'CHEST_THORAX',
     regionName: 'Chest and Thorax',
     examinations: [
-      { id: 'CXR_STANDARD', name: 'Chest X-Ray (Standard)', views: ['PA View', 'AP View', 'Lateral View', 'Not Sure'], aiModelSupported: true, modelId: 'mdl_cxr_denseresnet_v2' },
-      { id: 'CXR_PORTABLE', name: 'Portable Chest X-Ray', views: ['AP View', 'Lateral Decubitus', 'Not Sure'], aiModelSupported: true, modelId: 'mdl_cxr_denseresnet_v2' },
+      { id: 'CXR_STANDARD', name: 'Chest X-Ray (Standard)', views: ['PA View', 'AP View', 'Lateral View', 'Not Sure'], aiModelSupported: true, modelId: 'alg_cxr_anatomical_screen_v1' },
+      { id: 'CXR_PORTABLE', name: 'Portable Chest X-Ray', views: ['AP View', 'Lateral Decubitus', 'Not Sure'], aiModelSupported: true, modelId: 'alg_cxr_anatomical_screen_v1' },
       { id: 'RIBS', name: 'Ribs Radiograph', views: ['Oblique View', 'AP View', 'PA View', 'Not Sure'], aiModelSupported: false, modelId: null },
       { id: 'STERNUM', name: 'Sternum X-Ray', views: ['Lateral View', 'RAO Oblique', 'Not Sure'], aiModelSupported: false, modelId: null },
       { id: 'CLAVICLE', name: 'Clavicle X-Ray', views: ['AP View', 'Axial (Lordotic)', 'Not Sure'], aiModelSupported: false, modelId: null },

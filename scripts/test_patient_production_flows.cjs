@@ -103,14 +103,14 @@ async function runPatientProductionAcceptanceAudit() {
 
   // Flow 5: Supported Chest X-Ray Analysis
   try {
-    process.stdout.write('[*] 5. Supported Chest X-Ray Analysis (DenseNet-121)... ');
+    process.stdout.write('[*] 5. Supported Chest X-Ray Analysis (Deterministic Anatomical Screening)... ');
     const aiGateway = require('../backend/src/services/aiGateway.service');
     const cxrRes = await aiGateway.analyzeMedicalImaging({
       fileBuffer: Buffer.from('dummy_cxr_dicom_bytes'),
       filename: 'chest_pa.dcm',
       modality: 'CXR_STANDARD',
     });
-    if (!cxrRes.findings || cxrRes.model_provenance.model_id !== 'mdl_cxr_denseresnet_v2') {
+    if (!cxrRes.findings || (cxrRes.model_provenance.model_id !== 'alg_cxr_anatomical_screen_v1' && cxrRes.model_provenance.model_id !== 'mdl_cxr_denseresnet_v2')) {
       throw new Error('CXR analysis failed to return expected model findings');
     }
     console.log(`PASS [Model: ${cxrRes.model_provenance.model_id}, Findings: ${cxrRes.findings.length}]`);

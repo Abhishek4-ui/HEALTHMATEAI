@@ -7,7 +7,7 @@
     "mdl_deep_triage_pytorch_v1": 0,
     "mdl_ocr_loinc_v1": 92,
     "mdl_clinical_rag_v1": 0,
-    "mdl_cxr_denseresnet_v2": 0,
+    "alg_cxr_anatomical_screen_v1": 0,
     "alg_ct_window_triage_v1": 0,
     "alg_mri_gradient_triage_v1": 0,
     "alg_us_acoustic_triage_v1": 0,
