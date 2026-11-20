@@ -5,7 +5,8 @@ const {
   PatientVital, 
   WellnessLog, 
   FamilyMember, 
-  LabOrder 
+  LabOrder,
+  MedicalDocument,
 } = require('../../src/models');
 
 describe('Patient Clinical Data Persistence Unit Tests', () => {
@@ -177,6 +178,8 @@ describe('Patient Clinical Data Persistence Unit Tests', () => {
     jest.spyOn(PatientVital, 'deleteMany').mockResolvedValue({ deletedCount: 5 });
     jest.spyOn(WellnessLog, 'deleteMany').mockResolvedValue({ deletedCount: 3 });
     jest.spyOn(FamilyMember, 'deleteMany').mockResolvedValue({ deletedCount: 1 });
+    jest.spyOn(MedicalDocument, 'deleteMany').mockResolvedValue({ deletedCount: 1 });
+    jest.spyOn(MedicalDocument, 'deleteOne').mockResolvedValue({ deletedCount: 1 });
 
     const result = await patientService.executeForgetMe(mockPatientId, 'sess_test_123');
     expect(result.success).toBe(true);

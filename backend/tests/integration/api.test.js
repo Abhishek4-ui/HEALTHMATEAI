@@ -9,7 +9,8 @@ describe('HealthMate AI API Integration & Security Test Suite', () => {
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('healthy');
       expect(res.body.infrastructure.allowedRoles).toEqual(['PATIENT', 'DOCTOR', 'ADMINISTRATION']);
-      expect(res.body.infrastructure.ephemeralDefault).toBe(true);
+      expect(res.body.infrastructure.ephemeralDefault).toBe(false);
+      expect(res.body.infrastructure.ephemeralGuestPrivacy).toBe(true);
     });
 
     it('GET /api-docs/ - should serve Swagger documentation UI', async () => {

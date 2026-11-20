@@ -427,7 +427,7 @@ class PaymentService {
     if (isDbConnected) {
       // 1. Retrieve the genuine server-stored transaction record
       transaction = await PaymentTransaction.findOne({ orderId });
-      if (!transaction && process.env.NODE_ENV === 'production') {
+      if (!transaction) {
         logger.error('Payment verification failed: Order ID not found on server.', { orderId, paymentId });
         throw new Error('No payment transaction record found for the provided order ID.');
       }

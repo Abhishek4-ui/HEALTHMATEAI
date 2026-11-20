@@ -1,0 +1,19 @@
+{
+  "name": "HealthMate AI — Intelligent Healthcare Ecosystem",
+  "short_name": "HealthMate AI",
+  "description": "Intelligent Healthcare Management Ecosystem with Ephemeral Patient Privacy",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

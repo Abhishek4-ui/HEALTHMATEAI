@@ -8,7 +8,8 @@ const {
   DoctorAvailability, 
   Appointment, 
   Consultation, 
-  PatientProfile 
+  PatientProfile,
+  PaymentTransaction,
 } = require('../../src/models');
 
 describe('Enterprise AI Doctor & Real Doctor Consultation Suite', () => {
@@ -328,6 +329,15 @@ describe('Enterprise AI Doctor & Real Doctor Consultation Suite', () => {
     it('confirms appointment status upon authentic HMAC SHA-256 signature', async () => {
       const mockOrderId = `order_${Date.now()}`;
       const mockPaymentId = `pay_${Date.now()}`;
+      await PaymentTransaction.create({
+        orderId: mockOrderId,
+        patientId: patientA._id,
+        appointmentId: activeAppointment._id,
+        amount: activeAppointment.paymentAmount || 500,
+        currency: 'INR',
+        status: 'CREATED',
+        idempotencyKey: `idem_${Date.now()}`,
+      });
       const secret = process.env.RAZORPAY_KEY_SECRET || 'secret';
       const expectedSignature = crypto
         .createHmac('sha256', secret)
