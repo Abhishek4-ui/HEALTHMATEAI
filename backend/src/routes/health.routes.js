@@ -20,7 +20,9 @@ const handleHealthCheck = (req, res) => {
     infrastructure: {
       mongoDatabase: dbStatus,
       redisCache: redisStatus,
-      ephemeralDefault: true,
+      persistentRecordsStorage: 'MongoDB Document Vault (ReplicaSet)',
+      ephemeralDefault: false,
+      ephemeralGuestPrivacy: true,
       allowedRoles: ['PATIENT', 'DOCTOR', 'ADMINISTRATION']
     },
     llmGatewayConfig: {

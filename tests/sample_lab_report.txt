@@ -1,0 +1,15 @@
+LABORATORY PATHOLOGY REPORT
+Patient: De-identified Clinical Test Subject
+Date: 2026-11-20
+
+HEMATOLOGY PANEL:
+Hemoglobin (Hb): 14.2 g/dL
+Total Leukocyte Count (WBC): 6800 /mcL
+Platelet Count: 2.8 lakh/mcL
+
+BIOCHEMISTRY PANEL:
+Fasting Blood Glucose: 95 mg/dL
+Glycated Hemoglobin (HbA1c): 5.4 %
+Total Cholesterol: 185 mg/dL
+HDL Cholesterol: 52 mg/dL
+Serum Creatinine: 0.9 mg/dL

@@ -15,32 +15,37 @@ class MedicalImagingAnalyzer:
     self.model_registry = {
       'XRAY': {
         'model_id': 'mdl_cxr_denseresnet_v2',
-        'framework': 'PyTorch 2.2 / TorchVision',
-        'training_dataset': 'NIH ChestX-ray14 (Subset Verified)',
+        'architecture_type': 'DEEP_LEARNING_BASELINE',
+        'framework': 'PyTorch 2.2 / TorchVision (DenseNet-121 Checkpoint)',
+        'training_dataset': 'NIH ChestX-ray14 (Thoracic Hemithorax Subset)',
         'intended_use': 'Chest radiograph preliminary screening and finding prioritization'
       },
       'CT': {
-        'model_id': 'mdl_ct_axial_slice_v1',
-        'framework': 'PyTorch / NumPy',
-        'training_dataset': 'LIDC-IDRI Research Cohort',
-        'intended_use': 'Volumetric slice density assessment and navigation assist'
+        'model_id': 'alg_ct_window_triage_v1',
+        'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+        'framework': 'NumPy / PyDICOM / Deterministic Density Calibration',
+        'training_dataset': 'Calibrated Hounsfield Unit Standard Reference Profiles (Soft Tissue / Bone)',
+        'intended_use': 'Axial CT density histogram assessment and soft-tissue window navigation assist'
       },
       'MRI': {
-        'model_id': 'mdl_mri_neuro_t2_v1',
-        'framework': 'PyTorch / TorchVision',
-        'training_dataset': 'IXI Dataset Brain MRI',
-        'intended_use': 'Modality recognition (T1/T2/FLAIR) and tissue boundary analysis'
+        'model_id': 'alg_mri_gradient_triage_v1',
+        'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+        'framework': 'NumPy / SciPy Signal / Intensity Gradient Filtering',
+        'training_dataset': 'Standard T1/T2 Relaxation Contrast Benchmarks',
+        'intended_use': 'Tissue boundary SNR evaluation and image quality screening'
       },
       'ULTRASOUND': {
-        'model_id': 'mdl_us_boundary_v1',
-        'framework': 'PyTorch / OpenCV',
-        'training_dataset': 'Fetal & Abdominal US Open Research Benchmark',
-        'intended_use': 'Acoustic shadowing check and boundary definition'
+        'model_id': 'alg_us_acoustic_triage_v1',
+        'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+        'framework': 'NumPy / OpenCV / Beam Attenuation Profiling',
+        'training_dataset': 'Standard Ultrasound Beam Attenuation Gradients',
+        'intended_use': 'Acoustic window adequacy verification and shadow artifact check'
       },
       'PATHOLOGY': {
-        'model_id': 'mdl_path_wsi_tile_v1',
-        'framework': 'PyTorch / Scikit-learn',
-        'training_dataset': 'Camelyon16 Tile Benchmark',
+        'model_id': 'alg_path_stain_triage_v1',
+        'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
+        'framework': 'NumPy / Scikit-image / Stain Normalization Matrix',
+        'training_dataset': 'Standard H&E Cellular Density Benchmarks',
         'intended_use': 'Cellular density histogram and stain normalization'
       }
     }

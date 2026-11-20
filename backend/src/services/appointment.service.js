@@ -14,7 +14,7 @@ class AppointmentService {
       throw new Error('Selected practitioner not found.');
     }
 
-    if (doctor.verificationStatus === 'DISCOVERED' || doctor.verificationStatus === 'SOURCE_VERIFIED') {
+    if (doctor.verificationStatus !== 'CREDENTIAL_VERIFIED' && doctor.verificationStatus !== 'APPOINTMENT_ENABLED') {
       throw new Error(`Appointment booking is disabled for unverified practitioner profiles (Status: ${doctor.verificationStatus}). Only verified practitioners with confirmed registration credentials can accept appointments.`);
     }
 

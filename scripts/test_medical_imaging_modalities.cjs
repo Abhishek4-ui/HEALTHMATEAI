@@ -60,21 +60,21 @@ async function runModalityTests() {
       modality: 'CT',
       examination_id: 'CT_THORAX',
       expectedSupported: true,
-      expectedModel: 'mdl_ct_axial_slice_v1'
+      expectedModel: 'alg_ct_window_triage_v1'
     },
     {
       name: 'Brain MRI Scan (MRI_BRAIN)',
       modality: 'MRI',
       examination_id: 'MRI_BRAIN',
       expectedSupported: true,
-      expectedModel: 'mdl_mri_neuro_t2_v1'
+      expectedModel: 'alg_mri_gradient_triage_v1'
     },
     {
       name: 'Abdominal Ultrasound (US_ABDOMEN)',
       modality: 'ULTRASOUND',
       examination_id: 'US_ABDOMEN',
       expectedSupported: true,
-      expectedFindingKey: 'findings'
+      expectedModel: 'alg_us_acoustic_triage_v1'
     }
   ];
 

@@ -25,6 +25,7 @@ const PatientVital = require('./PatientVital');
 const WellnessLog = require('./WellnessLog');
 const FamilyMember = require('./FamilyMember');
 const LabOrder = require('./LabOrder');
+const MedicalDocument = require('./MedicalDocument');
 
 // Idempotent controlled index initialization without modifying data
 const initIndexes = async () => {
@@ -35,7 +36,8 @@ const initIndexes = async () => {
       PaymentTransaction, AuditLog, DataSource, AIModelMetadata,
       DatasetMetadata, IntegrationStatus, UserSession, RefreshToken,
       EmergencyContact, DoctorAvailability, SyncLog, MLOpsTelemetry,
-      MedicationSchedule, PatientVital, WellnessLog, FamilyMember, LabOrder
+      MedicationSchedule, PatientVital, WellnessLog, FamilyMember, LabOrder,
+      MedicalDocument
     ];
 
     for (const model of models) {
@@ -77,5 +79,6 @@ module.exports = {
   WellnessLog,
   FamilyMember,
   LabOrder,
+  MedicalDocument,
   initIndexes,
 };

@@ -85,6 +85,28 @@ class ReportService {
       fs.writeFileSync(destinationPath, file.buffer);
     }
 
+    // 2b. Always persist document buffer and metadata into MongoDB Vault to prevent silent loss on cloud container redeploys
+    try {
+      const { MedicalDocument } = require('../models');
+      const mongoose = require('mongoose');
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        await MedicalDocument.create({
+          uploadToken,
+          userId: userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          fileSizeBytes: file.size,
+          storageType: storageType === 'AWS_S3' ? 'AWS_S3' : 'MONGODB_VAULT',
+          s3Key: storageType === 'AWS_S3' ? s3Key : null,
+          fileData: file.buffer,
+          expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000), // 30 days retention
+        });
+        if (storageType === 'LOCAL') storageType = 'MONGODB_VAULT';
+      }
+    } catch (dbErr) {
+      logger.warn('Medical document MongoDB vault persistence notice:', { error: dbErr.message });
+    }
+
     // 3. Stage metadata in Redis with 30-min TTL
     const stageMetadata = {
       uploadToken,
@@ -121,6 +143,24 @@ class ReportService {
     let metadata = null;
     if (redisSessionService.isAvailable()) {
       metadata = await redisSessionService.getReportExtraction(uploadToken);
+    }
+
+    if (!metadata) {
+      try {
+        const { MedicalDocument } = require('../models');
+        const doc = await MedicalDocument.findOne({ uploadToken });
+        if (doc) {
+          metadata = {
+            uploadToken: doc.uploadToken,
+            originalName: doc.originalName,
+            mimeType: doc.mimeType,
+            uploadedBy: doc.userId ? String(doc.userId) : 'GUEST',
+            storageType: doc.storageType,
+            s3Key: doc.s3Key,
+            hasFileData: Boolean(doc.fileData),
+          };
+        }
+      } catch (e) {}
     }
 
     if (!metadata) {
@@ -182,6 +222,12 @@ class ReportService {
         logger.info('Deleted ephemeral report file from local disk.', { uploadToken });
       }
     }
+
+    try {
+      const { MedicalDocument } = require('../models');
+      await MedicalDocument.deleteOne({ uploadToken });
+      logger.info('Purged persistent document from MongoDB Vault.', { uploadToken });
+    } catch (e) {}
 
     return { success: true, message: 'Report removed.' };
   }

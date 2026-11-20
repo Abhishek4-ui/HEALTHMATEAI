@@ -27,7 +27,9 @@ export class TelehealthSession {
 
   async start(localStream) {
     this.localStream = localStream;
-    const socketUrl = window.location.hostname === 'localhost' ? 'http://localhost:5001' : '/';
+    const socketUrl = import.meta.env.VITE_SOCKET_URL 
+      || (import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/api\/v1\/?$/, '') : null)
+      || (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://healthmate-backend-9nmm.onrender.com');
 
     this.socket = io(socketUrl, {
       auth: { token: this.token || localStorage.getItem('token') },
@@ -132,6 +134,48 @@ export class TelehealthSession {
       }
     } catch (err) {
       if (this.onError) this.onError(err);
+    }
+  }
+
+  async getTransportStats() {
+    if (!this.peerConnection) return { status: 'DISCONNECTED', candidateType: 'NONE' };
+    try {
+      const stats = await this.peerConnection.getStats();
+      let activeCandidatePair = null;
+      let localCandidate = null;
+      let remoteCandidate = null;
+
+      stats.forEach(report => {
+        if (report.type === 'transport') {
+          activeCandidatePair = report.selectedCandidatePairId;
+        }
+      });
+
+      stats.forEach(report => {
+        if (report.type === 'candidate-pair' && (report.selected || report.nominated || report.state === 'succeeded')) {
+          activeCandidatePair = report;
+        }
+      });
+
+      if (activeCandidatePair && activeCandidatePair.localCandidateId) {
+        localCandidate = stats.get(activeCandidatePair.localCandidateId);
+        remoteCandidate = stats.get(activeCandidatePair.remoteCandidateId);
+      }
+
+      const isRelay = (localCandidate && localCandidate.candidateType === 'relay') 
+                   || (remoteCandidate && remoteCandidate.candidateType === 'relay');
+
+      return {
+        connectionState: this.peerConnection.connectionState,
+        iceConnectionState: this.peerConnection.iceConnectionState,
+        candidateType: isRelay ? 'relay' : (localCandidate?.candidateType || 'host'),
+        isRelayedViaTurn: isRelay,
+        localCandidateType: localCandidate?.candidateType || 'unknown',
+        remoteCandidateType: remoteCandidate?.candidateType || 'unknown',
+        protocol: localCandidate?.protocol || 'udp',
+      };
+    } catch (e) {
+      return { status: 'ERROR', message: e.message };
     }
   }
 
