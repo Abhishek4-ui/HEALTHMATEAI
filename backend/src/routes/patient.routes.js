@@ -50,7 +50,9 @@ router.post('/reports/ocr-extract', optionalAuth, handleReportUpload, reportCont
 // AI Copilot, Symptom Checker, and Health Risk Assessment
 router.post('/copilot/message', optionalAuth, async (req, res, next) => {
   try {
-    const { query, language, history } = req.body;
+    const query = req.body.query || req.body.message || req.body.text || '';
+    const language = req.body.language || 'en';
+    const history = req.body.history || [];
     const result = await aiGateway.sendHealthQuery(query, language, history);
     res.status(200).json({ success: true, data: result });
   } catch (err) { next(err); }

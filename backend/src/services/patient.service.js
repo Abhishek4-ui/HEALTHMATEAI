@@ -207,18 +207,22 @@ class PatientService {
       try {
         const reportService = require('./report.service');
         await reportService.deleteReport(sessionId);
+        const { MedicalDocument } = require('../models');
+        await MedicalDocument.deleteMany({ uploadToken: sessionId });
       } catch (err) {
         // Continue if no file with that token exists
       }
     }
 
     if (userId) {
-      // Purge patient-entered logs upon explicit right-to-erasure request
+      // Purge patient-entered logs and documents upon explicit right-to-erasure request
+      const { MedicalDocument } = require('../models');
       await Promise.allSettled([
         MedicationSchedule.deleteMany({ patientId: userId }),
         PatientVital.deleteMany({ patientId: userId }),
         WellnessLog.deleteMany({ patientId: userId }),
         FamilyMember.deleteMany({ patientId: userId }),
+        MedicalDocument.deleteMany({ userId }),
       ]);
     }
 

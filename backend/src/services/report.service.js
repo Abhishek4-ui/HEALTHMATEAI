@@ -99,7 +99,7 @@ class ReportService {
           storageType: storageType === 'AWS_S3' ? 'AWS_S3' : 'MONGODB_VAULT',
           s3Key: storageType === 'AWS_S3' ? s3Key : null,
           fileData: file.buffer,
-          expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000), // 30 days retention
+          expiresAt: userId ? null : new Date(Date.now() + 24 * 3600 * 1000), // Permanent vault for registered patients; 24h ephemeral cleanup for unauthenticated guests
         });
         if (storageType === 'LOCAL') storageType = 'MONGODB_VAULT';
       }
@@ -167,9 +167,11 @@ class ReportService {
       throw new Error('Report has expired or is not found.');
     }
 
-    // Access authorization check
-    if (metadata.uploadedBy !== 'GUEST' && userId && metadata.uploadedBy !== String(userId)) {
-      throw new Error('Unauthorized access to confidential diagnostic report.');
+    // Strict Patient Data Isolation & Access Authorization
+    if (metadata.uploadedBy !== 'GUEST') {
+      if (!userId || metadata.uploadedBy !== String(userId)) {
+        throw new Error('Unauthorized: You do not have permission to access this confidential medical document.');
+      }
     }
 
     if (metadata.storageType === 'AWS_S3' && metadata.s3Key && this.isS3Enabled()) {

@@ -163,15 +163,25 @@ class LLMGateway:
                 logger.error(f"Gemini fallback chat completion failed: {e}")
 
         # Clinically grounded local fallback
+        is_hindi = any('\u0900' <= char <= '\u097f' for char in user_content_prompt) or (system_content and "hindi" in system_content.lower())
+        if is_hindi:
+            content = (
+                "हेल्थमेट एआई क्लिनिकल असिस्टेंट: मैंने आपके लक्षणों और विवरण का मूल्यांकन किया है। "
+                "चूंकि बाहरी एआई सेवाएं इस समय सुरक्षा मोड में हैं, कृपया इन लक्षणों के लिए किसी योग्य चिकित्सक से प्रत्यक्ष परामर्श लें। "
+                "यदि आपको सीने में अत्यधिक दबाव, सांस फूलना या अन्य कोई गंभीर आपातकालीन लक्षण हैं, तो कृपया तुरंत राष्ट्रीय आपातकालीन नंबर 112 पर संपर्क करें।"
+            )
+        else:
+            content = (
+                "HealthMate AI Clinical Assistant: I have evaluated your symptoms and context. "
+                "Because external AI provider connectivity is in safeguard mode, please discuss these findings with an in-person physician. "
+                "For acute chest pressure, radiating arm pain, or severe shortness of breath, please dial national emergency services 112 immediately."
+            )
+
         return {
             "success": False,
             "provider": "local_clinical_safeguard",
             "model": "healthmate-safeguard-v1",
-            "content": (
-                "HealthMate AI Clinical Assistant: I have evaluated your symptoms and context. "
-                "Because external AI provider connectivity is in safeguard mode, please discuss these findings with an in-person physician. "
-                "For acute chest pressure, radiating arm pain, or severe shortness of breath, please dial national emergency services 112 immediately."
-            ),
+            "content": content,
             "fallback_used": True
         }
 
