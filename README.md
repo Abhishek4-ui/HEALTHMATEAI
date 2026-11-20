@@ -1,182 +1,243 @@
-# HEALTHMATE AI — Complete Patient-Only AI/ML Healthcare Ecosystem
+# HealthMate AI — Unified Patient Healthcare Platform
 
 [![Build Status](https://img.shields.io/badge/Build-Passing-emerald.svg)](https://github.com/Abhishek4-ui/HEALTHMATEAI)
-[![Tests Passing](https://img.shields.io/badge/Backend%20Tests-114%2F114%20Passing-emerald.svg)](TEST_REPORT.md)
-[![AI Benchmarks](https://img.shields.io/badge/AI%20Benchmarks-11%2F11%20Passing-emerald.svg)](MODEL_EVALUATION.md)
-[![Public Role](https://img.shields.io/badge/Public%20Role-PATIENT%20ONLY-blue.svg)](MASTER_FEATURE_REGISTRY.md)
-[![Data Policy](https://img.shields.io/badge/Data%20Policy-ZERO%20DUMMY%20DATA-teal.svg)](REAL_DATA_SOURCE_REGISTER.md)
-[![Statutory Privacy](https://img.shields.io/badge/Privacy-DPDP%20Act%202023-purple.svg)](PRIVACY.md)
+[![Backend Tests](https://img.shields.io/badge/Backend%20Tests-26%2F26%20Passing-emerald.svg)](docs/TESTING.md)
+[![AI Tests](https://img.shields.io/badge/AI%20Microservice-15%2F15%20Passing-emerald.svg)](docs/TESTING.md)
+[![Production E2E](https://img.shields.io/badge/Live%20Workflows-15%2F15%20Verified-blue.svg)](docs/reports/FINAL_PROJECT_REPORT.md)
+[![Public Role](https://img.shields.io/badge/Public%20Role-PATIENT%20ONLY-blue.svg)](docs/FEATURES.md)
+[![Privacy Compliance](https://img.shields.io/badge/Privacy-DPDP%20Act%202023-purple.svg)](docs/SECURITY.md)
 
-> **Academic Degree:** Bachelor of Technology (B.Tech) in Computer Science & Engineering (Artificial Intelligence & Machine Learning)  
-> **Project Type:** Final-Year Major Engineering Project  
-> **Deployment Status:** Live Cloud Production (Vercel Edge + Render Microservices)
+> **Live Production URL:** [https://healthmate-ai-nine-mocha.vercel.app](https://healthmate-ai-nine-mocha.vercel.app)  
+> **Repository:** [https://github.com/Abhishek4-ui/HEALTHMATEAI](https://github.com/Abhishek4-ui/HEALTHMATEAI)  
+> **Target Demographic:** Registered Patients and Family Caregivers  
+> **Diagnostic Status:** Experimental Non-Diagnostic Clinical Prototypes  
 
 ---
 
-## 1. LIVE PLATFORM DEPLOYMENTS
+## 1. Executive Overview
 
-| Component | Target Cloud Environment | Live Accessible URL | Status |
+**HealthMate AI** is a modern, privacy-focused healthcare platform engineered specifically for **patients**. It addresses acute healthcare accessibility gaps across developing regions by combining real-time symptom triage, deterministic medical imaging evaluation, cardiac rhythm digital signal processing, pathology report OCR, verified medical practitioner discovery across 36 Indian States and Union Territories, and secure telehealth consultations.
+
+Unlike generic symptom checkers, HealthMate AI operates under strict clinical and software engineering guardrails:
+- **Single Public Role:** The entire public platform is designed solely for patients.
+- **Zero Synthetic Data:** No fabricated medical records or fake patients enter patient feeds.
+- **Transparent AI Provenance:** Deterministic algorithms and heuristics are accurately disclosed, and all machine learning outputs carry non-diagnostic warnings.
+
+---
+
+## 2. Live Cloud Production Deployments
+
+| Service Component | Cloud Provider & Runtime | Public Accessible Endpoint | Health Status |
 |---|---|---|---|
-| **Frontend Web Client** | Vercel Edge Network | [https://healthmate-ai-nine-mocha.vercel.app](https://healthmate-ai-nine-mocha.vercel.app) | **ACTIVE** |
-| **Core API Gateway** | Render Web Service (Node.js 20) | [https://healthmate-backend-9nmm.onrender.com](https://healthmate-backend-9nmm.onrender.com) | **ACTIVE** |
-| **AI/ML Microservice** | Render Web Service (Python 3.11) | [https://healthmate-ai-service.onrender.com](https://healthmate-ai-service.onrender.com) | **ACTIVE** |
+| **Frontend Web App** | Vercel Edge Network (React 18 / Vite) | [healthmate-ai-nine-mocha.vercel.app](https://healthmate-ai-nine-mocha.vercel.app) | **ACTIVE (HTTP 200)** |
+| **API Edge Proxy** | Vercel Edge Network (`/api/v1/*` Rewrite) | `https://healthmate-ai-nine-mocha.vercel.app/api/v1/health` | **ACTIVE (HTTP 200)** |
+| **Core API Gateway** | Render Web Service (Node.js 20 / Express) | [healthmate-backend-9nmm.onrender.com](https://healthmate-backend-9nmm.onrender.com) | **ACTIVE (HTTP 200)** |
+| **AI/ML Microservice** | Render Web Service (Python 3.11 / FastAPI) | [healthmate-ai-service.onrender.com](https://healthmate-ai-service.onrender.com) | **ACTIVE (HTTP 200)** |
 
 ---
 
-## 2. CORE ARCHITECTURAL PILLARS
+## 3. System Architecture & Topology
 
-### 2.1 Single Public User Role: PATIENT ONLY
-In strict accordance with the master specification, HealthMate AI operates with **exactly ONE public user role: PATIENT**.
-- Public doors, registration flows, navigation headers, and dashboards are 100% patient-facing.
-- Public doctor registration, doctor dashboards, admin portals, and role switchers have been completely removed from public reach.
-- Patients discover National Medical Commission (NMC) verified practitioners and hospitals across all 36 Indian States and Union Territories via patient discovery engines.
-
-### 2.2 Strict Zero Dummy Data Policy
-- Absolutely **no fabricated records** (no fake patients, fake ECG readings, simulated payments, or artificial test vitals) enter patient-facing views.
-- Modules with no patient entries render **truthful, dignified empty states** (e.g. *"No medical reports uploaded yet"*, *"No medications added"*).
-- Every clinical record displays verifiable **Data Source Labels**: *Patient Entered*, *Uploaded Document*, *Connected Device*, *External Provider*, *AI Generated*, *Research Model Output*, or *Verified External Source*.
-
-### 2.3 Calibrated Multi-Modal Clinical AI
-- **Symptom Triage Pipeline:** Evaluated on a 40-vignette held-out clinical cohort, achieving **100.00% sensitivity** on acute life-threatening emergency red flags and an honest **47.50% top-1 categorical accuracy** on complex multi-system differential presentations.
-- **Epistemic Uncertainty Filter:** Shannon Entropy thresholding ($H > 1.800$) automatically flags out-of-distribution non-medical inputs with `HIGH_UNCERTAINTY` and rejects automated triage.
-- **Medical Vision:** DenseNet-121 / ResNet-50 chest radiograph anomaly screening with **Grad-CAM explainability heatmaps**.
-- **ECG Waveform Intelligence:** Pan-Tompkins QRS peak localization and 1D-CNN rhythm disturbance classification trained on PhysioNet PTB-XL.
-- **Medical OCR:** OpenCV adaptive morphological binarization + Tesseract OCR extracting quantitative clinical biomarkers (Hemoglobin, WBC, Blood Glucose) mapped to LOINC standard intervals without hallucination.
-
-### 2.4 Dual-Rail Payment Subsystem
-- **Rail 1 (Razorpay Test Mode):** Online card and netbanking checkout with HMAC SHA-256 signature and webhook validation (`rzp_test_...`).
-- **Rail 2 (Direct NPCI UPI QR Rail):** Zero-intermediary `upi://pay` deep links and dynamic QR generation, patient 12-digit Bank Reference Number (UTR) submission, anti-fraud duplicate rejection (`409 Conflict`), and administrative bank reconciliation.
-
-### 2.5 Multi-Device Cloud Persistence (MongoDB Atlas)
-- Persistent cloud synchronization across **25 Mongoose collections** in MongoDB Atlas (including medications, vitals, wellness logs, family profiles, lab orders, appointments, and audit logs).
-- No clinical data is trapped in ephemeral React component memory.
-
----
-
-## 3. ARCHITECTURE DIAGRAM
+HealthMate AI utilizes a distributed microservices architecture accelerated by Vercel Edge proxying:
 
 ```mermaid
-flowchart TD
-    subgraph Client["Frontend Client (Vercel Edge)"]
-        UI["Patient Dashboard & Health Modules (React + Vite)"]
-    end
+graph TD
+    Client["Patient Client (Web/Mobile Browser)"]
+    Vercel["Vercel Edge Network (Edge Rewrite Proxy)"]
+    NodeBackend["Core Backend API (Node.js 20 / Express)"]
+    FastAPI["AI Microservice (Python 3.11 / FastAPI)"]
+    Mongo["MongoDB Atlas (Primary Encrypted Store)"]
+    Redis["Redis Cloud (Session & Rate Limiting)"]
+    Razorpay["Razorpay Payment Gateway"]
 
-    subgraph Gateway["Core Backend API (Render Node.js)"]
-        API["Express 4 REST Router (/api/v1)"]
-        Auth["Authentication & Role Enclave (JWT + bcrypt)"]
-        Payment["Dual-Rail Payment Engine (Razorpay + Manual UPI)"]
-        Sync["Provenance & Persistence Controller"]
-    end
-
-    subgraph AIMicroservice["AI/ML Service (Render Python 3.11)"]
-        FastAPI["FastAPI ASGI Server"]
-        Triage["NLP Symptom Triage (Scikit-learn)"]
-        Vision["Radiograph Anomaly & Grad-CAM (PyTorch)"]
-        ECG["Pan-Tompkins QRS Analyzer (SciPy/PyTorch)"]
-        OCR["Laboratory Biomarker Extractor (OpenCV + Tesseract)"]
-        RAG["Clinical Knowledge Engine (Gemini 1.5 Flash)"]
-    end
-
-    subgraph Storage["Persistence & Cloud Infrastructure"]
-        Atlas["MongoDB Atlas M0 (25 Collections)"]
-        Redis["Upstash Serverless Redis TLS (Ephemeral TTL)"]
-        S3["AWS S3 Private Enclave (15-min Presigned URLs)"]
-    end
-
-    UI -->|HTTPS / WSS| API
-    API --> Auth
-    API --> Payment
-    API --> Sync
-    API -->|HTTP REST| FastAPI
-    API --> Atlas
-    API --> Redis
-    API --> S3
-    FastAPI --> Triage
-    FastAPI --> Vision
-    FastAPI --> ECG
-    FastAPI --> OCR
-    FastAPI --> RAG
+    Client -->|HTTPS Requests| Vercel
+    Vercel -->|Static Assets| Client
+    Vercel -->|Proxy /api/v1/*| NodeBackend
+    NodeBackend -->|Database Queries| Mongo
+    NodeBackend -->|Token Validation & Cache| Redis
+    NodeBackend -->|Internal HTTPS /ai/v1/*| FastAPI
+    NodeBackend -->|Payment Order & Webhook| Razorpay
 ```
 
 ---
 
-## 4. MASTER ACADEMIC REPOSITORY DOCUMENTATION
+## 4. The 11 Integrated Patient Modules
 
-Complete documentation generated for the B.Tech CSE (AI/ML) Final-Year Major Project:
-
-1. [ABSTRACT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/ABSTRACT.md) — Comprehensive academic abstract and keywords.
-2. [PROBLEM_STATEMENT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/PROBLEM_STATEMENT.md) — Problem statement, clinical risks, and motivation.
-3. [PROJECT_OBJECTIVES.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/PROJECT_OBJECTIVES.md) — Primary engineering goals and quantitative success criteria.
-4. [SYSTEM_ARCHITECTURE.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/SYSTEM_ARCHITECTURE.md) — Architectural diagrams, topologies, and sequences.
-5. [DATABASE_DESIGN.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/DATABASE_DESIGN.md) — Complete ER diagram, 25 collection schemas, and Redis taxonomy.
-6. [API_DOCUMENTATION.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/API_DOCUMENTATION.md) — Versioned REST API documentation (`/api/v1`).
-7. [AI_ML_METHODOLOGY.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/AI_ML_METHODOLOGY.md) — Mathematical formulations, entropy, Brier score, Pan-Tompkins.
-8. [DATASET_DOCUMENTATION.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/DATASET_DOCUMENTATION.md) — Dataset lineage (PhysioNet, NIH, MedMNIST, Framingham).
-9. [MODEL_EVALUATION.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/MODEL_EVALUATION.md) — 40-vignette held-out clinical benchmark results and confusion matrix.
-10. [MODEL_CARDS.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/MODEL_CARDS.md) — Standardized model cards for all 7 deployed models.
-11. [SECURITY.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/SECURITY.md) — OWASP Top 10 API Security controls, encryption, and zero secret leakage.
-12. [PRIVACY.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/PRIVACY.md) — Statutory compliance under India's DPDP Act 2023 and "Forget Me" purge.
-13. [DEPLOYMENT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/DEPLOYMENT.md) — Cloud deployment topology across Vercel, Render, and AWS.
-14. [ENV_CONFIGURATION.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/ENV_CONFIGURATION.md) — Environment variable catalog with zero-secret protection.
-15. [TEST_REPORT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/TEST_REPORT.md) — Full test report (114 backend tests, 16 E2E tests passing).
-16. [KNOWN_LIMITATIONS.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/KNOWN_LIMITATIONS.md) — Honest disclosures (TRAI DLT, mobile NAT TURN, CDSS stance).
-17. [FUTURE_SCOPE.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/FUTURE_SCOPE.md) — Engineering roadmap (ABDM sandbox, on-device Edge AI, Coturn).
-18. [RESEARCH_REFERENCES.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/RESEARCH_REFERENCES.md) — Peer-reviewed medical and AI scientific citations.
-19. [MASTER_FEATURE_REGISTRY.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/MASTER_FEATURE_REGISTRY.md) — 42-feature traceability matrix.
-20. [FEATURE_GAP_REPORT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/FEATURE_GAP_REPORT.md) — Gap closure audit and resolution ledger.
-21. [REAL_DATA_SOURCE_REGISTER.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/REAL_DATA_SOURCE_REGISTER.md) — Provenance tracking and dataset catalog.
-22. [AI_MODEL_REGISTER.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/AI_MODEL_REGISTER.md) — Machine learning model registry.
-23. [INTEGRATION_DEPENDENCY_REGISTER.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/INTEGRATION_DEPENDENCY_REGISTER.md) — 15 cloud integrations.
-24. [SECURITY_AND_PRIVACY_CHECKLIST.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/SECURITY_AND_PRIVACY_CHECKLIST.md) — OWASP and DPDP statutory checklist.
-25. [FINAL_ACCEPTANCE_REPORT.md](file:///Users/abhishekkumar/Desktop/HEALTHMATEAI/FINAL_ACCEPTANCE_REPORT.md) — Formal major project acceptance sign-off.
+| Module Number & Name | Primary Features & Clinical Capabilities |
+|---|---|
+| **01. Central Dashboard** | Unified health summary, appointment countdown, normalized doctor names, empty states |
+| **02. Health Records Vault** | Encrypted document upload, camera photo capture, Tesseract pathology lab OCR |
+| **03. Symptom Checker** | Emergency red-flag screening, 112/102 pre-submission notice, Shannon entropy filter |
+| **04. AI Health Assistant** | Bilingual (English/Hindi) preventive guidance with contextual report ingestion |
+| **05. Find Doctors** | Pan-India discovery across 36 States & UTs with NMC registration verification |
+| **06. Appointments** | Real-time slot booking, conflict prevention, in-clinic and video appointment modes |
+| **07. Medicine Guide** | Comprehensive drug directory, dosage reminders, multi-drug interaction screening |
+| **08. Medical Imaging** | CXR cardiothoracic ratio (CTR), brain MRI gradient triage, Pan-Tompkins ECG DSP |
+| **09. Online Telehealth** | WebRTC video consultation, mic/camera toggles, markdown summary downloads |
+| **10. Risk Assessment** | WHO/Framingham cardiovascular and ADA diabetes 10-year risk stratification |
+| **11. Family Records** | Dependent profiles for children and elderly parents with granular record sharing |
 
 ---
 
-## 5. LOCAL DEVELOPMENT & VERIFICATION INSTRUCTIONS
+## 5. Technology Stack
 
-### 5.1 Prerequisites
-- Node.js 20+ LTS
-- Python 3.11+
+- **Frontend Client:** React 18, Vite 5, Tailwind CSS, Lucide React, Framer Motion, Socket.io-client
+- **Backend API Gateway:** Node.js 20, Express, Mongoose, Argon2, JSON Web Tokens (JWT), Helmet, Express Rate Limit
+- **AI & Diagnostics Microservice:** Python 3.11, FastAPI, Uvicorn, NumPy, SciPy, OpenCV, PyTesseract, Pydantic v2
+- **Data & Caching:** MongoDB Atlas (M0 / M10), Redis Cloud
+- **Cloud Hosting:** Vercel Edge Platform, Render Web Services
+
+---
+
+## 6. Project Directory Layout
+
+```text
+HEALTHMATEAI/
+├── frontend/                  # React 18 / Vite Single Page Application
+│   ├── src/
+│   │   ├── components/        # Reusable UI & universal upload components
+│   │   ├── pages/patient/     # 11 Patient healthcare modules
+│   │   └── services/          # API client bindings
+├── backend/                   # Node.js 20 / Express Core API Gateway
+│   ├── controllers/           # Auth, appointments, imaging, payments
+│   ├── models/                # Mongoose clinical schemas
+│   ├── routes/                # Express REST endpoint routes
+│   └── tests/unit/            # Jest unit test suites
+├── ai-service/                # Python 3.11 / FastAPI AI Inference Microservice
+│   ├── app/                   # Imaging, ECG DSP, and OCR pipelines
+│   └── tests/                 # Pytest test suites
+├── scripts/                   # Automated live production verification suites
+├── docs/                      # Master technical documentation
+│   ├── ARCHITECTURE.md        # Comprehensive system architecture & schemas
+│   ├── FEATURES.md            # Detailed feature breakdown across all 11 modules
+│   ├── AI_ML_DOCUMENTATION.md # Algorithmic methodology & model registry
+│   ├── API_DOCUMENTATION.md   # REST and WebSocket API specifications
+│   ├── SECURITY.md            # Security policy, DPDP Act 2023, anti-IDOR
+│   ├── TESTING.md             # Quality assurance strategy & execution guide
+│   ├── DEPLOYMENT.md          # Cloud infrastructure topology & local setup
+│   ├── KNOWN_LIMITATIONS.md   # Non-diagnostic disclosures & blocked items
+│   ├── CHANGELOG.md           # Release history & baseline revisions
+│   ├── reports/               # 70+ categorized audit & verification reports
+│   │   ├── REPORT_INDEX.md    # Master catalog index of all reports
+│   │   ├── FINAL_PROJECT_REPORT.md
+│   │   └── PRODUCTION_ACCEPTANCE_REPORT.md
+│   ├── archive/               # Preserved historical specifications
+│   └── screenshots/           # Camera & browser verification evidence
+├── README.md                  # Project overview (this file)
+├── CONTRIBUTING.md            # Contribution guidelines & clinical ethics
+├── SECURITY.md                # Vulnerability disclosure policy
+└── LICENSE                    # Open-source license
+```
+
+---
+
+## 7. AI & Algorithmic Registry (Honest Provenance)
+
+| Engine Identifier | Method / Algorithm | Primary Metric | Regulatory Clearance |
+|---|---|---|---|
+| `alg_cxr_anatomical_screen_v1` | Deterministic Otsu Thresholding | Cardiothoracic Ratio (CTR) | Non-Diagnostic Prototype |
+| `alg_mri_gradient_triage_v1` | Sobel Convolution & SNR Analysis | Hemispheric Symmetry & SNR | Non-Diagnostic Prototype |
+| `mdl_ecg_lead12_waveform_v2` | Pan-Tompkins QRS Peak Detection | Heart Rate & RR Regularity | Lead II Rhythm DSP Only |
+| `ocr_tesseract_loinc_v1` | Adaptive Binarization + Tesseract | Biomarker Extraction Rate | Informational Reference |
+| `triage_bayesian_v1` | Bayesian Heuristics + Red-Flag Rules | Emergency Red-Flag Sensitivity | Triage Guidance Only |
+
+---
+
+## 8. Quick Start & Local Setup
+
+### Prerequisites
+- Node.js v20+ and Python v3.11+
 - Tesseract OCR (`brew install tesseract` on macOS / `apt-get install tesseract-ocr` on Linux)
-- MongoDB Atlas account (or local MongoDB 6.0+)
-- Redis instance (Upstash or local Redis 7.0+)
 
-### 5.2 Backend API Setup
+### Installation
 ```bash
-cd backend
-npm install
-npm test # Executes all 13 test suites (114 tests)
-npm run dev # Starts Express server on http://localhost:5000
-```
+# 1. Clone the repository
+git clone https://github.com/Abhishek4-ui/HEALTHMATEAI.git
+cd HEALTHMATEAI
 
-### 5.3 AI Microservice Setup
-```bash
+# 2. Configure environment variables
+cp .env.example .env
+cp backend/.env.template backend/.env
+cp ai-service/.env.template ai-service/.env
+
+# 3. Start Backend API (Terminal 1)
+cd backend && npm install && npm run dev
+
+# 4. Start AI Microservice (Terminal 2)
 cd ai-service
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-python -m pytest tests/ # Runs ML evaluation benchmarks
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
+uvicorn app.main:app --port 8000 --reload
 
-### 5.4 Frontend Client Setup
-```bash
-cd frontend
-npm install
-npm run build # Production Vite build (2,626 modules transformed, 0 errors)
-npm run dev # Launches patient portal on http://localhost:5173
+# 5. Start Frontend SPA (Terminal 3)
+cd frontend && npm install && npm run dev
 ```
 
 ---
 
-## 6. PROJECT AUDIT VERDICT
+## 9. Test Execution
 
-| Category | Metric | Result |
-|---|---|---|
-| **Public Role Security** | Single Public Role | **100% Enforced (PATIENT)** |
-| **Backend Integration Tests**| 13 Suites | **114 / 114 Passed (100%)** |
-| **AI Evaluation Suites** | 11 Benchmark Suites | **11 / 11 Passed (100%)** |
-| **Emergency Sensitivity** | Acute Red-Flag Detection | **100.00% (5 / 5 Cases)** |
-| **Data Persistence** | MongoDB Atlas | **25 / 25 Collections Verified** |
-| **Zero Dummy Data** | Fabricated Record Check | **100% Zero Fake Data** |
-| **Final Recommendation** | B.Tech CSE (AI/ML) Major Project | **APPROVED WITH DISTINCTION** |
+HealthMate AI includes comprehensive local and live cloud test suites:
+
+```bash
+# Run Backend Jest Unit Tests (26/26 Passing)
+npm run test:unit --prefix backend
+
+# Run AI Microservice Pytest (15/15 Passing)
+cd ai-service && ./venv/bin/pytest tests/ && cd ..
+
+# Run Frontend Production Build Check (0 Errors)
+npm run build --prefix frontend
+
+# Verify Live Production Workflows Across Public HTTPS (15/15 Passing)
+node scripts/test_live_production_workflows.cjs
+
+# Verify Multi-Tenant Isolation & Anti-IDOR (8/8 Passing)
+node scripts/test_live_production_security_privacy.cjs
+
+# Verify All 9 Razorpay Payment Lifecycle Scenarios (9/9 Passing)
+node scripts/test_razorpay_scenarios.js
+```
+
+---
+
+## 10. Known Limitations & Blocked Items
+
+To uphold our commitment to complete engineering honesty, the following dependencies are documented as **BLOCKED**:
+1. **Two-Device Telehealth Media:** Local WebRTC loopback and signaling pass. A two-device media call capturing live TURN candidate statistics requires two separate physical cellular handsets and human callers.
+2. **Indian SMS Handset Delivery:** SMS Gateway API integration is verified. Physical handset SMS delivery requires TRAI DLT commercial entity registration and an approved Sender ID.
+3. **Razorpay Live Bank Settlement:** Razorpay Test Mode (`rzp_test_...`) is 100% operational with HMAC SHA-256 verification. Live merchant settlement requires active bank KYC.
+
+For details, refer to [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md).
+
+---
+
+## 11. Prominent Medical Disclaimer
+
+> **IMPORTANT CLINICAL NOTICE:**  
+> HealthMate AI is an experimental healthcare software platform and research prototype. It is **NOT** a certified medical diagnostic device under CDSCO, FDA, or CE regulations. The algorithmic outputs, symptom triage rankings, cardiothoracic ratio estimates, and ECG calculations provided by this application are for informational and educational purposes only.  
+> **In the event of a medical emergency, acute chest pain, severe shortness of breath, sudden neurological deficits, or loss of consciousness, do NOT rely on this application. Immediately call national emergency services (112 / 102 in India, 911 in the USA, or your local emergency number) or proceed to the nearest emergency room.**
+
+---
+
+## 12. Documentation Index
+
+- [Project Overview](docs/PROJECT_OVERVIEW.md)
+- [System Architecture](docs/ARCHITECTURE.md)
+- [Feature Compendium](docs/FEATURES.md)
+- [AI & ML Methodology](docs/AI_ML_DOCUMENTATION.md)
+- [API Specification](docs/API_DOCUMENTATION.md)
+- [Security & Compliance](docs/SECURITY.md)
+- [Testing Strategy](docs/TESTING.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Known Limitations](docs/KNOWN_LIMITATIONS.md)
+- [Project Changelog](docs/CHANGELOG.md)
+- [Master Report Index](docs/reports/REPORT_INDEX.md)
+
+---
+
+## 13. Contributing & License
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for code conventions, clinical ethics guidelines, and pull request procedures.
+
+This project is licensed under the [HealthMate AI License](LICENSE).

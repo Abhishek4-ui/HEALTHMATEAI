@@ -88,7 +88,10 @@ async function testECGValidation() {
   process.stdout.write('[*] Testing: 2. Paper ECG Optical Digitization (Grid Line Extraction)... ');
   try {
     const form = new FormData();
-    const sampleImage = fs.readFileSync(path.join(__dirname, '../screenshots/camera_captured_photo_verified.png'));
+    const imagePath = fs.existsSync(path.join(__dirname, '../docs/screenshots/camera_captured_photo_verified.png'))
+      ? path.join(__dirname, '../docs/screenshots/camera_captured_photo_verified.png')
+      : path.join(__dirname, '../screenshots/camera_captured_photo_verified.png');
+    const sampleImage = fs.readFileSync(imagePath);
     const blob = new Blob([sampleImage], { type: 'image/png' });
     form.append('ecg', blob, 'paper_ecg_lead2_scan.png');
     form.append('patient_age', '60');
