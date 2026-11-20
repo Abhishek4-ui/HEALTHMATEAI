@@ -235,7 +235,7 @@ export default function Module01_Dashboard() {
                 <div key={appt._id || appt.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                      Dr. {appt.doctorId?.fullName || 'Specialist Consultation'}
+                      {appt.doctorId?.fullName?.startsWith('Dr.') ? appt.doctorId?.fullName : `Dr. ${appt.doctorId?.fullName || 'Specialist Consultation'}`}
                     </h4>
                     <p className="text-[11px] text-slate-500">
                       {appt.scheduledDate ? new Date(appt.scheduledDate).toDateString() : 'Upcoming'} • {appt.timeSlot}

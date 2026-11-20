@@ -3,7 +3,8 @@ import {
   ClipboardCheck, 
   Activity, 
   ArrowRight,
-  Stethoscope
+  Stethoscope,
+  ShieldAlert
 } from 'lucide-react';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -83,6 +84,14 @@ export default function Module03_SymptomChecker() {
         </div>
         <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-aurora-teal flex items-center justify-center shrink-0">
           <ClipboardCheck className="w-5 h-5" />
+        </div>
+      </div>
+
+      {/* Mandatory Clinical Safety Disclaimer Banner */}
+      <div className="p-4 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <div className="text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+          <span className="font-bold uppercase tracking-wider">Mandatory Clinical Safety Notice:</span> This algorithmic symptom triage is an informational pre-screening aid and does not constitute a formal medical diagnosis or prescription. In case of acute chest discomfort, radiating left arm pain, difficulty breathing, sudden numbness, or severe trauma, immediately dial <span className="font-bold font-mono">112 / 102</span> or proceed to the nearest emergency room.
         </div>
       </div>
 

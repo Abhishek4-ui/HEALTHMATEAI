@@ -214,7 +214,7 @@ export default function UniversalUpload({
               <Button
                 type="button"
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => setIsCameraOpen(true)}
                 className="flex items-center gap-1.5 text-xs font-semibold border-teal-500/40 hover:border-teal-500 text-teal-700 dark:text-teal-300 bg-teal-50/50 dark:bg-teal-950/30"
               >
