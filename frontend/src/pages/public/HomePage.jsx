@@ -31,7 +31,7 @@ export default function HomePage() {
     { title: '36 States & UTs', subtitle: 'All-India doctor, clinic, and hospital directory across all states and territories' },
     { title: 'State Medical Councils', subtitle: 'Transparent practitioner registration numbers and council affiliations' },
     { title: 'Patient Data Privacy', subtitle: 'Explicit consent controls, temporary session memory, and strict access isolation' },
-    { title: 'Multi-Modal AI Suite', subtitle: 'Clinical assistance for lab reports, 12-lead ECGs, and diagnostic imaging' },
+    { title: 'Multi-Modal AI Suite', subtitle: 'Clinical assistance for lab reports, ECG rhythm strips, and diagnostic imaging' },
   ];
 
   return (
@@ -124,12 +124,12 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Clinical AI & Diagnostics</h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                Check symptoms in real-time, upload lab reports to extract LOINC biomarkers, and evaluate 12-lead ECGs and medical scans with AI assistance.
+                Check symptoms in real-time, upload lab reports to extract LOINC biomarkers, and evaluate ECG rhythm strips (Lead II DSP) and medical scans with AI assistance.
               </p>
               <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-100 dark:border-slate-700/60">
                 <li className="flex items-center gap-2">• Automated Laboratory Report OCR & LOINC standards</li>
                 <li className="flex items-center gap-2">• Medical Imaging AI (Chest X-Ray, CT, Brain MRI)</li>
-                <li className="flex items-center gap-2">• 12-Lead ECG rhythm and conduction review</li>
+                <li className="flex items-center gap-2">• ECG rhythm and conduction review (Lead II DSP focus)</li>
                 <li className="flex items-center gap-2">• 24/7 Conversational AI Health Assistant</li>
               </ul>
             </div>

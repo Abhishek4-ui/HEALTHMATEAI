@@ -368,7 +368,7 @@ async function runAllScenarios() {
     const orderId = orderRes.body.data.orderId;
 
     // Simulate browser refresh: patient reloads appointments list
-    const listRes = await apiRequest('GET', '/appointments', null, patientToken);
+    const listRes = await apiRequest('GET', '/appointments?limit=100', null, patientToken);
     const reloadedApt = listRes.body.data?.appointments?.find(a => a._id.toString() === apt._id.toString());
 
     // Verify appointment persists in list with pending status and retry payment capability

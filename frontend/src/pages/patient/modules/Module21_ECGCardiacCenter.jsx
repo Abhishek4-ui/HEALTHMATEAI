@@ -83,12 +83,12 @@ export default function Module21_ECGCardiacCenter() {
               <Heart className="w-3.5 h-3.5" /> Cardiac Intelligence Center
             </span>
             <span className="bg-white/10 text-rose-200 text-xs px-2 py-0.5 rounded-full font-mono">
-              PTB-XL Validated Pipeline
+              Lead II Rhythm-Strip DSP Validated
             </span>
           </div>
-          <h1 className="text-2xl font-bold">12-Lead Electrocardiography & Rhythm Intelligence</h1>
+          <h1 className="text-2xl font-bold">ECG Rhythm-Strip & Conduction Intelligence</h1>
           <p className="text-sm text-rose-100/80 max-w-2xl mt-1">
-            Algorithmic measurement of cardiac conduction intervals, Bazett QTc calculation, and automated rhythm categorization with direct cardiology consultation triage.
+            Algorithmic measurement of cardiac conduction intervals, Bazett QTc calculation, and automated rhythm categorization (Lead II rhythm-strip DSP focus; standard sheets supported via strip isolation) with direct cardiology consultation triage.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function Module21_ECGCardiacCenter() {
               onFileSelect={handleFileSelect}
               acceptedTypes={['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.csv', '.json', '.txt', '.dat']}
               maxSizeMB={20}
-              title="Upload 12-Lead Paper Strip, Scanned Image, or 1D ECG Signal Record"
+              title="Upload ECG Paper Strip, Scanned Sheet, or 1D Signal Record (Lead II Focus)"
               subtitle="Device upload (.png, .jpg, .pdf, .csv, .json), live camera photo, or document scanner enhancement"
               allowCamera={true}
               allowScanner={true}
@@ -377,12 +377,13 @@ export default function Module21_ECGCardiacCenter() {
               clinical_notes: ecgResult.rhythm_classification?.narrative,
               model_provenance: {
                 model_id: 'mdl_ecg_ptb_xl_v2',
-                framework: '1D Deep Convolutional Residual Network (PyTorch)',
-                training_dataset: 'PTB-XL 21,837 Clinical 12-Lead Electrocardiograms'
+                framework: 'SciPy Signal Processing DSP + Pan-Tompkins Algorithm',
+                training_dataset: 'PTB-XL Clinical Lead II Benchmark (Wagner et al. PhysioNet)',
+                validation_scope: 'Lead II rhythm-strip DSP validated; full 12-lead simultaneous tensor evaluation is NOT claimed'
               }
             }}
             modality="ECG"
-            examTitle="12-Lead Standard Electrocardiogram"
+            examTitle="ECG Rhythm Strip (Lead II Conduction & Interval Analysis)"
             modelId="mdl_ecg_ptb_xl_v2"
           />
 

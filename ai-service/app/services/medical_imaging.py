@@ -27,6 +27,8 @@ class MedicalImagingAnalyzer:
         'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
         'framework': 'NumPy / PyDICOM / Deterministic Density Calibration',
         'training_dataset': 'Calibrated Hounsfield Unit Standard Reference Profiles (Soft Tissue / Bone)',
+        'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Deterministic Quality & Histogram Screening Only)',
         'intended_use': 'Axial CT density histogram assessment and soft-tissue window navigation assist'
       },
       'MRI': {
@@ -34,6 +36,8 @@ class MedicalImagingAnalyzer:
         'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
         'framework': 'NumPy / SciPy Signal / Intensity Gradient Filtering',
         'training_dataset': 'Standard T1/T2 Relaxation Contrast Benchmarks',
+        'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Non-Diagnostic Gradient & SNR Screening Only)',
         'intended_use': 'Tissue boundary SNR evaluation and image quality screening'
       },
       'ULTRASOUND': {
@@ -41,6 +45,8 @@ class MedicalImagingAnalyzer:
         'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
         'framework': 'NumPy / OpenCV / Beam Attenuation Profiling',
         'training_dataset': 'Standard Ultrasound Beam Attenuation Gradients',
+        'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Quality & Attenuation Profiler Only)',
         'intended_use': 'Acoustic window adequacy verification and shadow artifact check'
       },
       'PATHOLOGY': {
@@ -48,6 +54,8 @@ class MedicalImagingAnalyzer:
         'architecture_type': 'DETERMINISTIC_CALIBRATED_IMAGE_PROCESSING',
         'framework': 'NumPy / Scikit-image / Stain Normalization Matrix',
         'training_dataset': 'Standard H&E Cellular Density Benchmarks',
+        'clinical_validation_status': 'EXPERIMENTAL_NON_DIAGNOSTIC',
+        'regulatory_clearance': 'NONE (Not cleared by CDSCO/FDA; Stain Normalization Only)',
         'intended_use': 'Cellular density histogram and stain normalization'
       }
     }

@@ -48,7 +48,7 @@ export default function PublicFooter() {
               <li><Link to="/patient/symptom-checker" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">AI Symptom Triage</Link></li>
               <li><Link to="/patient/reports" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Diagnostic Report OCR & LOINC</Link></li>
               <li><Link to="/patient/medical-imaging" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">Medical Imaging AI (X-Ray, CT, MRI)</Link></li>
-              <li><Link to="/patient/cardiac-ecg" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">12-Lead ECG Analysis</Link></li>
+              <li><Link to="/patient/cardiac-ecg" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">ECG Rhythm Analysis (Lead II DSP)</Link></li>
               <li><Link to="/about" className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">About Our Healthcare Network</Link></li>
             </ul>
           </div>

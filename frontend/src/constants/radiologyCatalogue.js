@@ -144,7 +144,7 @@ export const ULTRASOUND_STUDIES = [
 ];
 
 export const ECG_RECORDING_TYPES = [
-  { id: 'STANDARD_12_LEAD', name: 'Standard 12-Lead ECG Strip / Sheet (Paper Printout Photo)' },
+  { id: 'STANDARD_12_LEAD', name: 'Standard ECG Sheet (Lead II Rhythm Strip Extraction)' },
   { id: 'DIGITAL_PDF', name: 'Digital Hospital ECG PDF Export (Holter / Resting Trace)' },
   { id: 'RAW_SIGNAL_CSV', name: 'Raw Discrete Signal Stream (PhysioNet / CSV Data)' },
   { id: 'WEARABLE_SINGLE_LEAD', name: 'Wearable Single-Lead Rhythm Trace (Smartwatch Lead I Photo)' },
